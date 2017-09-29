@@ -1,5 +1,8 @@
 # helm-s3
 
+[![CircleCI](https://circleci.com/gh/hypnoglow/helm-s3.svg?style=shield)](https://circleci.com/gh/hypnoglow/helm-s3)
+[![License MIT](https://img.shields.io/badge/license-MIT-blue.svg?style=flat)](LICENSE)
+
 The Helm plugin that provides s3 protocol support. 
 
 This allows you to have private Helm chart repositories hosted on Amazon S3.
