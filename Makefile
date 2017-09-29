@@ -1,2 +1,4 @@
+pkg := github.com/hypnoglow/helm-s3
+
 build:
-	@go build -o bin/helms3 ./cmd/helms3
+	@./sh/build.sh $(CURDIR) $(pkg)
