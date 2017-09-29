@@ -1,4 +1,2 @@
-pkg := github.com/hypnoglow/helm-s3
-
 build:
-	@GOBIN=$(CURDIR)/bin/ go install $(pkg)/cmd/...
+	@go build -o bin/helms3 ./cmd/helms3
