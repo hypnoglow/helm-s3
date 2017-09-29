@@ -9,24 +9,17 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/aws/aws-sdk-go/service/s3/s3manager"
-	"github.com/go-ini/ini"
-	"github.com/pkg/errors"
 
-	"github.com/hypnoglow/helm-s3/pkg/s3object"
+	"github.com/hypnoglow/helm-s3/pkg/awss3"
+	"github.com/hypnoglow/helm-s3/pkg/dotaws"
 )
 
 const (
 	envAwsAccessKeyID     = "AWS_ACCESS_KEY_ID"
 	envAwsSecretAccessKey = "AWS_SECRET_ACCESS_KEY"
 	envAWsDefaultRegion   = "AWS_DEFAULT_REGION"
-)
 
-var (
-	credFile = os.ExpandEnv("$HOME/.aws/credentials")
-	confFile = os.ExpandEnv("$HOME/.aws/config")
+	defaultTimeout = time.Second * 5
 )
 
 func main() {
@@ -35,19 +28,16 @@ func main() {
 		return
 	}
 
-	parseCreds()
-	parseConfig()
-
-	uri := os.Args[4]
-	result, err := get(uri)
-	if err != nil {
-		log.Fatal(err)
+	if err := dotaws.ParseCredentials(); err != nil {
+		log.Fatalf("failed to parse aws credentials file: %s", err)
+	}
+	if err := dotaws.ParseConfig(); err != nil {
+		log.Fatalf("failed to parse aws config file: %s", err)
 	}
 
-	fmt.Print(string(result))
-}
-
-func get(uri string) ([]byte, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
+	defer cancel()
+	uri := os.Args[4]
 	awsConfig := &aws.Config{
 		Credentials: credentials.NewStaticCredentials(
 			os.Getenv(envAwsAccessKeyID),
@@ -57,84 +47,10 @@ func get(uri string) ([]byte, error) {
 		Region: aws.String(os.Getenv(envAWsDefaultRegion)),
 	}
 
-	sess, err := session.NewSession(awsConfig)
+	b, err := awss3.FetchRaw(ctx, uri, awsConfig)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to create new aws session")
+		log.Fatalf("failed to fetch from s3: %s", err)
 	}
 
-	bucket, key := s3object.Parse(uri)
-
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
-	defer cancel()
-
-	buf := &aws.WriteAtBuffer{}
-	_, err = s3manager.
-		NewDownloader(sess).
-		DownloadWithContext(ctx, buf, &s3.GetObjectInput{
-			Bucket: aws.String(bucket),
-			Key:    aws.String(key),
-		})
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to upload file to s3")
-	}
-
-	return buf.Bytes(), nil
-}
-
-func parseCreds() {
-	f, err := os.Open(credFile)
-	if err != nil {
-		log.Print("[DEBUG] failed to read aws credentials file:", err)
-		return
-	}
-
-	fmt.Printf("DEBUG: %#v\n", "blya")
-
-	il, err := ini.Load(f)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	sec, err := il.GetSection("default")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	accessKeyID, err := sec.GetKey("aws_access_key_id")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	os.Setenv(envAwsAccessKeyID, accessKeyID.String())
-
-	secretAccessKey, err := sec.GetKey("aws_secret_access_key")
-	if err != nil {
-		log.Fatal(err)
-	}
-	os.Setenv(envAwsSecretAccessKey, secretAccessKey.String())
-}
-
-func parseConfig() {
-	f, err := os.Open(confFile)
-	if err != nil {
-		log.Print("[DEBUG] failed to read aws config file:", err)
-		return
-	}
-
-	il, err := ini.Load(f)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	sec, err := il.GetSection("default")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	region, err := sec.GetKey("region")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	os.Setenv(envAWsDefaultRegion, region.String())
+	fmt.Print(string(b))
 }
