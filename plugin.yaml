@@ -2,6 +2,7 @@ name: "s3"
 version: "0.1.0"
 usage: "The plugin allows to use s3 protocol to fetch charts and to work with repositories."
 description: |-
+  Provides AWS S3 protocol support.
   Make sure your AWS credentials are stored either in ~/.aws/credentials and ~/.aws/config or
   in environment variables $AWS_ACCESS_KEY_ID, $AWS_SECRET_ACCESS_KEY, $AWS_DEFAULT_REGION.
   Then you can use s3 directly with helm commands:
@@ -13,3 +14,5 @@ downloaders:
 - command: "bin/helms3"
   protocols:
     - "s3"
+hooks:
+  install: "cd $HELM_PLUGIN_DIR; make build"

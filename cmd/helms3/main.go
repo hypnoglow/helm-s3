@@ -44,7 +44,6 @@ func main() {
 		log.Fatal(err)
 	}
 
-	fmt.Fprint(os.Stderr, string(result))
 	fmt.Print(string(result))
 }
 
