@@ -30,10 +30,9 @@ on specific bucket.
 
 ## Usage
 
-Let's omit the process of uploading repository index and charts to s3 and assume
+For now let's omit the process of uploading repository index and charts to s3 and assume
 you already have your repository `index.yaml` file on s3 under path `s3://bucket-name/charts/index.yaml`
 and a chart archive `epicservice-0.5.1.tgz` under path `s3://bucket-name/charts/epicservice-0.5.1.tgz`.
-
 
 Add your repository:
 
@@ -51,6 +50,33 @@ Try:
 Fetching also works:
 
     $ helm fetch s3://bucket-name/charts/epicservice-0.5.1.tgz
+
+### Init & Push
+
+To create a new repository, use **init**:
+
+    $ helm s3 init s3://bucket-name/charts
+
+This command generates an empty **index.yaml** and uploads it to the S3 bucket 
+under `/charts` key.
+
+To push to this repo by it's name, you need to add it first:
+
+    $ helm repo add mynewrepo s3://bucket-name/charts
+
+Now you can push your chart to this repo:
+
+    $ helm s3 push ./epicservice-0.7.2.tgz mynewrepo
+
+On push, remote repo index is automatically updated. To sync your local index, run:
+
+    $ helm repo update mynewrepo
+
+Now your pushed chart is available:
+
+    $ helm search mynewrepo 
+    NAME                    VERSION	 DESCRIPTION
+    mynewrepo/epicservice	0.7.2    A Helm chart.
 
 ## Uninstall
 
