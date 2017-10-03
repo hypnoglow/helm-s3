@@ -13,10 +13,14 @@ jobs:
 #      - run: dep ensure -v
       - run: ./.circleci/testcover.sh
       - run: bash <(curl -s https://codecov.io/bash)
-      - run: go build ./cmd/...
+      - run: go build -o bin/helms3 ./cmd/helms3
       - deploy:
           name: goreleaser
           command: |
             if [ -n "$CIRCLE_TAG" ]; then
               curl -sL https://git.io/goreleaser | bash
             fi
+
+deployment:
+  trigger_tag:
+    tag: /.*/
