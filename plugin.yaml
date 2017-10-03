@@ -10,4 +10,5 @@ downloaders:
   protocols:
     - "s3"
 hooks:
-  install: "cd $HELM_PLUGIN_DIR; make build"
+  install: "cd $HELM_PLUGIN_DIR; make install"
+  update: "cd $HELM_PLUGIN_DIR; make install"
