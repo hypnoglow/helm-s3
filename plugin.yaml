@@ -1,18 +1,14 @@
 name: "s3"
-version: "0.1.0"
-usage: "The plugin allows to use s3 protocol to fetch charts and to work with repositories."
+version: "0.2.0"
+usage: "The plugin allows to use s3 protocol to upload, fetch charts and to work with repositories."
 description: |-
   Provides AWS S3 protocol support.
-  Make sure your AWS credentials are stored either in ~/.aws/credentials and ~/.aws/config or
-  in environment variables $AWS_ACCESS_KEY_ID, $AWS_SECRET_ACCESS_KEY, $AWS_DEFAULT_REGION.
-  Then you can use s3 directly with helm commands:
-    $ helm repo add s3://bucket-name/charts
-    $ helm fetch s3://bucket-name/charts/my-chart-0.1.0.tgz
+  https://github.com/hypnoglow/helm-s3
 command: "$HELM_PLUGIN_DIR/bin/helms3"
-ignoreFlags: true
 downloaders:
 - command: "bin/helms3"
   protocols:
     - "s3"
 hooks:
-  install: "cd $HELM_PLUGIN_DIR; make build"
+  install: "cd $HELM_PLUGIN_DIR; make install"
+  update: "cd $HELM_PLUGIN_DIR; make install"

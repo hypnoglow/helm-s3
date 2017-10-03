@@ -1,56 +1,57 @@
 package main
 
 import (
-	"context"
-	"fmt"
-	"log"
 	"os"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
+	"gopkg.in/alecthomas/kingpin.v2"
+)
 
-	"github.com/hypnoglow/helm-s3/pkg/awss3"
-	"github.com/hypnoglow/helm-s3/pkg/dotaws"
+var (
+	version = "master"
 )
 
 const (
-	envAwsAccessKeyID     = "AWS_ACCESS_KEY_ID"
-	envAwsSecretAccessKey = "AWS_SECRET_ACCESS_KEY"
-	envAWsDefaultRegion   = "AWS_DEFAULT_REGION"
+	actionPush = "push"
+	actionInit = "init"
 
 	defaultTimeout = time.Second * 5
 )
 
 func main() {
-	if len(os.Args) < 5 {
-		fmt.Print("The direct use of \"helm s3\" command is currently not supported.")
+	if len(os.Args) == 5 {
+		runProxy(os.Args[4])
 		return
 	}
 
-	if err := dotaws.ParseCredentials(); err != nil {
-		log.Fatalf("failed to parse aws credentials file: %s", err)
-	}
-	if err := dotaws.ParseConfig(); err != nil {
-		log.Fatalf("failed to parse aws config file: %s", err)
-	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
-	defer cancel()
-	uri := os.Args[4]
-	awsConfig := &aws.Config{
-		Credentials: credentials.NewStaticCredentials(
-			os.Getenv(envAwsAccessKeyID),
-			os.Getenv(envAwsSecretAccessKey),
-			"",
-		),
-		Region: aws.String(os.Getenv(envAWsDefaultRegion)),
-	}
-
-	b, err := awss3.FetchRaw(ctx, uri, awsConfig)
-	if err != nil {
-		log.Fatalf("failed to fetch from s3: %s", err)
+	cli := kingpin.New("helm s3", "")
+	cli.Version(version)
+	initCmd := cli.Command(actionInit, "Initialize empty repository on AWS S3.")
+	initURI := initCmd.Arg("uri", "URI of repository, e.g. s3://awesome-bucket/charts").
+		Required().
+		String()
+	pushCmd := cli.Command(actionPush, "Push chart to repository.")
+	pushChartPath := pushCmd.Arg("chartPath", "Path to a chart, e.g. ./epicservice-0.5.1.tgz").
+		Required().
+		String()
+	pushTargetRepository := pushCmd.Arg("repo", "Target repository to runPush").
+		Required().
+		String()
+	action := kingpin.MustParse(cli.Parse(os.Args[1:]))
+	if action == "" {
+		cli.Usage(os.Args[1:])
+		os.Exit(0)
 	}
 
-	fmt.Print(string(b))
+	switch action {
+
+	case actionInit:
+		runInit(*initURI)
+		return
+
+	case actionPush:
+		runPush(*pushChartPath, *pushTargetRepository)
+		return
+
+	}
 }

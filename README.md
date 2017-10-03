@@ -2,6 +2,7 @@
 
 [![CircleCI](https://circleci.com/gh/hypnoglow/helm-s3.svg?style=shield)](https://circleci.com/gh/hypnoglow/helm-s3)
 [![License MIT](https://img.shields.io/badge/license-MIT-blue.svg?style=flat)](LICENSE)
+[![GitHub release](https://img.shields.io/github/release/hypnoglow/helm-s3.svg)](https://github.com/hypnoglow/helm-s3/releases)
 
 The Helm plugin that provides s3 protocol support. 
 
@@ -9,12 +10,18 @@ This allows you to have private Helm chart repositories hosted on Amazon S3.
 
 ## Install
 
-Installation itself is simple as:
+The installation itself is simple as:
 
     $ helm plugin install https://github.com/hypnoglow/helm-s3.git
 
-Plugin requires Golang to be installed to build the binary file from source.
-It will happen implicitly on plugin installation, nothing needs to be done manually.
+You can install a specific release version: 
+
+    $ helm plugin install https://github.com/hypnoglow/helm-s3.git --version 0.2.0
+
+To use the plugin, you do not need any special dependencies. The installer will
+download versioned release with prebuilt binary from [github releases](https://github.com/hypnoglow/helm-s3/releases).
+However, if you want to build the plugin from source, or you want to contribute
+to the plugin, please see [these instructions](.github/CONTRIBUTING.md).
 
 #### Note on AWS authentication
 
@@ -30,10 +37,9 @@ on specific bucket.
 
 ## Usage
 
-Let's omit the process of uploading repository index and charts to s3 and assume
+For now let's omit the process of uploading repository index and charts to s3 and assume
 you already have your repository `index.yaml` file on s3 under path `s3://bucket-name/charts/index.yaml`
 and a chart archive `epicservice-0.5.1.tgz` under path `s3://bucket-name/charts/epicservice-0.5.1.tgz`.
-
 
 Add your repository:
 
@@ -52,13 +58,41 @@ Fetching also works:
 
     $ helm fetch s3://bucket-name/charts/epicservice-0.5.1.tgz
 
+### Init & Push
+
+To create a new repository, use **init**:
+
+    $ helm s3 init s3://bucket-name/charts
+
+This command generates an empty **index.yaml** and uploads it to the S3 bucket 
+under `/charts` key.
+
+To push to this repo by it's name, you need to add it first:
+
+    $ helm repo add mynewrepo s3://bucket-name/charts
+
+Now you can push your chart to this repo:
+
+    $ helm s3 push ./epicservice-0.7.2.tgz mynewrepo
+
+On push, remote repo index is automatically updated. To sync your local index, run:
+
+    $ helm repo update
+
+Now your pushed chart is available:
+
+    $ helm search mynewrepo 
+    NAME                    VERSION	 DESCRIPTION
+    mynewrepo/epicservice   0.7.2    A Helm chart.
+
 ## Uninstall
 
     $ helm plugin remove s3
     
 ## Contributing
 
-Contributions are welcome.
+Contributions are welcome. Please see [these instructions](.github/CONTRIBUTING.md)
+that will help you to develop the plugin.
     
 ## License
 
