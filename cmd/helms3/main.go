@@ -8,6 +8,10 @@ import (
 )
 
 const (
+	version = "master"
+)
+
+const (
 	actionPush = "push"
 	actionInit = "init"
 
@@ -21,6 +25,7 @@ func main() {
 	}
 
 	cli := kingpin.New("helm s3", "")
+	cli.Version(version)
 	initCmd := cli.Command(actionInit, "Initialize empty repository on AWS S3.")
 	initURI := initCmd.Arg("uri", "URI of repository, e.g. s3://awesome-bucket/charts").
 		Required().
