@@ -1,6 +1,8 @@
 builds:
   - main: ./cmd/helms3
     binary: ./bin/helms3
+    env:
+      - CGO_ENABLED=0
     goos:
       - darwin
       - linux
