@@ -70,7 +70,7 @@ Now you can push your chart to this repo:
 
 On push, remote repo index is automatically updated. To sync your local index, run:
 
-    $ helm repo update mynewrepo
+    $ helm repo update
 
 Now your pushed chart is available:
 

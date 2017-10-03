@@ -8,10 +8,6 @@ import (
 )
 
 const (
-	envAwsAccessKeyID     = "AWS_ACCESS_KEY_ID"
-	envAwsSecretAccessKey = "AWS_SECRET_ACCESS_KEY"
-	envAWsDefaultRegion   = "AWS_DEFAULT_REGION"
-
 	actionPush = "push"
 	actionInit = "init"
 
@@ -24,18 +20,23 @@ func main() {
 		return
 	}
 
-	initCmd := kingpin.Command(actionInit, "Initialize empty repository on AWS S3.")
+	cli := kingpin.New("helm s3", "")
+	initCmd := cli.Command(actionInit, "Initialize empty repository on AWS S3.")
 	initURI := initCmd.Arg("uri", "URI of repository, e.g. s3://awesome-bucket/charts").
 		Required().
 		String()
-	pushCmd := kingpin.Command(actionPush, "Push chart to repository.")
+	pushCmd := cli.Command(actionPush, "Push chart to repository.")
 	pushChartPath := pushCmd.Arg("chartPath", "Path to a chart, e.g. ./epicservice-0.5.1.tgz").
 		Required().
 		String()
 	pushTargetRepository := pushCmd.Arg("repo", "Target repository to runPush").
 		Required().
 		String()
-	action := kingpin.Parse()
+	action := kingpin.MustParse(cli.Parse(os.Args[1:]))
+	if action == "" {
+		cli.Usage(os.Args[1:])
+		os.Exit(0)
+	}
 
 	switch action {
 

@@ -4,28 +4,15 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"os"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/hypnoglow/helm-s3/pkg/awss3"
-	"github.com/hypnoglow/helm-s3/pkg/dotaws"
+	"github.com/hypnoglow/helm-s3/pkg/awsutil"
 )
 
 func runProxy(uri string) {
-	if err := dotaws.ParseCredentials(); err != nil {
-		log.Fatalf("failed to parse aws credentials file: %s", err)
-	}
-	if err := dotaws.ParseConfig(); err != nil {
-		log.Fatalf("failed to parse aws config file: %s", err)
-	}
-	awsConfig := &aws.Config{
-		Credentials: credentials.NewStaticCredentials(
-			os.Getenv(envAwsAccessKeyID),
-			os.Getenv(envAwsSecretAccessKey),
-			"",
-		),
-		Region: aws.String(os.Getenv(envAWsDefaultRegion)),
+	awsConfig, err := awsutil.Config()
+	if err != nil {
+		log.Fatalf("failed to get aws config: %s", err)
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
