@@ -76,7 +76,7 @@ Now your pushed chart is available:
 
     $ helm search mynewrepo 
     NAME                    VERSION	 DESCRIPTION
-    mynewrepo/epicservice	0.7.2    A Helm chart.
+    mynewrepo/epicservice   0.7.2    A Helm chart.
 
 ## Uninstall
 
