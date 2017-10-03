@@ -7,7 +7,7 @@ import (
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 
-const (
+var (
 	version = "master"
 )
 
