@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+	"log"
 	"os"
 	"time"
 
@@ -46,7 +48,10 @@ func main() {
 	switch action {
 
 	case actionInit:
-		runInit(*initURI)
+		if err := runInit(*initURI); err != nil {
+			log.Fatal(err)
+		}
+		fmt.Printf("Initialized empty repository at %s\n", *initURI)
 		return
 
 	case actionPush:
