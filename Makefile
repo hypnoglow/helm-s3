@@ -1,5 +1,8 @@
 pkg := github.com/hypnoglow/helm-s3
 
+dep:
+	@dep ensure -v -vendor-only
+
 build:
 	@./sh/build.sh $(CURDIR) $(pkg)
 

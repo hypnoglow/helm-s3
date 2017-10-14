@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+	"log"
 	"os"
 	"time"
 
@@ -20,7 +22,9 @@ const (
 
 func main() {
 	if len(os.Args) == 5 {
-		runProxy(os.Args[4])
+		if err := runProxy(os.Args[4]); err != nil {
+			log.Fatal(err)
+		}
 		return
 	}
 
@@ -46,11 +50,16 @@ func main() {
 	switch action {
 
 	case actionInit:
-		runInit(*initURI)
+		if err := runInit(*initURI); err != nil {
+			log.Fatal(err)
+		}
+		fmt.Printf("Initialized empty repository at %s\n", *initURI)
 		return
 
 	case actionPush:
-		runPush(*pushChartPath, *pushTargetRepository)
+		if err := runPush(*pushChartPath, *pushTargetRepository); err != nil {
+			log.Fatal(err)
+		}
 		return
 
 	}

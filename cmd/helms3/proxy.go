@@ -3,16 +3,17 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
+
+	"github.com/pkg/errors"
 
 	"github.com/hypnoglow/helm-s3/pkg/awss3"
 	"github.com/hypnoglow/helm-s3/pkg/awsutil"
 )
 
-func runProxy(uri string) {
+func runProxy(uri string) error {
 	awsConfig, err := awsutil.Config()
 	if err != nil {
-		log.Fatalf("failed to get aws config: %s", err)
+		return errors.WithMessage(err, "get aws config")
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
@@ -20,8 +21,9 @@ func runProxy(uri string) {
 
 	b, err := awss3.FetchRaw(ctx, uri, awsConfig)
 	if err != nil {
-		log.Fatalf("failed to fetch from s3: %s", err)
+		return errors.WithMessage(err, "fetch from s3")
 	}
 
 	fmt.Print(string(b))
+	return nil
 }
