@@ -14,8 +14,10 @@ var (
 )
 
 const (
-	actionPush = "push"
-	actionInit = "init"
+	actionVersion = "version"
+	actionInit    = "init"
+	actionPush    = "push"
+	actionDelete  = "delete"
 
 	defaultTimeout = time.Second * 5
 )
@@ -29,18 +31,32 @@ func main() {
 	}
 
 	cli := kingpin.New("helm s3", "")
-	cli.Version(version)
+	cli.Command(actionVersion, "Show plugin version.")
+
 	initCmd := cli.Command(actionInit, "Initialize empty repository on AWS S3.")
 	initURI := initCmd.Arg("uri", "URI of repository, e.g. s3://awesome-bucket/charts").
 		Required().
 		String()
-	pushCmd := cli.Command(actionPush, "Push chart to repository.")
+
+	pushCmd := cli.Command(actionPush, "Push chart to the repository.")
 	pushChartPath := pushCmd.Arg("chartPath", "Path to a chart, e.g. ./epicservice-0.5.1.tgz").
 		Required().
 		String()
-	pushTargetRepository := pushCmd.Arg("repo", "Target repository to runPush").
+	pushTargetRepository := pushCmd.Arg("repo", "Target repository to push to").
 		Required().
 		String()
+
+	deleteCmd := cli.Command(actionDelete, "Delete chart from the repository.").Alias("del")
+	deleteChartName := deleteCmd.Arg("chartName", "Name of chart to delete").
+		Required().
+		String()
+	deleteChartVersion := deleteCmd.Flag("version", "Version of chart to delete").
+		Required().
+		String()
+	deleteTargetRepository := deleteCmd.Arg("repo", "Target repository to delete from").
+		Required().
+		String()
+
 	action := kingpin.MustParse(cli.Parse(os.Args[1:]))
 	if action == "" {
 		cli.Usage(os.Args[1:])
@@ -48,6 +64,9 @@ func main() {
 	}
 
 	switch action {
+	case actionVersion:
+		fmt.Print(version)
+		return
 
 	case actionInit:
 		if err := runInit(*initURI); err != nil {
@@ -62,5 +81,10 @@ func main() {
 		}
 		return
 
+	case actionDelete:
+		if err := runDelete(*deleteChartName, *deleteChartVersion, *deleteTargetRepository); err != nil {
+			log.Fatal(err)
+		}
+		return
 	}
 }

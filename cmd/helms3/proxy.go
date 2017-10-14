@@ -16,10 +16,12 @@ func runProxy(uri string) error {
 		return errors.WithMessage(err, "get aws config")
 	}
 
+	storage := awss3.NewStorage(awsConfig)
+
 	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
 	defer cancel()
 
-	b, err := awss3.FetchRaw(ctx, uri, awsConfig)
+	b, err := storage.FetchRaw(ctx, uri)
 	if err != nil {
 		return errors.WithMessage(err, "fetch from s3")
 	}
