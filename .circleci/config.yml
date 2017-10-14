@@ -9,8 +9,8 @@ jobs:
     working_directory: /go/src/github.com/hypnoglow/helm-s3
     steps:
       - checkout
-#      - run: go get -u -v github.com/golang/dep/cmd/dep
-#      - run: dep ensure -v
+      - run: go get -u -v github.com/golang/dep/cmd/dep
+      - run: dep ensure -v
       - run: ./.circleci/testcover.sh
       - run: bash <(curl -s https://codecov.io/bash)
       - run: go build -o bin/helms3 ./cmd/helms3
