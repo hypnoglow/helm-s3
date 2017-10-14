@@ -22,7 +22,9 @@ const (
 
 func main() {
 	if len(os.Args) == 5 {
-		runProxy(os.Args[4])
+		if err := runProxy(os.Args[4]); err != nil {
+			log.Fatal(err)
+		}
 		return
 	}
 
