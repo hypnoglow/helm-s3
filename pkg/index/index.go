@@ -24,9 +24,19 @@ func (i Index) Reader() (io.Reader, error) {
 	return bytes.NewReader(b), nil
 }
 
-// New returns a new helm chart repository index.
+// New returns a new index.
 func New() Index {
 	return Index{
 		repo.NewIndexFile(),
 	}
+}
+
+// LoadBytes returns an index read from bytes.
+func LoadBytes(b []byte) (Index, error) {
+	i := &repo.IndexFile{}
+	if err := yaml.Unmarshal(b, i); err != nil {
+		return Index{}, err
+	}
+	i.SortEntries()
+	return Index{i}, nil
 }

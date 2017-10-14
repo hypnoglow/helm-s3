@@ -55,7 +55,9 @@ func main() {
 		return
 
 	case actionPush:
-		runPush(*pushChartPath, *pushTargetRepository)
+		if err := runPush(*pushChartPath, *pushTargetRepository); err != nil {
+			log.Fatal(err)
+		}
 		return
 
 	}
