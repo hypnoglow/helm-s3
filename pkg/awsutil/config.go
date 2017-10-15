@@ -16,6 +16,14 @@ const (
 	envAWsDefaultRegion   = "AWS_DEFAULT_REGION"
 )
 
+var (
+	// awsDisableSSL can be set to true by build tag.
+	awsDisableSSL = "false"
+
+	// awsEndpoint can be set to a custom endpoint by build tag.
+	awsEndpoint = ""
+)
+
 // Config returns AWS config with credentials and parameters taken from
 // environment and/or from ~/.aws/* files.
 func Config() (*aws.Config, error) {
@@ -37,6 +45,9 @@ func Config() (*aws.Config, error) {
 			os.Getenv(envAwsSecretAccessKey),
 			"",
 		),
-		Region: aws.String(os.Getenv(envAWsDefaultRegion)),
+		DisableSSL:       aws.Bool(awsDisableSSL == "true"),
+		Endpoint:         aws.String(awsEndpoint),
+		Region:           aws.String(os.Getenv(envAWsDefaultRegion)),
+		S3ForcePathStyle: aws.Bool(true),
 	}, nil
 }

@@ -8,3 +8,6 @@ build:
 
 install:
 	@./sh/install.sh
+
+integration-tests:
+	@./sh/integration-tests-local.sh

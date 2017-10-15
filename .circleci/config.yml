@@ -20,6 +20,57 @@ jobs:
             if [ -n "$CIRCLE_TAG" ]; then
               curl -sL https://git.io/goreleaser | bash
             fi
+  test-integration:
+    docker:
+      - image: circleci/golang:1.9
+        environment:
+          AWS_ACCESS_KEY_ID: EXAMPLEKEY123
+          AWS_SECRET_ACCESS_KEY: EXAMPLESECRET123456
+          AWS_DEFAULT_REGION: us-east-1
+          HELM_VERSION: v2.6.2
+      - image: minio/minio:latest
+        name: helm-s3-minio
+        environment:
+          MINIO_ACCESS_KEY: EXAMPLEKEY123
+          MINIO_SECRET_KEY: EXAMPLESECRET123456
+        command: ["server", "/data"]
+    working_directory: /go/src/github.com/hypnoglow/helm-s3
+    steps:
+      - checkout
+      - run:
+          name: Build the plugin
+          command: |
+            go get -u -v github.com/golang/dep/cmd/dep
+            dep ensure -v
+            go build -o bin/helms3 -ldflags "-X github.com/hypnoglow/helm-s3/pkg/awsutil.awsDisableSSL=true -X github.com/hypnoglow/helm-s3/pkg/awsutil.awsEndpoint=helm-s3-minio:9000" ./cmd/helms3
+      - run:
+          name: Install helm, install plugin
+          command: |
+            curl -sSL https://storage.googleapis.com/kubernetes-helm/helm-${HELM_VERSION}-linux-amd64.tar.gz | tar xz
+            mv linux-amd64/helm ${GOPATH}/bin/helm
+            rm -rf linux-amd64
+            helm init --client-only
+            HELM_S3_PLUGIN_NO_INSTALL_HOOK=true helm plugin install ${GOPATH}/src/github.com/hypnoglow/helm-s3
+      - run:
+          name: Install minio client, prepare minio
+          command: |
+            nc -vz helm-s3-minio 9000
+            curl -sSL https://dl.minio.io/client/mc/release/linux-amd64/mc -o ${GOPATH}/bin/mc
+            chmod +x ${GOPATH}/bin/mc
+            mc config host add helm-s3-minio http://helm-s3-minio:9000 $AWS_ACCESS_KEY_ID $AWS_SECRET_ACCESS_KEY
+            mc mb helm-s3-minio/test-bucket
+      - run:
+          name: Run tests
+          command: ./sh/integration-tests.sh
+
+workflows:
+  version: 2
+  build_and_test:
+    jobs:
+    - build
+    - test-integration:
+        requires:
+          - build
 
 deployment:
   trigger_tag:
