@@ -13,7 +13,9 @@ import (
 const (
 	envAwsAccessKeyID     = "AWS_ACCESS_KEY_ID"
 	envAwsSecretAccessKey = "AWS_SECRET_ACCESS_KEY"
-	envAWsDefaultRegion   = "AWS_DEFAULT_REGION"
+	envAwsDefaultRegion   = "AWS_DEFAULT_REGION"
+
+	envAwsProfile = "AWS_PROFILE"
 )
 
 var (
@@ -27,14 +29,16 @@ var (
 // Config returns AWS config with credentials and parameters taken from
 // environment and/or from ~/.aws/* files.
 func Config() (*aws.Config, error) {
+	profile := os.Getenv(envAwsProfile)
+
 	if os.Getenv(envAwsAccessKeyID) == "" && os.Getenv(envAwsSecretAccessKey) == "" {
-		if err := dotaws.ParseCredentials(); err != nil {
+		if err := dotaws.ParseCredentials(profile); err != nil {
 			return nil, errors.Wrap(err, "failed to parse aws credentials file")
 		}
 	}
 
-	if os.Getenv(envAWsDefaultRegion) == "" {
-		if err := dotaws.ParseConfig(); err != nil {
+	if os.Getenv(envAwsDefaultRegion) == "" {
+		if err := dotaws.ParseConfig(profile); err != nil {
 			return nil, errors.Wrap(err, "failed to parse aws config file")
 		}
 	}
@@ -47,7 +51,7 @@ func Config() (*aws.Config, error) {
 		),
 		DisableSSL:       aws.Bool(awsDisableSSL == "true"),
 		Endpoint:         aws.String(awsEndpoint),
-		Region:           aws.String(os.Getenv(envAWsDefaultRegion)),
+		Region:           aws.String(os.Getenv(envAwsDefaultRegion)),
 		S3ForcePathStyle: aws.Bool(true),
 	}, nil
 }

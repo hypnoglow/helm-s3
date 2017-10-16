@@ -1,6 +1,7 @@
 package dotaws
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/go-ini/ini"
@@ -13,7 +14,7 @@ const (
 	envAWsDefaultRegion = "AWS_DEFAULT_REGION"
 )
 
-func ParseConfig() error {
+func ParseConfig(profile string) error {
 	f, err := os.Open(os.ExpandEnv(configFile))
 	if err != nil {
 		if err == os.ErrNotExist {
@@ -27,7 +28,12 @@ func ParseConfig() error {
 		return errors.Wrapf(err, "failed to load file %s as ini", configFile)
 	}
 
-	sec, err := il.GetSection("default")
+	sectionName := "default"
+	if profile != "" {
+		sectionName = fmt.Sprintf("profile %s", profile)
+	}
+
+	sec, err := il.GetSection(sectionName)
 	if err != nil {
 		return errors.Wrap(err, `aws config file has no "default" section`)
 	}
