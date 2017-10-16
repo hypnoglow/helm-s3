@@ -14,7 +14,7 @@ const (
 	envAwsSecretAccessKey = "AWS_SECRET_ACCESS_KEY"
 )
 
-func ParseCredentials() error {
+func ParseCredentials(profile string) error {
 	f, err := os.Open(os.ExpandEnv(credentialsFile))
 	if err != nil {
 		if err == os.ErrNotExist {
@@ -28,7 +28,12 @@ func ParseCredentials() error {
 		return errors.Wrapf(err, "failed to load file %s as ini", credentialsFile)
 	}
 
-	sec, err := il.GetSection("default")
+	sectionName := "default"
+	if profile != "" {
+		sectionName = profile
+	}
+
+	sec, err := il.GetSection(sectionName)
 	if err != nil {
 		return errors.Wrap(err, `aws credentials file has no "default" section`)
 	}
