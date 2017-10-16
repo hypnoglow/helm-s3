@@ -30,7 +30,12 @@ Two options are available:
 1) The plugin is able to read AWS default environment variables: `$AWS_ACCESS_KEY_ID`,
 `$AWS_SECRET_ACCESS_KEY` and `$AWS_DEFAULT_REGION`.
 2) If you already using `aws-cli`, you may already have files `$HOME/.aws/credentials` and `$HOME/.aws/config`.
-If so, you are good to go - the plugin can read your credentials from those files.
+If so, you are good to go - the plugin can read your credentials from those files. 
+In case of multiple profiles, the plugin also understands `AWS_PROFILE` environment variable.
+Use it to let plugin select specific profile, or leave it to use **default** profile. Example:
+
+        $ export AWS_PROFILE=app-dev
+        $ helm repo add myrepo s3://app-dev-bucket/charts
 
 To minimize security issues, remember to configure your IAM user policies properly - the plugin requires only S3 Read access
 on specific bucket.
