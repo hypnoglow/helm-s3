@@ -14,12 +14,6 @@ jobs:
       - run: ./.circleci/testcover.sh
       - run: bash <(curl -s https://codecov.io/bash)
       - run: go build -o bin/helms3 ./cmd/helms3
-      - deploy:
-          name: goreleaser
-          command: |
-            if [ -n "$CIRCLE_TAG" ]; then
-              curl -sL https://git.io/goreleaser | bash
-            fi
   test-integration:
     docker:
       - image: circleci/golang:1.9
@@ -62,16 +56,40 @@ jobs:
       - run:
           name: Run tests
           command: ./sh/integration-tests.sh
+  release:
+    docker:
+      - image: circleci/golang:1.9
+    working_directory: /go/src/github.com/hypnoglow/helm-s3
+    steps:
+      - checkout
+      - run: go get -u -v github.com/golang/dep/cmd/dep
+      - run: dep ensure -v
+      - deploy:
+          name: goreleaser
+          command: |
+            if [ -n "$CIRCLE_TAG" ]; then
+              curl -sL https://git.io/goreleaser | bash
+            fi
 
 workflows:
   version: 2
-  build_and_test:
+  build_test_release:
     jobs:
-    - build
+    - build:
+        filters:
+          tags:
+            only: /.*/
     - test-integration:
+        filters:
+          tags:
+            only: /.*/
         requires:
-          - build
-
-deployment:
-  trigger_tag:
-    tag: /.*/
+        - build
+    - release:
+        filters:
+          tags:
+            only: /.*/
+          branches:
+            ignore: /.*/
+        requires:
+        - test-integration
