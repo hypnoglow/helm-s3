@@ -50,8 +50,30 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
+#
+# Delete
+#
+
+helm s3 delete postgresql --version 0.8.3 test-repo
+if [ $? -ne 0 ]; then
+    echo "Failed to delete chart from repo"
+    exit 1
+fi
+
+if mc ls -q helm-s3-minio/test-bucket/charts/postgresql-0.8.3.tgz 2>/dev/null ; then
+    echo "Chart was not actually deleted"
+    exit 1
+fi
+
+helm repo update
+
+if helm search test-repo/postgres | grep -q 0.8.3 ; then
+    echo "Failed to delete chart from index"
+    exit 1
+fi
+
+# Tear down
 rm postgresql-0.8.3.tgz
 helm repo remove test-repo
-
 set +x
 

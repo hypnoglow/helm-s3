@@ -16,7 +16,7 @@ The installation itself is simple as:
 
 You can install a specific release version: 
 
-    $ helm plugin install https://github.com/hypnoglow/helm-s3.git --version 0.2.0
+    $ helm plugin install https://github.com/hypnoglow/helm-s3.git --version 0.4.0
 
 To use the plugin, you do not need any special dependencies. The installer will
 download versioned release with prebuilt binary from [github releases](https://github.com/hypnoglow/helm-s3/releases).
@@ -58,7 +58,7 @@ Fetching also works:
 
     $ helm fetch s3://bucket-name/charts/epicservice-0.5.1.tgz
 
-### Init & Push
+### Init
 
 To create a new repository, use **init**:
 
@@ -67,9 +67,11 @@ To create a new repository, use **init**:
 This command generates an empty **index.yaml** and uploads it to the S3 bucket 
 under `/charts` key.
 
-To push to this repo by it's name, you need to add it first:
+To work with this repo by it's name, first you need to add it using native helm command:
 
     $ helm repo add mynewrepo s3://bucket-name/charts
+
+### Push
 
 Now you can push your chart to this repo:
 
@@ -84,6 +86,21 @@ Now your pushed chart is available:
     $ helm search mynewrepo 
     NAME                    VERSION	 DESCRIPTION
     mynewrepo/epicservice   0.7.2    A Helm chart.
+
+### Delete
+
+To delete specific chart version from the repository:
+
+    $ helm s3 delete epicservice --version 0.7.2 mynewrepo
+
+As always, remote repo index updated automatically again. To sync local, run:
+
+    $ helm repo update
+
+The chart is deleted from the repo:
+
+    $ helm search mynewrepo/epicservice 
+    No results found
 
 ## Uninstall
 

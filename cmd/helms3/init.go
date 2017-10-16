@@ -21,10 +21,12 @@ func runInit(uri string) error {
 		return errors.WithMessage(err, "get aws config")
 	}
 
+	storage := awss3.NewStorage(awsConfig)
+
 	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
 	defer cancel()
 
-	if _, err := awss3.Upload(ctx, uri+"/index.yaml", r, awsConfig); err != nil {
+	if _, err := storage.Upload(ctx, uri+"/index.yaml", r); err != nil {
 		return errors.WithMessage(err, "upload index to s3")
 	}
 
