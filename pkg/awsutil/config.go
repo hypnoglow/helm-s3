@@ -13,6 +13,7 @@ import (
 const (
 	envAwsAccessKeyID     = "AWS_ACCESS_KEY_ID"
 	envAwsSecretAccessKey = "AWS_SECRET_ACCESS_KEY"
+	envAwsSessionToken    = "AWS_SESSION_TOKEN"
 	envAwsDefaultRegion   = "AWS_DEFAULT_REGION"
 
 	envAwsProfile = "AWS_PROFILE"
@@ -24,6 +25,9 @@ var (
 
 	// awsEndpoint can be set to a custom endpoint by build tag.
 	awsEndpoint = ""
+
+	// awsSessionToken retrieved from http://169.254.169.254/latest/meta-data/iam/security-credentials/ ( IAM Instance Profile )
+	awsSessionToken = ""
 )
 
 // Config returns AWS config with credentials and parameters taken from
@@ -43,11 +47,15 @@ func Config() (*aws.Config, error) {
 		}
 	}
 
+	if os.Getenv(envAwsSessionToken) != "" {
+		awsSessionToken = os.Getenv(envAwsSessionToken)
+	}
+
 	return &aws.Config{
 		Credentials: credentials.NewStaticCredentials(
 			os.Getenv(envAwsAccessKeyID),
 			os.Getenv(envAwsSecretAccessKey),
-			"",
+			awsSessionToken,
 		),
 		DisableSSL:       aws.Bool(awsDisableSSL == "true"),
 		Endpoint:         aws.String(awsEndpoint),
