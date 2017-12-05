@@ -12,6 +12,7 @@ const (
 
 	envAwsAccessKeyID     = "AWS_ACCESS_KEY_ID"
 	envAwsSecretAccessKey = "AWS_SECRET_ACCESS_KEY"
+	envAwsSessionToken    = "AWS_SESSION_TOKEN"
 )
 
 func ParseCredentials(profile string) error {
@@ -46,6 +47,11 @@ func ParseCredentials(profile string) error {
 	secretAccessKey, err := sec.GetKey("aws_secret_access_key")
 	if err != nil {
 		return errors.Wrap(err, `aws credentials file "default" section has no key "aws_secret_access_key"`)
+	}
+
+	awsSessionToken, err := sec.GetKey("aws_session_token")
+	if err == nil {
+		os.Setenv(envAwsSessionToken, awsSessionToken.String())
 	}
 
 	os.Setenv(envAwsAccessKeyID, accessKeyID.String())
