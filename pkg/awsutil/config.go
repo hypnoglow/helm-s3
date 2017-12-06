@@ -14,6 +14,7 @@ const (
 	envAwsAccessKeyID     = "AWS_ACCESS_KEY_ID"
 	envAwsSecretAccessKey = "AWS_SECRET_ACCESS_KEY"
 	envAwsDefaultRegion   = "AWS_DEFAULT_REGION"
+	envAwsSessionToken    = "AWS_SESSION_TOKEN"
 
 	envAwsProfile = "AWS_PROFILE"
 )
@@ -47,7 +48,7 @@ func Config() (*aws.Config, error) {
 		Credentials: credentials.NewStaticCredentials(
 			os.Getenv(envAwsAccessKeyID),
 			os.Getenv(envAwsSecretAccessKey),
-			"",
+			os.Getenv(envAwsSessionToken),
 		),
 		DisableSSL:       aws.Bool(awsDisableSSL == "true"),
 		Endpoint:         aws.String(awsEndpoint),

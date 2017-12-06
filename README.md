@@ -28,7 +28,7 @@ to the plugin, please see [these instructions](.github/CONTRIBUTING.md).
 Because this plugin assumes private access to S3, you need to provide valid AWS credentials.
 Two options are available:
 1) The plugin is able to read AWS default environment variables: `$AWS_ACCESS_KEY_ID`,
-`$AWS_SECRET_ACCESS_KEY` and `$AWS_DEFAULT_REGION`.
+`$AWS_SECRET_ACCESS_KEY` and `$AWS_DEFAULT_REGION`.  `$AWS_SESSION_TOKEN` is also supported but not required. 
 2) If you already using `aws-cli`, you may already have files `$HOME/.aws/credentials` and `$HOME/.aws/config`.
 If so, you are good to go - the plugin can read your credentials from those files. 
 In case of multiple profiles, the plugin also understands `AWS_PROFILE` environment variable.
