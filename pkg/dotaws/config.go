@@ -17,15 +17,15 @@ const (
 func ParseConfig(profile string) error {
 	f, err := os.Open(os.ExpandEnv(configFile))
 	if err != nil {
-		if err == os.ErrNotExist {
+		if os.IsNotExist(err) {
 			return nil
 		}
-		return errors.Wrap(err, "failed to open aws config file")
+		return errors.Wrap(err, "open aws config file")
 	}
 
 	il, err := ini.Load(f)
 	if err != nil {
-		return errors.Wrapf(err, "failed to load file %s as ini", configFile)
+		return errors.Wrapf(err, "load file %s as ini", configFile)
 	}
 
 	sectionName := "default"
@@ -35,14 +35,12 @@ func ParseConfig(profile string) error {
 
 	sec, err := il.GetSection(sectionName)
 	if err != nil {
-		return errors.Wrap(err, `aws config file has no "default" section`)
+		return errors.Wrapf(err, "aws config file has no section %q", sectionName)
 	}
 
-	region, err := sec.GetKey("region")
-	if err != nil {
-		return errors.Wrap(err, `aws config file '"default" section has no key "region"`)
+	if region, err := sec.GetKey("region"); err == nil {
+		os.Setenv(envAWsDefaultRegion, region.String())
 	}
 
-	os.Setenv(envAWsDefaultRegion, region.String())
 	return nil
 }

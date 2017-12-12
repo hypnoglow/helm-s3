@@ -18,15 +18,15 @@ const (
 func ParseCredentials(profile string) error {
 	f, err := os.Open(os.ExpandEnv(credentialsFile))
 	if err != nil {
-		if err == os.ErrNotExist {
+		if os.IsNotExist(err) {
 			return nil
 		}
-		return errors.Wrap(err, "failed to open aws credentials file")
+		return errors.Wrap(err, "open aws credentials file")
 	}
 
 	il, err := ini.Load(f)
 	if err != nil {
-		return errors.Wrapf(err, "failed to load file %s as ini", credentialsFile)
+		return errors.Wrapf(err, "load file %s as ini", credentialsFile)
 	}
 
 	sectionName := "default"
@@ -36,25 +36,20 @@ func ParseCredentials(profile string) error {
 
 	sec, err := il.GetSection(sectionName)
 	if err != nil {
-		return errors.Wrap(err, `aws credentials file has no "default" section`)
+		return errors.Wrapf(err, "aws credentials file has no section %q", sectionName)
 	}
 
-	accessKeyID, err := sec.GetKey("aws_access_key_id")
-	if err != nil {
-		return errors.Wrap(err, `aws credentials file "default" section has no key "aws_access_key_id"`)
+	if accessKeyID, err := sec.GetKey("aws_access_key_id"); err == nil {
+		os.Setenv(envAwsAccessKeyID, accessKeyID.String())
 	}
 
-	secretAccessKey, err := sec.GetKey("aws_secret_access_key")
-	if err != nil {
-		return errors.Wrap(err, `aws credentials file "default" section has no key "aws_secret_access_key"`)
+	if secretAccessKey, err := sec.GetKey("aws_secret_access_key"); err == nil {
+		os.Setenv(envAwsSecretAccessKey, secretAccessKey.String())
 	}
 
-	awsSessionToken, err := sec.GetKey("aws_session_token")
-	if err == nil {
+	if awsSessionToken, err := sec.GetKey("aws_session_token"); err == nil {
 		os.Setenv(envAwsSessionToken, awsSessionToken.String())
 	}
 
-	os.Setenv(envAwsAccessKeyID, accessKeyID.String())
-	os.Setenv(envAwsSecretAccessKey, secretAccessKey.String())
 	return nil
 }
