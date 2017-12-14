@@ -53,27 +53,7 @@ func runPush(chartPath string, repoName string) error {
 		return errors.WithMessage(err, "get chart digest")
 	}
 
-	// Fetch current index.
-
-	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
-	defer cancel()
-
-	b, err := storage.FetchRaw(ctx, repoEntry.URL+"/index.yaml")
-	if err != nil {
-		return errors.WithMessage(err, "fetch current repo index")
-	}
-
-	idx, err := index.LoadBytes(b)
-	if err != nil {
-		return errors.WithMessage(err, "load index from downloaded file")
-	}
-
-	// Update index.
-
-	idx.Add(chart.GetMetadata(), fname, repoEntry.URL, hash)
-	idx.SortEntries()
-
-	// Finally, upload both chart file and index.
+	// Upload chart file
 
 	fchart, err := os.Open(fname)
 	if err != nil {
@@ -90,6 +70,27 @@ func runPush(chartPath string, repoName string) error {
 	if _, err := storage.Upload(ctx, repoEntry.URL+"/"+fname, fchart); err != nil {
 		return errors.WithMessage(err, "upload chart to s3")
 	}
+	
+	// Fetch current index.
+
+	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
+	defer cancel()
+
+	b, err := storage.FetchRaw(ctx, repoEntry.URL+"/index.yaml")
+	if err != nil {
+		return errors.WithMessage(err, "fetch current repo index")
+	}
+
+	idx, err := index.LoadBytes(b)
+	if err != nil {
+		return errors.WithMessage(err, "load index from downloaded file")
+	}
+
+	// Update index, then upload it to S3
+
+	idx.Add(chart.GetMetadata(), fname, repoEntry.URL, hash)
+	idx.SortEntries()
+
 	if _, err := storage.Upload(ctx, repoEntry.URL+"/index.yaml", idxReader); err != nil {
 		return errors.WithMessage(err, "upload index to s3")
 	}
