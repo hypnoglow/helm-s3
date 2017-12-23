@@ -13,10 +13,8 @@ var (
 	awsEndpoint = ""
 )
 
-// Config returns AWS config with credentials and parameters taken from
-// environment and/or from ~/.aws/* files.
+// Session returns an AWS session as described http://docs.aws.amazon.com/sdk-for-go/v1/developer-guide/configuring-sdk.html
 func Session() (*session.Session, error) {
-
 	return session.NewSessionWithOptions(session.Options{
 		Config: aws.Config{
 			DisableSSL:       aws.Bool(awsDisableSSL == "true"),
@@ -25,17 +23,4 @@ func Session() (*session.Session, error) {
 		},
 		SharedConfigState: session.SharedConfigEnable,
 	})
-
-	// return sess.Config, nil
-	// return &aws.Config{
-	// 	Credentials: credentials.NewStaticCredentials(
-	// 		os.Getenv(envAwsAccessKeyID),
-	// 		os.Getenv(envAwsSecretAccessKey),
-	// 		os.Getenv(envAwsSessionToken),
-	// 	),
-	// 	DisableSSL:       aws.Bool(awsDisableSSL == "true"),
-	// 	Endpoint:         aws.String(awsEndpoint),
-	// 	Region:           aws.String(os.Getenv(envAwsDefaultRegion)),
-	// 	S3ForcePathStyle: aws.Bool(true),
-	// }, nil
 }
