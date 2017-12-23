@@ -11,19 +11,17 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"github.com/hypnoglow/helm-s3/pkg/awsutil"
 	"github.com/pkg/errors"
 )
 
-// NewStorage returns a new Storage.
-func NewStorage(awsConfig *aws.Config) *Storage {
-	return &Storage{
-		config: awsConfig,
-	}
+// New returns a new Storage.
+func New() *Storage {
+	return &Storage{}
 }
 
 // Storage provides an interface to work with AWS S3 objects by s3 protocol.
 type Storage struct {
-	config  *aws.Config
 	session *session.Session
 }
 
@@ -111,7 +109,7 @@ func (s *Storage) initSession() (err error) {
 		return nil
 	}
 
-	s.session, err = session.NewSession(s.config)
+	s.session, err = awsutil.Session()
 	return errors.Wrap(err, "init aws session")
 }
 
