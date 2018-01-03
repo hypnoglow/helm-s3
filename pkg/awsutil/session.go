@@ -2,6 +2,7 @@ package awsutil
 
 import (
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials/stscreds"
 	"github.com/aws/aws-sdk-go/aws/session"
 )
 
@@ -21,6 +22,7 @@ func Session() (*session.Session, error) {
 			S3ForcePathStyle: aws.Bool(true),
 			Endpoint:         aws.String(awsEndpoint),
 		},
-		SharedConfigState: session.SharedConfigEnable,
+		SharedConfigState:       session.SharedConfigEnable,
+		AssumeRoleTokenProvider: stscreds.StdinTokenProvider,
 	})
 }
