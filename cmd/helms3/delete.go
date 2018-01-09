@@ -59,7 +59,7 @@ func runDelete(name, version, repoName string) error {
 	if err := storage.Delete(ctx, uri); err != nil {
 		return errors.WithMessage(err, "delete chart file from s3")
 	}
-	if _, err := storage.Upload(ctx, repoEntry.URL+"/index.yaml", idxReader); err != nil {
+	if err := storage.PutIndex(ctx, repoEntry.URL, idxReader); err != nil {
 		return errors.WithMessage(err, "upload new index to s3")
 	}
 

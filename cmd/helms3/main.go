@@ -17,6 +17,7 @@ const (
 	actionVersion = "version"
 	actionInit    = "init"
 	actionPush    = "push"
+	actionReindex = "reindex"
 	actionDelete  = "delete"
 
 	defaultTimeout = time.Second * 5
@@ -43,6 +44,11 @@ func main() {
 		Required().
 		String()
 	pushTargetRepository := pushCmd.Arg("repo", "Target repository to push to").
+		Required().
+		String()
+
+	reindexCmd := cli.Command(actionReindex, "Reindex the repository.")
+	reindexTargetRepository := reindexCmd.Arg("repo", "Target repository to reindex").
 		Required().
 		String()
 
@@ -80,6 +86,11 @@ func main() {
 			log.Fatal(err)
 		}
 		return
+
+	case actionReindex:
+		if err := runReindex(*reindexTargetRepository); err != nil {
+			log.Fatal(err)
+		}
 
 	case actionDelete:
 		if err := runDelete(*deleteChartName, *deleteChartVersion, *deleteTargetRepository); err != nil {
