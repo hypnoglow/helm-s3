@@ -23,7 +23,10 @@ import (
 )
 
 var (
+	// ErrBucketNotFound signals that a bucket was not found.
 	ErrBucketNotFound = errors.New("bucket not found")
+
+	// ErrObjectNotFound signals that an object was not found.
 	ErrObjectNotFound = errors.New("object not found")
 )
 
@@ -38,9 +41,17 @@ type Storage struct {
 }
 
 // Traverse traverses all charts in the repository.
+func (s *Storage) Traverse(ctx context.Context, repoURI string) (<-chan ChartInfo, <-chan error) {
+	charts := make(chan ChartInfo, 1)
+	errs := make(chan error, 1)
+	go s.traverse(ctx, repoURI, charts, errs)
+	return charts, errs
+}
+
+// traverse traverses all charts in the repository.
 // It writes an info item about every chart to items, and errors to errs.
 // It always closes both channels when returns.
-func (s *Storage) Traverse(ctx context.Context, repoURI string, items chan<- ChartInfo, errs chan<- error) {
+func (s *Storage) traverse(ctx context.Context, repoURI string, items chan<- ChartInfo, errs chan<- error) {
 	defer close(items)
 	defer close(errs)
 
@@ -91,11 +102,10 @@ func (s *Storage) Traverse(ctx context.Context, repoURI string, items chan<- Cha
 
 			reindexItem := ChartInfo{Filename: *obj.Key}
 
-			// PROCESS THE OBJECT
 			serializedChartMeta, hasMeta := metaOut.Metadata[strings.Title(metaChartMetadata)]
 			chartDigest, hasDigest := metaOut.Metadata[strings.Title(metaChartDigest)]
 			if !hasMeta || !hasDigest {
-				// TODO: This is deprecated. Remove in next major release? Or not?
+				// TODO: This is deprecated. Remove in the next major release? Or not?
 				// All charts pushed to the repository
 				// since "reindex" command implementation should have these
 				// meta fields.
@@ -151,6 +161,7 @@ func (s *Storage) Traverse(ctx context.Context, repoURI string, items chan<- Cha
 	}
 }
 
+// ChartInfo contains info about particular chart.
 type ChartInfo struct {
 	Meta     *chart.Metadata
 	Filename string
@@ -192,34 +203,8 @@ func (s *Storage) FetchRaw(ctx context.Context, uri string) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-// Upload uploads the object read from r to S3 by path uri.
+// PutChart puts the chart file to the storage.
 // uri must be in the form of s3 protocol: s3://bucket-name/key[...].
-//
-// Deprecated: use PutChart or PutIndex instead.
-func (s *Storage) Upload(ctx context.Context, uri string, r io.Reader) (string, error) {
-	if err := s.initSession(); err != nil {
-		return "", err
-	}
-
-	bucket, key, err := parseURI(uri)
-	if err != nil {
-		return "", err
-	}
-
-	result, err := s3manager.NewUploader(s.session).UploadWithContext(
-		ctx,
-		&s3manager.UploadInput{
-			Bucket: aws.String(bucket),
-			Key:    aws.String(key),
-			Body:   r,
-		})
-	if err != nil {
-		return "", errors.Wrap(err, "upload object to s3")
-	}
-
-	return result.Location, nil
-}
-
 func (s *Storage) PutChart(ctx context.Context, uri string, r io.Reader, chartMeta, chartDigest string) (string, error) {
 	if err := s.initSession(); err != nil {
 		return "", err
@@ -248,6 +233,8 @@ func (s *Storage) PutChart(ctx context.Context, uri string, r io.Reader, chartMe
 	return result.Location, nil
 }
 
+// PutIndex puts the index file to the storage.
+// uri must be in the form of s3 protocol: s3://bucket-name/key[...].
 func (s *Storage) PutIndex(ctx context.Context, uri string, r io.Reader) error {
 	if strings.HasPrefix(uri, "index.yaml") {
 		return errors.New("uri must not contain \"index.yaml\" suffix, it appends automatically")
@@ -330,6 +317,9 @@ func parseURI(uri string) (bucket, key string, err error) {
 }
 
 const (
+	// metaChartMetadata is a s3 object metadata key that represents chart metadata.
 	metaChartMetadata = "chart-metadata"
-	metaChartDigest   = "chart-digest"
+
+	// metaChartDigest is a s3 object metadata key that represents chart digest.
+	metaChartDigest = "chart-digest"
 )

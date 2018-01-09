@@ -16,7 +16,10 @@
 [[projects]]
   branch = "master"
   name = "github.com/alecthomas/template"
-  packages = [".","parse"]
+  packages = [
+    ".",
+    "parse"
+  ]
   revision = "a0175ee3bccc567396460bf5acd36800cb10c49c"
 
 [[projects]]
@@ -27,9 +30,37 @@
 
 [[projects]]
   name = "github.com/aws/aws-sdk-go"
-  packages = ["aws","aws/awserr","aws/awsutil","aws/client","aws/client/metadata","aws/corehandlers","aws/credentials","aws/credentials/ec2rolecreds","aws/credentials/endpointcreds","aws/credentials/stscreds","aws/defaults","aws/ec2metadata","aws/endpoints","aws/request","aws/session","aws/signer/v4","internal/shareddefaults","private/protocol","private/protocol/query","private/protocol/query/queryutil","private/protocol/rest","private/protocol/restxml","private/protocol/xml/xmlutil","service/s3","service/s3/s3iface","service/s3/s3manager","service/sts"]
-  revision = "6198197eabb9bb93346ae204d79ac2225e44cf05"
-  version = "v1.12.2"
+  packages = [
+    "aws",
+    "aws/awserr",
+    "aws/awsutil",
+    "aws/client",
+    "aws/client/metadata",
+    "aws/corehandlers",
+    "aws/credentials",
+    "aws/credentials/ec2rolecreds",
+    "aws/credentials/endpointcreds",
+    "aws/credentials/stscreds",
+    "aws/defaults",
+    "aws/ec2metadata",
+    "aws/endpoints",
+    "aws/request",
+    "aws/session",
+    "aws/signer/v4",
+    "internal/shareddefaults",
+    "private/protocol",
+    "private/protocol/query",
+    "private/protocol/query/queryutil",
+    "private/protocol/rest",
+    "private/protocol/restxml",
+    "private/protocol/xml/xmlutil",
+    "service/s3",
+    "service/s3/s3iface",
+    "service/s3/s3manager",
+    "service/sts"
+  ]
+  revision = "00aba4fd6bb87ab518ee0857fea017804f40a6da"
+  version = "v1.12.58"
 
 [[projects]]
   name = "github.com/ghodss/yaml"
@@ -45,15 +76,28 @@
 
 [[projects]]
   name = "github.com/gobwas/glob"
-  packages = [".","compiler","match","syntax","syntax/ast","syntax/lexer","util/runes","util/strings"]
+  packages = [
+    ".",
+    "compiler",
+    "match",
+    "syntax",
+    "syntax/ast",
+    "syntax/lexer",
+    "util/runes",
+    "util/strings"
+  ]
   revision = "bea32b9cd2d6f55753d94a28e959b13f0244797a"
   version = "v0.2.2"
 
 [[projects]]
   branch = "master"
   name = "github.com/golang/protobuf"
-  packages = ["proto","ptypes/any","ptypes/timestamp"]
-  revision = "130e6b02ab059e7b717a096f397c5b60111cae74"
+  packages = [
+    "proto",
+    "ptypes/any",
+    "ptypes/timestamp"
+  ]
+  revision = "1e59b77b52bf8e4b449a57e6f79f21226d571845"
 
 [[projects]]
   name = "github.com/jmespath/go-jmespath"
@@ -75,36 +119,65 @@
 [[projects]]
   branch = "master"
   name = "golang.org/x/crypto"
-  packages = ["cast5","openpgp","openpgp/armor","openpgp/clearsign","openpgp/elgamal","openpgp/errors","openpgp/packet","openpgp/s2k"]
-  revision = "9419663f5a44be8b34ca85f08abc5fe1be11f8a3"
+  packages = [
+    "cast5",
+    "openpgp",
+    "openpgp/armor",
+    "openpgp/clearsign",
+    "openpgp/elgamal",
+    "openpgp/errors",
+    "openpgp/packet",
+    "openpgp/s2k"
+  ]
+  revision = "0fcca4842a8d74bfddc2c96a073bd2a4d2a7a2e8"
 
 [[projects]]
   name = "gopkg.in/alecthomas/kingpin.v2"
   packages = ["."]
-  revision = "1087e65c9441605df944fb12c33f0fe7072d18ca"
-  version = "v2.2.5"
+  revision = "947dcec5ba9c011838740e680966fd7087a71d0d"
+  version = "v2.2.6"
 
 [[projects]]
   branch = "v2"
   name = "gopkg.in/yaml.v2"
   packages = ["."]
-  revision = "eb3733d160e74a9c7e442f435eb3bea458e1d19f"
+  revision = "d670f9405373e636a5a2765eea47fac0c9bc91a4"
 
 [[projects]]
   branch = "master"
   name = "k8s.io/apimachinery"
   packages = ["pkg/version"]
-  revision = "3b05bbfa0a45413bfa184edbf9af617e277962fb"
+  revision = "91d8586aac31d9086939d077ba556d2c7fb157b4"
+
+[[projects]]
+  name = "k8s.io/client-go"
+  packages = ["util/homedir"]
+  revision = "78700dec6369ba22221b72770783300f143df150"
+  version = "v6.0.0"
 
 [[projects]]
   name = "k8s.io/helm"
-  packages = ["pkg/chartutil","pkg/getter","pkg/helm/environment","pkg/helm/helmpath","pkg/ignore","pkg/plugin","pkg/proto/hapi/chart","pkg/proto/hapi/version","pkg/provenance","pkg/repo","pkg/tlsutil","pkg/urlutil","pkg/version"]
-  revision = "be3ae4ea91b2960be98c07e8f73754e67e87963c"
-  version = "v2.6.2"
+  packages = [
+    "pkg/chartutil",
+    "pkg/getter",
+    "pkg/helm/environment",
+    "pkg/helm/helmpath",
+    "pkg/ignore",
+    "pkg/plugin",
+    "pkg/proto/hapi/chart",
+    "pkg/proto/hapi/version",
+    "pkg/provenance",
+    "pkg/repo",
+    "pkg/tlsutil",
+    "pkg/urlutil",
+    "pkg/version"
+  ]
+  revision = "8478fb4fc723885b155c924d1c8c410b7a9444e6"
+  version = "v2.7.2"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "c70ff64311bef6504a05ded3c1312d67ab44d2551650affa26336fa73ca5aeb9"
+  inputs-digest = "b92ce03447c6856aa3b4cf89c6a790f96f7857b0cd64e3450cd754e3b6da423d"
   solver-name = "gps-cdcl"
   solver-version = 1

@@ -20,10 +20,9 @@ func runInit(uri string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
 	defer cancel()
 
-	if _, err := storage.Upload(ctx, uri+"/index.yaml", r); err != nil {
+	if err := storage.PutIndex(ctx, uri, r); err != nil {
 		return errors.WithMessage(err, "upload index to s3")
 	}
 
 	return nil
-
 }
