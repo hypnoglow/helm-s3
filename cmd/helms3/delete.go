@@ -7,7 +7,6 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/hypnoglow/helm-s3/pkg/awss3"
-	"github.com/hypnoglow/helm-s3/pkg/awsutil"
 	"github.com/hypnoglow/helm-s3/pkg/helmutil"
 	"github.com/hypnoglow/helm-s3/pkg/index"
 )
@@ -18,12 +17,7 @@ func runDelete(name, version, repoName string) error {
 		return err
 	}
 
-	awsConfig, err := awsutil.Config()
-	if err != nil {
-		return errors.Wrap(err, "get aws config")
-	}
-
-	storage := awss3.NewStorage(awsConfig)
+	storage := awss3.New()
 
 	// Fetch current index.
 
