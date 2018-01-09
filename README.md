@@ -110,7 +110,14 @@ The chart is deleted from the repo:
 ## Uninstall
 
     $ helm plugin remove s3
-    
+
+## Documentation
+
+Additional documentation is available in the [docs](docs) directory. This currently includes:
+- estimated [usage cost calculation](docs/usage-cost.md)
+- [best practices](docs/best-practice.md)
+for organizing your repositories.
+
 ## Contributing
 
 Contributions are welcome. Please see [these instructions](.github/CONTRIBUTING.md)

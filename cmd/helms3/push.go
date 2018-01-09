@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -52,24 +53,28 @@ func runPush(chartPath string, repoName string) error {
 		return err
 	}
 
+	hash, err := provenance.DigestFile(fname)
+	if err != nil {
+		return errors.WithMessage(err, "get chart digest")
+	}
+
 	fchart, err := os.Open(fname)
 	if err != nil {
 		return errors.Wrap(err, "open chart file")
 	}
 
-	if _, err := storage.Upload(ctx, repoEntry.URL+"/"+fname, fchart); err != nil {
+	serializedChartMeta, err := json.Marshal(chart.Metadata)
+	if err != nil {
+		return errors.Wrap(err, "encode chart metadata to json")
+	}
+
+	if _, err := storage.PutChart(ctx, repoEntry.URL+"/"+fname, fchart, string(serializedChartMeta), hash); err != nil {
 		return errors.WithMessage(err, "upload chart to s3")
 	}
 
-	// Next, update the repository index.
 	// The gap between index fetching and uploading should be as small as
 	// possible to make the best effort to avoid race conditions.
 	// See https://github.com/hypnoglow/helm-s3/issues/18 for more info.
-
-	hash, err := provenance.DigestFile(fname)
-	if err != nil {
-		return errors.WithMessage(err, "get chart digest")
-	}
 
 	// Fetch current index, update it and upload it back.
 
@@ -91,7 +96,7 @@ func runPush(chartPath string, repoName string) error {
 		return errors.WithMessage(err, "get index reader")
 	}
 
-	if _, err := storage.Upload(ctx, repoEntry.URL+"/index.yaml", idxReader); err != nil {
+	if err := storage.PutIndex(ctx, repoEntry.URL, idxReader); err != nil {
 		return errors.WithMessage(err, "upload index to s3")
 	}
 
