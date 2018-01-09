@@ -26,19 +26,15 @@ to the plugin, please see [these instructions](.github/CONTRIBUTING.md).
 #### Note on AWS authentication
 
 Because this plugin assumes private access to S3, you need to provide valid AWS credentials.
-Two options are available:
-1) The plugin is able to read AWS default environment variables: `$AWS_ACCESS_KEY_ID`,
-`$AWS_SECRET_ACCESS_KEY` and `$AWS_DEFAULT_REGION`.  `$AWS_SESSION_TOKEN` is also supported but not required. 
-2) If you already using `aws-cli`, you may already have files `$HOME/.aws/credentials` and `$HOME/.aws/config`.
-If so, you are good to go - the plugin can read your credentials from those files. 
-In case of multiple profiles, the plugin also understands `AWS_PROFILE` environment variable.
-Use it to let plugin select specific profile, or leave it to use **default** profile. Example:
+You can do this in [the same manner](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html) as for `AWS CLI` tool.
 
-        $ export AWS_PROFILE=app-dev
-        $ helm repo add myrepo s3://app-dev-bucket/charts
+So, if you want to use the plugin and you are already using `AWS CLI` - you are 
+good to go, no additional configuration required. Otherwise, follow [the official guide](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html) 
+to set up credentials.
 
-To minimize security issues, remember to configure your IAM user policies properly - the plugin requires only S3 Read access
-on specific bucket.
+To minimize security issues, remember to configure your IAM user policies properly. 
+As an example, a setup can provide only read access for users, and write access
+for a CI that builds and pushes charts to your repository.
 
 ## Usage
 
