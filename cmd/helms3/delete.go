@@ -7,23 +7,28 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/hypnoglow/helm-s3/pkg/awss3"
+	"github.com/hypnoglow/helm-s3/pkg/awsutil"
 	"github.com/hypnoglow/helm-s3/pkg/helmutil"
 	"github.com/hypnoglow/helm-s3/pkg/index"
 )
 
-func runDelete(name, version, repoName string) error {
-	repoEntry, err := helmutil.LookupRepoEntry(repoName)
+type deleteAction struct {
+	name, version, repoName string
+}
+
+func (act deleteAction) Run(ctx context.Context) error {
+	repoEntry, err := helmutil.LookupRepoEntry(act.repoName)
 	if err != nil {
 		return err
 	}
 
-	storage := awss3.New()
+	sess, err := awsutil.Session()
+	if err != nil {
+		return err
+	}
+	storage := awss3.New(sess)
 
 	// Fetch current index.
-
-	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
-	defer cancel()
-
 	b, err := storage.FetchRaw(ctx, repoEntry.URL+"/index.yaml")
 	if err != nil {
 		return errors.WithMessage(err, "fetch current repo index")
@@ -36,7 +41,7 @@ func runDelete(name, version, repoName string) error {
 
 	// Update index.
 
-	chartVersion, err := idx.Delete(name, version)
+	chartVersion, err := idx.Delete(act.name, act.version)
 	if err != nil {
 		return err
 	}
@@ -52,9 +57,6 @@ func runDelete(name, version, repoName string) error {
 		return fmt.Errorf("chart version index record has no urls")
 	}
 	uri := chartVersion.URLs[0]
-
-	ctx, cancel = context.WithTimeout(context.Background(), defaultTimeout*2)
-	defer cancel()
 
 	if err := storage.Delete(ctx, uri); err != nil {
 		return errors.WithMessage(err, "delete chart file from s3")

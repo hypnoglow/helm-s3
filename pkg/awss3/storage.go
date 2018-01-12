@@ -18,8 +18,6 @@ import (
 	"k8s.io/helm/pkg/chartutil"
 	"k8s.io/helm/pkg/proto/hapi/chart"
 	"k8s.io/helm/pkg/provenance"
-
-	"github.com/hypnoglow/helm-s3/pkg/awsutil"
 )
 
 var (
@@ -31,8 +29,8 @@ var (
 )
 
 // New returns a new Storage.
-func New() *Storage {
-	return &Storage{}
+func New(session *session.Session) *Storage {
+	return &Storage{session: session}
 }
 
 // Storage provides an interface to work with AWS S3 objects by s3 protocol.
@@ -54,11 +52,6 @@ func (s *Storage) Traverse(ctx context.Context, repoURI string) (<-chan ChartInf
 func (s *Storage) traverse(ctx context.Context, repoURI string, items chan<- ChartInfo, errs chan<- error) {
 	defer close(items)
 	defer close(errs)
-
-	if err := s.initSession(); err != nil {
-		errs <- err
-		return
-	}
 
 	bucket, key, err := parseURI(repoURI)
 	if err != nil {
@@ -171,10 +164,6 @@ type ChartInfo struct {
 // FetchRaw downloads the object from URI and returns it in the form of byte slice.
 // uri must be in the form of s3 protocol: s3://bucket-name/key[...].
 func (s *Storage) FetchRaw(ctx context.Context, uri string) ([]byte, error) {
-	if err := s.initSession(); err != nil {
-		return nil, err
-	}
-
 	bucket, key, err := parseURI(uri)
 	if err != nil {
 		return nil, err
@@ -206,10 +195,6 @@ func (s *Storage) FetchRaw(ctx context.Context, uri string) ([]byte, error) {
 // PutChart puts the chart file to the storage.
 // uri must be in the form of s3 protocol: s3://bucket-name/key[...].
 func (s *Storage) PutChart(ctx context.Context, uri string, r io.Reader, chartMeta, chartDigest string) (string, error) {
-	if err := s.initSession(); err != nil {
-		return "", err
-	}
-
 	bucket, key, err := parseURI(uri)
 	if err != nil {
 		return "", err
@@ -241,10 +226,6 @@ func (s *Storage) PutIndex(ctx context.Context, uri string, r io.Reader) error {
 	}
 	uri += "/index.yaml"
 
-	if err := s.initSession(); err != nil {
-		return err
-	}
-
 	bucket, key, err := parseURI(uri)
 	if err != nil {
 		return err
@@ -267,10 +248,6 @@ func (s *Storage) PutIndex(ctx context.Context, uri string, r io.Reader) error {
 // Delete deletes the object by uri.
 // uri must be in the form of s3 protocol: s3://bucket-name/key[...].
 func (s *Storage) Delete(ctx context.Context, uri string) error {
-	if err := s.initSession(); err != nil {
-		return err
-	}
-
 	bucket, key, err := parseURI(uri)
 	if err != nil {
 		return err
@@ -288,15 +265,6 @@ func (s *Storage) Delete(ctx context.Context, uri string) error {
 	}
 
 	return nil
-}
-
-func (s *Storage) initSession() (err error) {
-	if s.session != nil {
-		return nil
-	}
-
-	s.session, err = awsutil.Session()
-	return errors.Wrap(err, "init aws session")
 }
 
 // parseURI returns bucket and key from URIs like:

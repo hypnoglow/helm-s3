@@ -6,27 +6,30 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"time"
 
 	"github.com/pkg/errors"
 	"k8s.io/helm/pkg/chartutil"
 	"k8s.io/helm/pkg/provenance"
 
 	"github.com/hypnoglow/helm-s3/pkg/awss3"
+	"github.com/hypnoglow/helm-s3/pkg/awsutil"
 	"github.com/hypnoglow/helm-s3/pkg/helmutil"
 	"github.com/hypnoglow/helm-s3/pkg/index"
 )
 
-const (
-	pushCommandDefaultTimeout = time.Second * 15
-)
+type pushAction struct {
+	chartPath string
+	repoName  string
+}
 
-func runPush(chartPath string, repoName string) error {
-	// Just one big timeout for the whole operation.
-	ctx, cancel := context.WithTimeout(context.Background(), pushCommandDefaultTimeout)
-	defer cancel()
+func (act pushAction) Run(ctx context.Context) error {
+	sess, err := awsutil.Session()
+	if err != nil {
+		return err
+	}
+	storage := awss3.New(sess)
 
-	fpath, err := filepath.Abs(chartPath)
+	fpath, err := filepath.Abs(act.chartPath)
 	if err != nil {
 		return errors.WithMessage(err, "get chart abs path")
 	}
@@ -38,8 +41,6 @@ func runPush(chartPath string, repoName string) error {
 		return errors.Wrapf(err, "change dir to %s", dir)
 	}
 
-	storage := awss3.New()
-
 	// Load chart, calculate required params like hash,
 	// and upload the chart right away.
 
@@ -48,7 +49,7 @@ func runPush(chartPath string, repoName string) error {
 		return fmt.Errorf("file %s is not a helm chart archive", fname)
 	}
 
-	repoEntry, err := helmutil.LookupRepoEntry(repoName)
+	repoEntry, err := helmutil.LookupRepoEntry(act.repoName)
 	if err != nil {
 		return err
 	}

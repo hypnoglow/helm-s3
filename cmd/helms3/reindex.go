@@ -2,30 +2,30 @@ package main
 
 import (
 	"context"
-	"time"
 
 	"github.com/pkg/errors"
 
 	"github.com/hypnoglow/helm-s3/pkg/awss3"
+	"github.com/hypnoglow/helm-s3/pkg/awsutil"
 	"github.com/hypnoglow/helm-s3/pkg/helmutil"
 	"github.com/hypnoglow/helm-s3/pkg/index"
 )
 
-const (
-	reindexCommandDefaultTimeout = time.Second * 15
-)
+type reindexAction struct {
+	repoName string
+}
 
-func runReindex(repoName string) error {
-	// Just one big timeout for the whole operation.
-	ctx, cancel := context.WithTimeout(context.Background(), reindexCommandDefaultTimeout)
-	defer cancel()
-
-	repoEntry, err := helmutil.LookupRepoEntry(repoName)
+func (act reindexAction) Run(ctx context.Context) error {
+	repoEntry, err := helmutil.LookupRepoEntry(act.repoName)
 	if err != nil {
 		return err
 	}
 
-	storage := awss3.New()
+	sess, err := awsutil.Session()
+	if err != nil {
+		return err
+	}
+	storage := awss3.New(sess)
 
 	items, errs := storage.Traverse(ctx, repoEntry.URL)
 
