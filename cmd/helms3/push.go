@@ -101,5 +101,9 @@ func (act pushAction) Run(ctx context.Context) error {
 		return errors.WithMessage(err, "upload index to s3")
 	}
 
+	if err := helmutil.UpdateLocalIndex(act.repoName, idx); err != nil {
+		return errors.WithMessage(err, "update local index")
+	}
+
 	return nil
 }
