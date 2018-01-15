@@ -1,12 +1,15 @@
 package helmutil
 
 import (
+	"io/ioutil"
 	"os"
 
 	"github.com/pkg/errors"
 	"k8s.io/helm/pkg/helm/environment"
 	"k8s.io/helm/pkg/helm/helmpath"
 	"k8s.io/helm/pkg/repo"
+
+	"github.com/hypnoglow/helm-s3/pkg/index"
 )
 
 const (
@@ -32,4 +35,20 @@ func LookupRepoEntry(name string) (*repo.Entry, error) {
 	}
 
 	return nil, errors.Errorf("repo with name %s not found, try `helm repo add %s <uri>`", name, name)
+}
+
+// UpdateLocalIndex rewrites index file for repository named repoName with idx
+// contents.
+func UpdateLocalIndex(repoName string, idx *index.Index) error {
+	entry, err := LookupRepoEntry(repoName)
+	if err != nil {
+		return err
+	}
+
+	b, err := idx.Bytes()
+	if err != nil {
+		return err
+	}
+
+	return ioutil.WriteFile(entry.Cache, b, 0644)
 }

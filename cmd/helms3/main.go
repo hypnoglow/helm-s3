@@ -30,7 +30,7 @@ type Action interface {
 }
 
 func main() {
-	if len(os.Args) == 5 {
+	if len(os.Args) == 5 && !isAction(os.Args[1]) {
 		cmd := proxyCmd{uri: os.Args[4]}
 		ctx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
 		defer cancel()
@@ -119,4 +119,12 @@ func main() {
 	if err := act.Run(ctx); err != nil {
 		log.Fatal(err)
 	}
+}
+
+func isAction(name string) bool {
+	return name == actionDelete ||
+		name == actionInit ||
+		name == actionPush ||
+		name == actionReindex ||
+		name == actionVersion
 }

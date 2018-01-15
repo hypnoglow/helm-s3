@@ -30,5 +30,10 @@ func (act initAction) Run(ctx context.Context) error {
 		return errors.WithMessage(err, "upload index to s3")
 	}
 
+	// TODO:
+	// do we need to automatically do `helm repo add <name> <uri>`,
+	// like we are doing `helm repo update` when we push a chart
+	// with this plugin?
+
 	return nil
 }

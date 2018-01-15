@@ -16,13 +16,18 @@ type Index struct {
 }
 
 // Reader returns io.Reader for index.
-func (i *Index) Reader() (io.Reader, error) {
-	b, err := yaml.Marshal(i)
+func (idx *Index) Reader() (io.Reader, error) {
+	b, err := idx.Bytes()
 	if err != nil {
 		return nil, err
 	}
 
 	return bytes.NewReader(b), nil
+}
+
+// Bytes returns index in bytes representation.
+func (idx *Index) Bytes() ([]byte, error) {
+	return yaml.Marshal(idx)
 }
 
 // Delete removes chart version from index and returns deleted item.

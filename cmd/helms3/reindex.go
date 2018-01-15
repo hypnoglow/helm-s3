@@ -55,5 +55,9 @@ func (act reindexAction) Run(ctx context.Context) error {
 		return errors.Wrap(err, "upload index to the repository")
 	}
 
+	if err := helmutil.UpdateLocalIndex(act.repoName, idx); err != nil {
+		return errors.WithMessage(err, "update local index")
+	}
+
 	return nil
 }
