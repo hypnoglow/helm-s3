@@ -6,21 +6,27 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/hypnoglow/helm-s3/pkg/awss3"
+	"github.com/hypnoglow/helm-s3/pkg/awsutil"
 	"github.com/hypnoglow/helm-s3/pkg/index"
 )
 
-func runInit(uri string) error {
+type initAction struct {
+	uri string
+}
+
+func (act initAction) Run(ctx context.Context) error {
 	r, err := index.New().Reader()
 	if err != nil {
 		return errors.WithMessage(err, "get index reader")
 	}
 
-	storage := awss3.New()
+	sess, err := awsutil.Session()
+	if err != nil {
+		return err
+	}
+	storage := awss3.New(sess)
 
-	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
-	defer cancel()
-
-	if err := storage.PutIndex(ctx, uri, r); err != nil {
+	if err := storage.PutIndex(ctx, act.uri, r); err != nil {
 		return errors.WithMessage(err, "upload index to s3")
 	}
 

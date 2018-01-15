@@ -59,8 +59,8 @@
     "service/s3/s3manager",
     "service/sts"
   ]
-  revision = "00aba4fd6bb87ab518ee0857fea017804f40a6da"
-  version = "v1.12.58"
+  revision = "726cba4d63d34a7055809986b7942c3eae6c4eb2"
+  version = "v1.12.60"
 
 [[projects]]
   name = "github.com/ghodss/yaml"
@@ -129,7 +129,7 @@
     "openpgp/packet",
     "openpgp/s2k"
   ]
-  revision = "0fcca4842a8d74bfddc2c96a073bd2a4d2a7a2e8"
+  revision = "5f55bce93ad2c89f411e009659bb1fd83da36e7b"
 
 [[projects]]
   name = "gopkg.in/alecthomas/kingpin.v2"
@@ -147,7 +147,7 @@
   branch = "master"
   name = "k8s.io/apimachinery"
   packages = ["pkg/version"]
-  revision = "91d8586aac31d9086939d077ba556d2c7fb157b4"
+  revision = "c33db96a31b68b53ce6903caf3ba93571acb0e51"
 
 [[projects]]
   name = "k8s.io/client-go"
@@ -178,6 +178,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "b92ce03447c6856aa3b4cf89c6a790f96f7857b0cd64e3450cd754e3b6da423d"
+  inputs-digest = "a56ef2157e9363aa359b5b89dd2f809e2c34df8fc2737ffea41eb0494368fd13"
   solver-name = "gps-cdcl"
   solver-version = 1

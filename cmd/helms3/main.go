@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os"
@@ -20,12 +21,20 @@ const (
 	actionReindex = "reindex"
 	actionDelete  = "delete"
 
-	defaultTimeout = time.Second * 5
+	defaultTimeout = time.Minute * 5
 )
+
+// Action describes plugin action that can be run.
+type Action interface {
+	Run(context.Context) error
+}
 
 func main() {
 	if len(os.Args) == 5 {
-		if err := runProxy(os.Args[4]); err != nil {
+		cmd := proxyCmd{uri: os.Args[4]}
+		ctx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
+		defer cancel()
+		if err := cmd.Run(ctx); err != nil {
 			log.Fatal(err)
 		}
 		return
@@ -69,35 +78,45 @@ func main() {
 		os.Exit(0)
 	}
 
+	var act Action
 	switch action {
 	case actionVersion:
 		fmt.Print(version)
 		return
 
 	case actionInit:
-		if err := runInit(*initURI); err != nil {
-			log.Fatal(err)
+		act = initAction{
+			uri: *initURI,
 		}
-		fmt.Printf("Initialized empty repository at %s\n", *initURI)
-		return
+		defer fmt.Printf("Initialized empty repository at %s\n", *initURI)
 
 	case actionPush:
-		if err := runPush(*pushChartPath, *pushTargetRepository); err != nil {
-			log.Fatal(err)
+		act = pushAction{
+			chartPath: *pushChartPath,
+			repoName:  *pushTargetRepository,
 		}
-		return
 
 	case actionReindex:
 		fmt.Fprint(os.Stderr, "Warning: reindex feature is in beta. If you experience any issues,\nplease provide your feedback here: https://github.com/hypnoglow/helm-s3/issues/22\n\n")
-		if err := runReindex(*reindexTargetRepository); err != nil {
-			log.Fatal(err)
+		act = reindexAction{
+			repoName: *reindexTargetRepository,
 		}
-		fmt.Printf("Repository %s was successfully reindexed.\n", *reindexTargetRepository)
+		defer fmt.Printf("Repository %s was successfully reindexed.\n", *reindexTargetRepository)
 
 	case actionDelete:
-		if err := runDelete(*deleteChartName, *deleteChartVersion, *deleteTargetRepository); err != nil {
-			log.Fatal(err)
+		act = deleteAction{
+			name:     *deleteChartName,
+			version:  *deleteChartVersion,
+			repoName: *deleteTargetRepository,
 		}
+	default:
 		return
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
+	defer cancel()
+
+	if err := act.Run(ctx); err != nil {
+		log.Fatal(err)
 	}
 }
