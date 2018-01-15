@@ -78,11 +78,10 @@ Now you can push your chart to this repo:
 
     $ helm s3 push ./epicservice-0.7.2.tgz mynewrepo
 
-On push, remote repo index is automatically updated. To sync your local index, run:
+On push, both remote and local repo indexes are automatically updated (that means
+you don't need to run `helm repo update`).
 
-    $ helm repo update
-
-Now your pushed chart is available:
+Your pushed chart is available:
 
     $ helm search mynewrepo 
     NAME                    VERSION	 DESCRIPTION
@@ -94,14 +93,21 @@ To delete specific chart version from the repository:
 
     $ helm s3 delete epicservice --version 0.7.2 mynewrepo
 
-As always, remote repo index updated automatically again. To sync local, run:
-
-    $ helm repo update
+As always, both remote and local repo indexes updated automatically.
 
 The chart is deleted from the repo:
 
     $ helm search mynewrepo/epicservice 
     No results found
+    
+### Reindex
+
+If your repository somehow became inconsistent or broken, you can use reindex to recreate
+the index in accordance with the charts in the repository.
+
+:warning: *note that this feature is currently in beta*
+
+    $ helm s3 reindex mynewrepo
 
 ## Uninstall
 
