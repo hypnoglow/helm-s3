@@ -6,11 +6,11 @@ dep:
 
 .PHONY: build
 build:
-	@./sh/build.sh $(CURDIR) $(PKG)
+	@./hack/build.sh $(CURDIR) $(PKG)
 
 .PHONY: install
 install:
-	@./sh/install.sh
+	@./hack/install.sh
 
 .PHONY: test
 test:
@@ -18,4 +18,4 @@ test:
 
 .PHONY: test-integration
 test-integration:
-	@./sh/integration-tests-local.sh
+	@./hack/integration-tests-local.sh

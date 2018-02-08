@@ -57,7 +57,7 @@ jobs:
             mc mb helm-s3-minio/test-bucket
       - run:
           name: Run tests
-          command: ./sh/integration-tests.sh
+          command: ./hack/integration-tests.sh
   release:
     docker:
       - image: circleci/golang:1.9
