@@ -6,10 +6,10 @@ import (
 
 	"github.com/pkg/errors"
 
+	"github.com/hypnoglow/helm-s3/internal/index"
 	"github.com/hypnoglow/helm-s3/pkg/awss3"
 	"github.com/hypnoglow/helm-s3/pkg/awsutil"
 	"github.com/hypnoglow/helm-s3/pkg/helmutil"
-	"github.com/hypnoglow/helm-s3/pkg/index"
 )
 
 type deleteAction struct {
@@ -34,8 +34,8 @@ func (act deleteAction) Run(ctx context.Context) error {
 		return errors.WithMessage(err, "fetch current repo index")
 	}
 
-	idx, err := index.LoadBytes(b)
-	if err != nil {
+	idx := &index.Index{}
+	if err := idx.UnmarshalBinary(b); err != nil {
 		return errors.WithMessage(err, "load index from downloaded file")
 	}
 
