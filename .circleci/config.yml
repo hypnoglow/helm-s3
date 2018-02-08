@@ -21,6 +21,8 @@ jobs:
           AWS_ACCESS_KEY_ID: EXAMPLEKEY123
           AWS_SECRET_ACCESS_KEY: EXAMPLESECRET123456
           AWS_DEFAULT_REGION: us-east-1
+          AWS_ENDPOINT: helm-s3-minio:9000
+          AWS_DISABLE_SSL: true
           HELM_VERSION: v2.6.2
       - image: minio/minio:latest
         name: helm-s3-minio
@@ -36,7 +38,7 @@ jobs:
           command: |
             go get -u -v github.com/golang/dep/cmd/dep
             dep ensure -v
-            go build -o bin/helms3 -ldflags "-X github.com/hypnoglow/helm-s3/pkg/awsutil.awsDisableSSL=true -X github.com/hypnoglow/helm-s3/pkg/awsutil.awsEndpoint=helm-s3-minio:9000" ./cmd/helms3
+            go build -o bin/helms3 ./cmd/helms3
       - run:
           name: Install helm, install plugin
           command: |

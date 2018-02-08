@@ -1,16 +1,19 @@
 package awsutil
 
 import (
+	"os"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 )
 
-var (
-	// awsDisableSSL can be set to true by build tag.
-	awsDisableSSL = "false"
+const (
+	// awsEndpoint can be set to a custom endpoint to use alternative AWS S3
+	// server like minio (https://minio.io).
+	awsEndpoint = "AWS_ENDPOINT"
 
-	// awsEndpoint can be set to a custom endpoint by build tag.
-	awsEndpoint = ""
+	// awsDisableSSL can be set to true to disable SSL for AWS S3 server.
+	awsDisableSSL = "AWS_DISABLE_SSL"
 )
 
 // SessionOption is an option for session.
@@ -25,11 +28,16 @@ func AssumeRoleTokenProvider(provider func() (string, error)) SessionOption {
 
 // Session returns an AWS session as described http://docs.aws.amazon.com/sdk-for-go/v1/developer-guide/configuring-sdk.html
 func Session(opts ...SessionOption) (*session.Session, error) {
+	disableSSL := false
+	if os.Getenv(awsDisableSSL) == "true" {
+		disableSSL = true
+	}
+
 	so := session.Options{
 		Config: aws.Config{
-			DisableSSL:       aws.Bool(awsDisableSSL == "true"),
+			DisableSSL:       aws.Bool(disableSSL),
 			S3ForcePathStyle: aws.Bool(true),
-			Endpoint:         aws.String(awsEndpoint),
+			Endpoint:         aws.String(os.Getenv(awsEndpoint)),
 		},
 		SharedConfigState:       session.SharedConfigEnable,
 		AssumeRoleTokenProvider: StderrTokenProvider,
