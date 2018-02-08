@@ -9,7 +9,7 @@ import (
 	"k8s.io/helm/pkg/helm/helmpath"
 	"k8s.io/helm/pkg/repo"
 
-	"github.com/hypnoglow/helm-s3/pkg/index"
+	"github.com/hypnoglow/helm-s3/internal/index"
 )
 
 const (
@@ -45,7 +45,7 @@ func UpdateLocalIndex(repoName string, idx *index.Index) error {
 		return err
 	}
 
-	b, err := idx.Bytes()
+	b, err := idx.MarshalBinary()
 	if err != nil {
 		return err
 	}

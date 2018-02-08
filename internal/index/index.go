@@ -17,7 +17,7 @@ type Index struct {
 
 // Reader returns io.Reader for index.
 func (idx *Index) Reader() (io.Reader, error) {
-	b, err := idx.Bytes()
+	b, err := idx.MarshalBinary()
 	if err != nil {
 		return nil, err
 	}
@@ -25,9 +25,21 @@ func (idx *Index) Reader() (io.Reader, error) {
 	return bytes.NewReader(b), nil
 }
 
-// Bytes returns index in bytes representation.
-func (idx *Index) Bytes() ([]byte, error) {
+// MarshalBinary encodes index to a binary form.
+func (idx *Index) MarshalBinary() (data []byte, err error) {
 	return yaml.Marshal(idx)
+}
+
+// UnmarshalBinary decodes index from a binary form.
+func (idx *Index) UnmarshalBinary(data []byte) error {
+	i := &repo.IndexFile{}
+	if err := yaml.Unmarshal(data, i); err != nil {
+		return err
+	}
+	i.SortEntries()
+
+	*idx = Index{IndexFile: i}
+	return nil
 }
 
 // Delete removes chart version from index and returns deleted item.
@@ -56,14 +68,4 @@ func New() *Index {
 	return &Index{
 		repo.NewIndexFile(),
 	}
-}
-
-// LoadBytes returns an index read from bytes.
-func LoadBytes(b []byte) (*Index, error) {
-	i := &repo.IndexFile{}
-	if err := yaml.Unmarshal(b, i); err != nil {
-		return nil, err
-	}
-	i.SortEntries()
-	return &Index{i}, nil
 }

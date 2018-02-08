@@ -5,9 +5,9 @@ import (
 
 	"github.com/pkg/errors"
 
+	"github.com/hypnoglow/helm-s3/internal/index"
 	"github.com/hypnoglow/helm-s3/pkg/awss3"
 	"github.com/hypnoglow/helm-s3/pkg/awsutil"
-	"github.com/hypnoglow/helm-s3/pkg/index"
 )
 
 type initAction struct {
