@@ -5,10 +5,10 @@ import (
 
 	"github.com/pkg/errors"
 
+	"github.com/hypnoglow/helm-s3/internal/awss3"
+	"github.com/hypnoglow/helm-s3/internal/awsutil"
+	"github.com/hypnoglow/helm-s3/internal/helmutil"
 	"github.com/hypnoglow/helm-s3/internal/index"
-	"github.com/hypnoglow/helm-s3/pkg/awss3"
-	"github.com/hypnoglow/helm-s3/pkg/awsutil"
-	"github.com/hypnoglow/helm-s3/pkg/helmutil"
 )
 
 type reindexAction struct {
@@ -55,7 +55,7 @@ func (act reindexAction) Run(ctx context.Context) error {
 		return errors.Wrap(err, "upload index to the repository")
 	}
 
-	if err := helmutil.UpdateLocalIndex(act.repoName, idx); err != nil {
+	if err := idx.WriteFile(repoEntry.Cache, 0644); err != nil {
 		return errors.WithMessage(err, "update local index")
 	}
 
