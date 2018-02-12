@@ -17,9 +17,16 @@ import (
 	"github.com/hypnoglow/helm-s3/internal/index"
 )
 
+var (
+	// ErrChartExists signals that chart already exists in the repository
+	// and cannot be pushed without --replace flag.
+	ErrChartExists = errors.New("chart already exists")
+)
+
 type pushAction struct {
 	chartPath string
 	repoName  string
+	replace   bool
 }
 
 func (act pushAction) Run(ctx context.Context) error {
@@ -67,6 +74,15 @@ func (act pushAction) Run(ctx context.Context) error {
 	serializedChartMeta, err := json.Marshal(chart.Metadata)
 	if err != nil {
 		return errors.Wrap(err, "encode chart metadata to json")
+	}
+
+	exists, err := storage.Exists(ctx, repoEntry.URL+"/"+fname)
+	if err != nil {
+		return errors.Wrap(err, "check if chart already exists in the repository")
+	}
+
+	if exists && !act.replace {
+		return ErrChartExists
 	}
 
 	if _, err := storage.PutChart(ctx, repoEntry.URL+"/"+fname, fchart, string(serializedChartMeta), hash); err != nil {
