@@ -78,7 +78,7 @@ func (act pushAction) Run(ctx context.Context) error {
 
 	exists, err := storage.Exists(ctx, repoEntry.URL+"/"+fname)
 	if err != nil {
-		return errors.Wrap(err, "check if chart already exists in the repository")
+		return errors.WithMessage(err, "check if chart already exists in the repository")
 	}
 
 	if exists && !act.replace {
@@ -105,7 +105,9 @@ func (act pushAction) Run(ctx context.Context) error {
 		return errors.WithMessage(err, "load index from downloaded file")
 	}
 
-	idx.Add(chart.GetMetadata(), fname, repoEntry.URL, hash)
+	if err := idx.AddOrReplace(chart.GetMetadata(), fname, repoEntry.URL, hash); err != nil {
+		return errors.WithMessage(err, "add/replace chart in the index")
+	}
 	idx.SortEntries()
 
 	idxReader, err := idx.Reader()
