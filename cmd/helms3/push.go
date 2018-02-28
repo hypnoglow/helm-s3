@@ -19,14 +19,14 @@ import (
 
 var (
 	// ErrChartExists signals that chart already exists in the repository
-	// and cannot be pushed without --replace flag.
+	// and cannot be pushed without --force flag.
 	ErrChartExists = errors.New("chart already exists")
 )
 
 type pushAction struct {
 	chartPath string
 	repoName  string
-	replace   bool
+	force     bool
 }
 
 func (act pushAction) Run(ctx context.Context) error {
@@ -81,7 +81,7 @@ func (act pushAction) Run(ctx context.Context) error {
 		return errors.WithMessage(err, "check if chart already exists in the repository")
 	}
 
-	if exists && !act.replace {
+	if exists && !act.force {
 		return ErrChartExists
 	}
 

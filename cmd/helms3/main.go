@@ -57,7 +57,7 @@ func main() {
 	pushTargetRepository := pushCmd.Arg("repo", "Target repository to push to").
 		Required().
 		String()
-	pushReplace := pushCmd.Flag("replace", "Replace the chart if it already exists").
+	pushForce := pushCmd.Flag("force", "Replace the chart if it already exists. This can cause the repository to lose existing chart; use it with care").
 		Bool()
 
 	reindexCmd := cli.Command(actionReindex, "Reindex the repository.")
@@ -98,7 +98,7 @@ func main() {
 		act = pushAction{
 			chartPath: *pushChartPath,
 			repoName:  *pushTargetRepository,
-			replace:   *pushReplace,
+			force:     *pushForce,
 		}
 
 	case actionReindex:
@@ -125,7 +125,7 @@ func main() {
 	switch err {
 	case nil:
 	case ErrChartExists:
-		log.Fatalf("The chart already exists in the repository and cannot be overwritten without an explicit intent. If you want to replace existing chart, use --replace flag:\n\n\thelm s3 push --replace %s %s\n\n", *pushChartPath, *pushTargetRepository)
+		log.Fatalf("The chart already exists in the repository and cannot be overwritten without an explicit intent. If you want to replace existing chart, use --force flag:\n\n\thelm s3 push --force %s %s\n\n", *pushChartPath, *pushTargetRepository)
 	default:
 		log.Fatal(err)
 	}

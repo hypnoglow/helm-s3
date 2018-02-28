@@ -67,9 +67,9 @@ fi
 
 set -e
 
-helm s3 push --replace postgresql-0.8.3.tgz test-repo
+helm s3 push --force postgresql-0.8.3.tgz test-repo
 if [ $? -ne 0 ]; then
-    echo "The same chart must be pushed again using --replace"
+    echo "The same chart must be pushed again using --force"
     exit 1
 fi
 
