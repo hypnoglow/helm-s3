@@ -10,6 +10,7 @@ import (
 	"github.com/pkg/errors"
 	"k8s.io/helm/pkg/chartutil"
 	"k8s.io/helm/pkg/provenance"
+	"k8s.io/helm/pkg/repo"
 
 	"github.com/hypnoglow/helm-s3/internal/awss3"
 	"github.com/hypnoglow/helm-s3/internal/awsutil"
@@ -59,6 +60,13 @@ func (act pushAction) Run(ctx context.Context) error {
 	repoEntry, err := helmutil.LookupRepoEntry(act.repoName)
 	if err != nil {
 		return err
+	}
+
+	if cachedIndex, err := repo.LoadIndexFile(repoEntry.Cache); err == nil {
+		// if cached index exists, check if the same chart version exists in it.
+		if cachedIndex.Has(chart.Metadata.Name, chart.Metadata.Version) && !act.force {
+			return ErrChartExists
+		}
 	}
 
 	hash, err := provenance.DigestFile(fname)
