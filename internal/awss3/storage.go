@@ -192,6 +192,28 @@ func (s *Storage) FetchRaw(ctx context.Context, uri string) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
+// Exists returns true if an object exists in the storage.
+func (s *Storage) Exists(ctx context.Context, uri string) (bool, error) {
+	bucket, key, err := parseURI(uri)
+	if err != nil {
+		return false, err
+	}
+
+	_, err = s3.New(s.session).HeadObject(&s3.HeadObjectInput{
+		Bucket: aws.String(bucket),
+		Key:    aws.String(key),
+	})
+	if err != nil {
+		// That's weird that there is no NotFound constant in aws sdk.
+		if ae, ok := err.(awserr.Error); ok && ae.Code() == "NotFound" {
+			return false, nil
+		}
+		return false, errors.Wrap(err, "head s3 object")
+	}
+
+	return true, nil
+}
+
 // PutChart puts the chart file to the storage.
 // uri must be in the form of s3 protocol: s3://bucket-name/key[...].
 func (s *Storage) PutChart(ctx context.Context, uri string, r io.Reader, chartMeta, chartDigest string) (string, error) {

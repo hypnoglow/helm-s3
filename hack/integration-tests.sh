@@ -2,6 +2,17 @@
 set -euo pipefail
 set -x
 
+#
+# Set up
+#
+
+# Prepare chart to play with.
+helm fetch stable/postgresql --version 0.8.3
+
+#
+# Test: init repo
+#
+
 helm s3 init s3://test-bucket/charts
 if [ $? -ne 0 ]; then
     echo "Failed to initialize repo"
@@ -20,8 +31,9 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-# Prepare chart to play with.
-helm fetch stable/postgresql --version 0.8.3
+#
+# Test: push chart
+#
 
 helm s3 push postgresql-0.8.3.tgz test-repo
 if [ $? -ne 0 ]; then
@@ -35,14 +47,35 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-# Update the index so we can find the uploaded chart.
-helm repo update
-
 helm search test-repo/postgres | grep -q 0.8.3
 if [ $? -ne 0 ]; then
     echo "Failed to find uploaded chart"
     exit 1
 fi
+
+#
+# Test: push the same chart again
+#
+
+set +e # next command should return non-zero status
+
+helm s3 push postgresql-0.8.3.tgz test-repo
+if [ $? -eq 0 ]; then
+    echo "The same chart must not be pushed again"
+    exit 1
+fi
+
+set -e
+
+helm s3 push --force postgresql-0.8.3.tgz test-repo
+if [ $? -ne 0 ]; then
+    echo "The same chart must be pushed again using --force"
+    exit 1
+fi
+
+#
+# Test: fetch chart
+#
 
 helm fetch test-repo/postgresql --version 0.8.3
 if [ $? -ne 0 ]; then
@@ -51,7 +84,7 @@ if [ $? -ne 0 ]; then
 fi
 
 #
-# Delete
+# Test: delete chart
 #
 
 helm s3 delete postgresql --version 0.8.3 test-repo
@@ -65,14 +98,15 @@ if mc ls -q helm-s3-minio/test-bucket/charts/postgresql-0.8.3.tgz 2>/dev/null ; 
     exit 1
 fi
 
-helm repo update
-
 if helm search test-repo/postgres | grep -q 0.8.3 ; then
     echo "Failed to delete chart from index"
     exit 1
 fi
 
+#
 # Tear down
+#
+
 rm postgresql-0.8.3.tgz
 helm repo remove test-repo
 set +x

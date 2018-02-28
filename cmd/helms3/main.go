@@ -30,6 +30,8 @@ type Action interface {
 }
 
 func main() {
+	log.SetFlags(0)
+
 	if len(os.Args) == 5 && !isAction(os.Args[1]) {
 		cmd := proxyCmd{uri: os.Args[4]}
 		ctx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
@@ -55,6 +57,8 @@ func main() {
 	pushTargetRepository := pushCmd.Arg("repo", "Target repository to push to").
 		Required().
 		String()
+	pushForce := pushCmd.Flag("force", "Replace the chart if it already exists. This can cause the repository to lose existing chart; use it with care").
+		Bool()
 
 	reindexCmd := cli.Command(actionReindex, "Reindex the repository.")
 	reindexTargetRepository := reindexCmd.Arg("repo", "Target repository to reindex").
@@ -94,6 +98,7 @@ func main() {
 		act = pushAction{
 			chartPath: *pushChartPath,
 			repoName:  *pushTargetRepository,
+			force:     *pushForce,
 		}
 
 	case actionReindex:
@@ -116,7 +121,12 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
 	defer cancel()
 
-	if err := act.Run(ctx); err != nil {
+	err := act.Run(ctx)
+	switch err {
+	case nil:
+	case ErrChartExists:
+		log.Fatalf("The chart already exists in the repository and cannot be overwritten without an explicit intent. If you want to replace existing chart, use --force flag:\n\n\thelm s3 push --force %s %s\n\n", *pushChartPath, *pushTargetRepository)
+	default:
 		log.Fatal(err)
 	}
 }

@@ -10,6 +10,7 @@ import (
 	"github.com/pkg/errors"
 	"k8s.io/helm/pkg/chartutil"
 	"k8s.io/helm/pkg/provenance"
+	"k8s.io/helm/pkg/repo"
 
 	"github.com/hypnoglow/helm-s3/internal/awss3"
 	"github.com/hypnoglow/helm-s3/internal/awsutil"
@@ -17,9 +18,16 @@ import (
 	"github.com/hypnoglow/helm-s3/internal/index"
 )
 
+var (
+	// ErrChartExists signals that chart already exists in the repository
+	// and cannot be pushed without --force flag.
+	ErrChartExists = errors.New("chart already exists")
+)
+
 type pushAction struct {
 	chartPath string
 	repoName  string
+	force     bool
 }
 
 func (act pushAction) Run(ctx context.Context) error {
@@ -54,6 +62,13 @@ func (act pushAction) Run(ctx context.Context) error {
 		return err
 	}
 
+	if cachedIndex, err := repo.LoadIndexFile(repoEntry.Cache); err == nil {
+		// if cached index exists, check if the same chart version exists in it.
+		if cachedIndex.Has(chart.Metadata.Name, chart.Metadata.Version) && !act.force {
+			return ErrChartExists
+		}
+	}
+
 	hash, err := provenance.DigestFile(fname)
 	if err != nil {
 		return errors.WithMessage(err, "get chart digest")
@@ -67,6 +82,15 @@ func (act pushAction) Run(ctx context.Context) error {
 	serializedChartMeta, err := json.Marshal(chart.Metadata)
 	if err != nil {
 		return errors.Wrap(err, "encode chart metadata to json")
+	}
+
+	exists, err := storage.Exists(ctx, repoEntry.URL+"/"+fname)
+	if err != nil {
+		return errors.WithMessage(err, "check if chart already exists in the repository")
+	}
+
+	if exists && !act.force {
+		return ErrChartExists
 	}
 
 	if _, err := storage.PutChart(ctx, repoEntry.URL+"/"+fname, fchart, string(serializedChartMeta), hash); err != nil {
@@ -89,7 +113,9 @@ func (act pushAction) Run(ctx context.Context) error {
 		return errors.WithMessage(err, "load index from downloaded file")
 	}
 
-	idx.Add(chart.GetMetadata(), fname, repoEntry.URL, hash)
+	if err := idx.AddOrReplace(chart.GetMetadata(), fname, repoEntry.URL, hash); err != nil {
+		return errors.WithMessage(err, "add/replace chart in the index")
+	}
 	idx.SortEntries()
 
 	idxReader, err := idx.Reader()
