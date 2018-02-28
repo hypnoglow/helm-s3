@@ -87,6 +87,16 @@ Your pushed chart is available:
     NAME                    VERSION	 DESCRIPTION
     mynewrepo/epicservice   0.7.2    A Helm chart.
 
+Note that the plugin denies push when the chart with the same version already exists
+in the repository. This behavior is intentional. It is useful, for example, in
+CI automated pushing: if someone forgets to bump chart version - the chart would
+not be overwritten. 
+
+However, in some cases you want to replace existing chart version. To do so,
+add `--force` flag to a push command:
+
+    $ helm s3 push --force ./epicservice-0.7.2.tgz mynewrepo
+
 ### Delete
 
 To delete specific chart version from the repository:
@@ -112,6 +122,18 @@ the index in accordance with the charts in the repository.
 ## Uninstall
 
     $ helm plugin remove s3
+
+## Using alternative S3-compatible vendors
+
+The plugin assumes Amazon S3 by default. However, it can work with any S3-compatible
+object storage, like [minio](https://www.minio.io/), [DreamObjects](https://www.dreamhost.com/cloud/storage/)
+and others. To configure the plugin to work alternative S3 backend, just define
+`AWS_ENDPOINT` (and optionally `AWS_DISABLE_SSL`):
+
+    $ export AWS_ENDPOINT=localhost:9000
+    $ export AWS_DISABLE_SSL=true
+
+See [these integration tests](https://github.com/hypnoglow/helm-s3/blob/master/hack/integration-tests-local.sh#L10) that use local minio docker container for a complete example.
 
 ## Documentation
 
