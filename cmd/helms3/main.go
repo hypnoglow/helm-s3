@@ -21,7 +21,17 @@ const (
 	actionReindex = "reindex"
 	actionDelete  = "delete"
 
-	defaultTimeout = time.Minute * 5
+	defaultTimeout       = time.Minute * 5
+	defaultTimeoutString = "5m"
+
+	helpFlagTimeout = `Timeout for the whole operation to complete. Defaults to 5 minutes.
+
+If you don't use MFA, it may be reasonable to lower the timeout 
+for the most commands, for example to 10 seconds. 
+
+In opposite, in cases where you want to reindex big repository 
+(e.g. 10 000 charts), you definitely want to increase the timeout.
+`
 )
 
 // Action describes plugin action that can be run.
@@ -44,6 +54,10 @@ func main() {
 
 	cli := kingpin.New("helm s3", "")
 	cli.Command(actionVersion, "Show plugin version.")
+
+	timeout := cli.Flag("timeout", helpFlagTimeout).
+		Default(defaultTimeoutString).
+		Duration()
 
 	initCmd := cli.Command(actionInit, "Initialize empty repository on AWS S3.")
 	initURI := initCmd.Arg("uri", "URI of repository, e.g. s3://awesome-bucket/charts").
@@ -118,7 +132,7 @@ func main() {
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), *timeout)
 	defer cancel()
 
 	err := act.Run(ctx)
