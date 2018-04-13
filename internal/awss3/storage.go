@@ -53,7 +53,7 @@ func (s *Storage) traverse(ctx context.Context, repoURI string, items chan<- Cha
 	defer close(items)
 	defer close(errs)
 
-	bucket, key, err := parseURI(repoURI)
+	bucket, prefixKey, err := parseURI(repoURI)
 	if err != nil {
 		errs <- err
 		return
@@ -65,7 +65,7 @@ func (s *Storage) traverse(ctx context.Context, repoURI string, items chan<- Cha
 	for {
 		listOut, err := client.ListObjectsV2(&s3.ListObjectsV2Input{
 			Bucket:            aws.String(bucket),
-			Prefix:            aws.String(key),
+			Prefix:            aws.String(prefixKey),
 			ContinuationToken: continuationToken,
 		})
 		if err != nil {
@@ -74,12 +74,18 @@ func (s *Storage) traverse(ctx context.Context, repoURI string, items chan<- Cha
 		}
 
 		for _, obj := range listOut.Contents {
-			if strings.Contains(*obj.Key, "/") {
+			// We need to make object key relative to repo root.
+			key := strings.TrimPrefix(*obj.Key, prefixKey)
+			// Additionally trim prefix slash if exists, because repos can be:
+			// s3://bucket/repo/subdir OR s3://bucket/repo/subdir/
+			key = strings.TrimPrefix(key, "/")
+
+			if strings.Contains(key, "/") {
 				// This is a subfolder. Ignore it, because chart repository
 				// is flat and cannot contain nested directories.
 				continue
 			}
-			if *obj.Key == "index.yaml" {
+			if key == "index.yaml" {
 				// Ignore the index itself.
 				continue
 			}
@@ -93,7 +99,7 @@ func (s *Storage) traverse(ctx context.Context, repoURI string, items chan<- Cha
 				return
 			}
 
-			reindexItem := ChartInfo{Filename: *obj.Key}
+			reindexItem := ChartInfo{Filename: key}
 
 			serializedChartMeta, hasMeta := metaOut.Metadata[strings.Title(metaChartMetadata)]
 			chartDigest, hasDigest := metaOut.Metadata[strings.Title(metaChartDigest)]
