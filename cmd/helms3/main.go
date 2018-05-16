@@ -73,6 +73,10 @@ func main() {
 		String()
 	pushForce := pushCmd.Flag("force", "Replace the chart if it already exists. This can cause the repository to lose existing chart; use it with care").
 		Bool()
+	repoBaseUrl := pushCmd.Flag("base-url", "the base url of the chart packages that are published").
+	  Default("").
+		String()
+
 
 	reindexCmd := cli.Command(actionReindex, "Reindex the repository.")
 	reindexTargetRepository := reindexCmd.Arg("repo", "Target repository to reindex").
@@ -110,15 +114,17 @@ func main() {
 
 	case actionPush:
 		act = pushAction{
-			chartPath: *pushChartPath,
-			repoName:  *pushTargetRepository,
-			force:     *pushForce,
+			chartPath:   *pushChartPath,
+			repoName:    *pushTargetRepository,
+			force:       *pushForce,
+			repoBaseUrl: *repoBaseUrl,
 		}
 
 	case actionReindex:
 		fmt.Fprint(os.Stderr, "Warning: reindex feature is in beta. If you experience any issues,\nplease provide your feedback here: https://github.com/hypnoglow/helm-s3/issues/22\n\n")
 		act = reindexAction{
-			repoName: *reindexTargetRepository,
+			repoName:    *reindexTargetRepository,
+			repoBaseUrl: *repoBaseUrl,
 		}
 		defer fmt.Printf("Repository %s was successfully reindexed.\n", *reindexTargetRepository)
 

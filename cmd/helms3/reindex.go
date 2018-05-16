@@ -13,6 +13,7 @@ import (
 
 type reindexAction struct {
 	repoName string
+	repoBaseUrl string
 }
 
 func (act reindexAction) Run(ctx context.Context) error {
@@ -29,11 +30,19 @@ func (act reindexAction) Run(ctx context.Context) error {
 
 	items, errs := storage.Traverse(ctx, repoEntry.URL)
 
+  // if you have a public repository, you might want to set chart base url to the s3 buckets website address
+  var url string
+  if act.repoBaseUrl == "" {
+    url = repoEntry.URL
+  } else {
+  	url = act.repoBaseUrl
+  }
+
 	builtIndex := make(chan *index.Index, 1)
 	go func() {
 		idx := index.New()
 		for item := range items {
-			idx.Add(item.Meta, item.Filename, repoEntry.URL, item.Hash)
+			idx.Add(item.Meta, item.Filename, url, item.Hash)
 		}
 		idx.SortEntries()
 

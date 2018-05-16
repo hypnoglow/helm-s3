@@ -25,9 +25,10 @@ var (
 )
 
 type pushAction struct {
-	chartPath string
-	repoName  string
-	force     bool
+	chartPath   string
+	repoName    string
+	force       bool
+	repoBaseUrl string
 }
 
 func (act pushAction) Run(ctx context.Context) error {
@@ -113,7 +114,15 @@ func (act pushAction) Run(ctx context.Context) error {
 		return errors.WithMessage(err, "load index from downloaded file")
 	}
 
-	if err := idx.AddOrReplace(chart.GetMetadata(), fname, repoEntry.URL, hash); err != nil {
+  // if you have a public repository, you might want to set chart base url to the s3 buckets website address
+  var url string
+  if act.repoBaseUrl == "" {
+    url = repoEntry.URL
+  } else {
+  	url = act.repoBaseUrl
+  }
+
+	if err := idx.AddOrReplace(chart.GetMetadata(), fname, url, hash); err != nil {
 		return errors.WithMessage(err, "add/replace chart in the index")
 	}
 	idx.SortEntries()
