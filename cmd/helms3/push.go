@@ -28,6 +28,7 @@ type pushAction struct {
 	chartPath   string
 	repoName    string
 	force       bool
+	acl         string
 	repoBaseURL string
 }
 
@@ -94,7 +95,7 @@ func (act pushAction) Run(ctx context.Context) error {
 		return ErrChartExists
 	}
 
-	if _, err := storage.PutChart(ctx, repoEntry.URL+"/"+fname, fchart, string(serializedChartMeta), hash); err != nil {
+	if _, err := storage.PutChart(ctx, repoEntry.URL+"/"+fname, fchart, string(serializedChartMeta), act.acl, hash); err != nil {
 		return errors.WithMessage(err, "upload chart to s3")
 	}
 
@@ -132,7 +133,7 @@ func (act pushAction) Run(ctx context.Context) error {
 		return errors.WithMessage(err, "get index reader")
 	}
 
-	if err := storage.PutIndex(ctx, repoEntry.URL, idxReader); err != nil {
+	if err := storage.PutIndex(ctx, repoEntry.URL, act.acl, idxReader); err != nil {
 		return errors.WithMessage(err, "upload index to s3")
 	}
 

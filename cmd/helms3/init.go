@@ -12,6 +12,7 @@ import (
 
 type initAction struct {
 	uri string
+	acl string
 }
 
 func (act initAction) Run(ctx context.Context) error {
@@ -26,7 +27,7 @@ func (act initAction) Run(ctx context.Context) error {
 	}
 	storage := awss3.New(sess)
 
-	if err := storage.PutIndex(ctx, act.uri, r); err != nil {
+	if err := storage.PutIndex(ctx, act.uri, act.acl, r); err != nil {
 		return errors.WithMessage(err, "upload index to s3")
 	}
 

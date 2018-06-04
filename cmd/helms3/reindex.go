@@ -13,6 +13,7 @@ import (
 
 type reindexAction struct {
 	repoName    string
+	acl         string
 	repoBaseURL string
 }
 
@@ -60,7 +61,7 @@ func (act reindexAction) Run(ctx context.Context) error {
 		return errors.Wrap(err, "get index reader")
 	}
 
-	if err := storage.PutIndex(ctx, repoEntry.URL, r); err != nil {
+	if err := storage.PutIndex(ctx, repoEntry.URL, act.acl, r); err != nil {
 		return errors.Wrap(err, "upload index to the repository")
 	}
 
