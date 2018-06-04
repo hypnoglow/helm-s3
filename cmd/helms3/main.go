@@ -26,11 +26,16 @@ const (
 
 	helpFlagTimeout = `Timeout for the whole operation to complete. Defaults to 5 minutes.
 
-If you don't use MFA, it may be reasonable to lower the timeout 
-for the most commands, for example to 10 seconds. 
+If you don't use MFA, it may be reasonable to lower the timeout
+for the most commands, for example to 10 seconds.
 
-In opposite, in cases where you want to reindex big repository 
+In opposite, in cases where you want to reindex big repository
 (e.g. 10 000 charts), you definitely want to increase the timeout.
+`
+
+	helpFlagACL = `S3 Object ACL to set on the Chart and Index object.
+
+For more information on S3 ACLs please see https://docs.aws.amazon.com/AmazonS3/latest/dev/acl-overview.html#canned-acl
 `
 )
 
@@ -58,6 +63,11 @@ func main() {
 	timeout := cli.Flag("timeout", helpFlagTimeout).
 		Default(defaultTimeoutString).
 		Duration()
+
+	acl := cli.Flag("acl", helpFlagACL).
+		Default("").
+		OverrideDefaultFromEnvar("S3_ACL").
+		String()
 
 	initCmd := cli.Command(actionInit, "Initialize empty repository on AWS S3.")
 	initURI := initCmd.Arg("uri", "URI of repository, e.g. s3://awesome-bucket/charts").
@@ -105,6 +115,7 @@ func main() {
 	case actionInit:
 		act = initAction{
 			uri: *initURI,
+			acl: *acl,
 		}
 		defer fmt.Printf("Initialized empty repository at %s\n", *initURI)
 
@@ -113,12 +124,14 @@ func main() {
 			chartPath: *pushChartPath,
 			repoName:  *pushTargetRepository,
 			force:     *pushForce,
+			acl:       *acl,
 		}
 
 	case actionReindex:
 		fmt.Fprint(os.Stderr, "Warning: reindex feature is in beta. If you experience any issues,\nplease provide your feedback here: https://github.com/hypnoglow/helm-s3/issues/22\n\n")
 		act = reindexAction{
 			repoName: *reindexTargetRepository,
+			acl:      *acl,
 		}
 		defer fmt.Printf("Repository %s was successfully reindexed.\n", *reindexTargetRepository)
 
@@ -127,6 +140,7 @@ func main() {
 			name:     *deleteChartName,
 			version:  *deleteChartVersion,
 			repoName: *deleteTargetRepository,
+			acl:      *acl,
 		}
 	default:
 		return

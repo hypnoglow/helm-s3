@@ -222,7 +222,7 @@ func (s *Storage) Exists(ctx context.Context, uri string) (bool, error) {
 
 // PutChart puts the chart file to the storage.
 // uri must be in the form of s3 protocol: s3://bucket-name/key[...].
-func (s *Storage) PutChart(ctx context.Context, uri string, r io.Reader, chartMeta, chartDigest string) (string, error) {
+func (s *Storage) PutChart(ctx context.Context, uri string, r io.Reader, chartMeta, acl string, chartDigest string) (string, error) {
 	bucket, key, err := parseURI(uri)
 	if err != nil {
 		return "", err
@@ -233,6 +233,7 @@ func (s *Storage) PutChart(ctx context.Context, uri string, r io.Reader, chartMe
 		&s3manager.UploadInput{
 			Bucket: aws.String(bucket),
 			Key:    aws.String(key),
+			ACL:    aws.String(acl),
 			Body:   r,
 			Metadata: map[string]*string{
 				metaChartMetadata: aws.String(chartMeta),
@@ -248,7 +249,7 @@ func (s *Storage) PutChart(ctx context.Context, uri string, r io.Reader, chartMe
 
 // PutIndex puts the index file to the storage.
 // uri must be in the form of s3 protocol: s3://bucket-name/key[...].
-func (s *Storage) PutIndex(ctx context.Context, uri string, r io.Reader) error {
+func (s *Storage) PutIndex(ctx context.Context, uri string, acl string, r io.Reader) error {
 	if strings.HasPrefix(uri, "index.yaml") {
 		return errors.New("uri must not contain \"index.yaml\" suffix, it appends automatically")
 	}
@@ -264,6 +265,7 @@ func (s *Storage) PutIndex(ctx context.Context, uri string, r io.Reader) error {
 		&s3manager.UploadInput{
 			Bucket: aws.String(bucket),
 			Key:    aws.String(key),
+			ACL:    aws.String(acl),
 			Body:   r,
 		})
 	if err != nil {
