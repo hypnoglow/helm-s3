@@ -22,17 +22,32 @@ var (
 	// ErrChartExists signals that chart already exists in the repository
 	// and cannot be pushed without --force flag.
 	ErrChartExists = errors.New("chart already exists")
+
+	// ErrForceAndIgnoreIfExists signals that the --force and --ignore-if-exists
+	// flags cannot be used together.
+	ErrForceAndIgnoreIfExists = errors.New("The --force and --ignore-if-exists flags are mutually exclusive and cannot be specified together.")
 )
 
 type pushAction struct {
+	// required parameters
+
 	chartPath string
 	repoName  string
-	force     bool
-	dryRun    bool
-	acl       string
+
+	// optional parameters and flags
+
+	force          bool
+	dryRun         bool
+	ignoreIfExists bool
+	acl            string
 }
 
 func (act pushAction) Run(ctx context.Context) error {
+	// Sanity check.
+	if act.force && act.ignoreIfExists {
+		return ErrForceAndIgnoreIfExists
+	}
+
 	sess, err := awsutil.Session()
 	if err != nil {
 		return err
@@ -66,8 +81,15 @@ func (act pushAction) Run(ctx context.Context) error {
 
 	if cachedIndex, err := repo.LoadIndexFile(repoEntry.Cache); err == nil {
 		// if cached index exists, check if the same chart version exists in it.
-		if cachedIndex.Has(chart.Metadata.Name, chart.Metadata.Version) && !act.force {
-			return ErrChartExists
+		if cachedIndex.Has(chart.Metadata.Name, chart.Metadata.Version) {
+			if act.ignoreIfExists {
+				return nil
+			}
+			if !act.force {
+				return ErrChartExists
+			}
+
+			// fallthrough on --force
 		}
 	}
 
@@ -91,8 +113,15 @@ func (act pushAction) Run(ctx context.Context) error {
 		return errors.WithMessage(err, "check if chart already exists in the repository")
 	}
 
-	if exists && !act.force {
-		return ErrChartExists
+	if exists {
+		if act.ignoreIfExists {
+			return nil
+		}
+		if !act.force {
+			return ErrChartExists
+		}
+
+		// fallthrough on --force
 	}
 
 	if !act.dryRun {
