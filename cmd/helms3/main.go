@@ -134,7 +134,6 @@ func main() {
 		}
 
 	case actionReindex:
-		fmt.Fprint(os.Stderr, "Warning: reindex feature is in beta. If you experience any issues,\nplease provide your feedback here: https://github.com/hypnoglow/helm-s3/issues/22\n\n")
 		act = reindexAction{
 			repoName: *reindexTargetRepository,
 			acl:      *acl,
