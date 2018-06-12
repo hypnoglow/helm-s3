@@ -110,3 +110,8 @@ workflows:
       - release:
           requires:
             - dep
+          filters:
+            tags:
+              only: /.*/
+            branches:
+              ignore: /.*/

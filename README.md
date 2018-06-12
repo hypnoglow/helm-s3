@@ -97,6 +97,9 @@ add `--force` flag to a push command:
 
     $ helm s3 push --force ./epicservice-0.7.2.tgz mynewrepo
 
+To see other available options, use `--help` flag:
+
+    $ helm s3 push --help 
 
 ### Delete
 
