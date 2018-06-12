@@ -28,6 +28,7 @@ type pushAction struct {
 	chartPath string
 	repoName  string
 	force     bool
+	dryRun    bool
 	acl       string
 }
 
@@ -94,8 +95,10 @@ func (act pushAction) Run(ctx context.Context) error {
 		return ErrChartExists
 	}
 
-	if _, err := storage.PutChart(ctx, repoEntry.URL+"/"+fname, fchart, string(serializedChartMeta), act.acl, hash); err != nil {
-		return errors.WithMessage(err, "upload chart to s3")
+	if !act.dryRun {
+		if _, err := storage.PutChart(ctx, repoEntry.URL+"/"+fname, fchart, string(serializedChartMeta), act.acl, hash); err != nil {
+			return errors.WithMessage(err, "upload chart to s3")
+		}
 	}
 
 	// The gap between index fetching and uploading should be as small as
@@ -124,12 +127,14 @@ func (act pushAction) Run(ctx context.Context) error {
 		return errors.WithMessage(err, "get index reader")
 	}
 
-	if err := storage.PutIndex(ctx, repoEntry.URL, act.acl, idxReader); err != nil {
-		return errors.WithMessage(err, "upload index to s3")
-	}
+	if !act.dryRun {
+		if err := storage.PutIndex(ctx, repoEntry.URL, act.acl, idxReader); err != nil {
+			return errors.WithMessage(err, "upload index to s3")
+		}
 
-	if err := idx.WriteFile(repoEntry.Cache, 0644); err != nil {
-		return errors.WithMessage(err, "update local index")
+		if err := idx.WriteFile(repoEntry.Cache, 0644); err != nil {
+			return errors.WithMessage(err, "update local index")
+		}
 	}
 
 	return nil

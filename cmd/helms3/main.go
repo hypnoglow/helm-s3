@@ -83,6 +83,8 @@ func main() {
 		String()
 	pushForce := pushCmd.Flag("force", "Replace the chart if it already exists. This can cause the repository to lose existing chart; use it with care").
 		Bool()
+	pushDryRun := pushCmd.Flag("dry-run", "Simulate a push, but don't actually touch anything.").
+		Bool()
 
 	reindexCmd := cli.Command(actionReindex, "Reindex the repository.")
 	reindexTargetRepository := reindexCmd.Arg("repo", "Target repository to reindex").
@@ -124,6 +126,7 @@ func main() {
 			chartPath: *pushChartPath,
 			repoName:  *pushTargetRepository,
 			force:     *pushForce,
+			dryRun:    *pushDryRun,
 			acl:       *acl,
 		}
 
