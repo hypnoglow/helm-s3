@@ -22,16 +22,32 @@ var (
 	// ErrChartExists signals that chart already exists in the repository
 	// and cannot be pushed without --force flag.
 	ErrChartExists = errors.New("chart already exists")
+
+	// ErrForceAndIgnoreIfExists signals that the --force and --ignore-if-exists
+	// flags cannot be used together.
+	ErrForceAndIgnoreIfExists = errors.New("The --force and --ignore-if-exists flags are mutually exclusive and cannot be specified together.")
 )
 
 type pushAction struct {
+	// required parameters
+
 	chartPath string
 	repoName  string
-	force     bool
-	acl       string
+
+	// optional parameters and flags
+
+	force          bool
+	dryRun         bool
+	ignoreIfExists bool
+	acl            string
 }
 
 func (act pushAction) Run(ctx context.Context) error {
+	// Sanity check.
+	if act.force && act.ignoreIfExists {
+		return ErrForceAndIgnoreIfExists
+	}
+
 	sess, err := awsutil.Session()
 	if err != nil {
 		return err
@@ -65,8 +81,15 @@ func (act pushAction) Run(ctx context.Context) error {
 
 	if cachedIndex, err := repo.LoadIndexFile(repoEntry.Cache); err == nil {
 		// if cached index exists, check if the same chart version exists in it.
-		if cachedIndex.Has(chart.Metadata.Name, chart.Metadata.Version) && !act.force {
-			return ErrChartExists
+		if cachedIndex.Has(chart.Metadata.Name, chart.Metadata.Version) {
+			if act.ignoreIfExists {
+				return nil
+			}
+			if !act.force {
+				return ErrChartExists
+			}
+
+			// fallthrough on --force
 		}
 	}
 
@@ -90,12 +113,21 @@ func (act pushAction) Run(ctx context.Context) error {
 		return errors.WithMessage(err, "check if chart already exists in the repository")
 	}
 
-	if exists && !act.force {
-		return ErrChartExists
+	if exists {
+		if act.ignoreIfExists {
+			return nil
+		}
+		if !act.force {
+			return ErrChartExists
+		}
+
+		// fallthrough on --force
 	}
 
-	if _, err := storage.PutChart(ctx, repoEntry.URL+"/"+fname, fchart, string(serializedChartMeta), act.acl, hash); err != nil {
-		return errors.WithMessage(err, "upload chart to s3")
+	if !act.dryRun {
+		if _, err := storage.PutChart(ctx, repoEntry.URL+"/"+fname, fchart, string(serializedChartMeta), act.acl, hash); err != nil {
+			return errors.WithMessage(err, "upload chart to s3")
+		}
 	}
 
 	// The gap between index fetching and uploading should be as small as
@@ -124,12 +156,14 @@ func (act pushAction) Run(ctx context.Context) error {
 		return errors.WithMessage(err, "get index reader")
 	}
 
-	if err := storage.PutIndex(ctx, repoEntry.URL, act.acl, idxReader); err != nil {
-		return errors.WithMessage(err, "upload index to s3")
-	}
+	if !act.dryRun {
+		if err := storage.PutIndex(ctx, repoEntry.URL, act.acl, idxReader); err != nil {
+			return errors.WithMessage(err, "upload index to s3")
+		}
 
-	if err := idx.WriteFile(repoEntry.Cache, 0644); err != nil {
-		return errors.WithMessage(err, "update local index")
+		if err := idx.WriteFile(repoEntry.Cache, 0644); err != nil {
+			return errors.WithMessage(err, "update local index")
+		}
 	}
 
 	return nil

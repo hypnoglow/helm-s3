@@ -2,19 +2,33 @@
 #
 # Check https://circleci.com/docs/2.0/language-go/ for more details
 version: 2
+
 jobs:
-  build:
+  dep:
     docker:
       - image: circleci/golang:1.9
     working_directory: /go/src/github.com/hypnoglow/helm-s3
     steps:
       - checkout
-      - run: go get -u -v github.com/golang/dep/cmd/dep
-      - run: dep ensure -v
+      - run:
+          command: |
+            curl -sSL https://github.com/golang/dep/releases/download/v0.4.1/dep-linux-amd64 -o /go/bin/dep
+            chmod +x /go/bin/dep
+      - run: dep ensure -v -vendor-only
+      - persist_to_workspace:
+          root: /go/src/github.com/hypnoglow
+          paths:
+            - helm-s3
+  test-unit:
+    docker:
+      - image: circleci/golang:1.10
+    working_directory: /go/src/github.com/hypnoglow/helm-s3
+    steps:
+      - attach_workspace:
+          at: /go/src/github.com/hypnoglow
       - run: ./.circleci/testcover.sh
       - run: bash <(curl -s https://codecov.io/bash)
-      - run: go build -o bin/helms3 ./cmd/helms3
-  test-integration:
+  test-integration-and-e2e:
     docker:
       - image: circleci/golang:1.9
         environment:
@@ -32,13 +46,11 @@ jobs:
         command: ["server", "/data"]
     working_directory: /go/src/github.com/hypnoglow/helm-s3
     steps:
-      - checkout
+      - attach_workspace:
+          at: /go/src/github.com/hypnoglow
       - run:
           name: Build the plugin
-          command: |
-            go get -u -v github.com/golang/dep/cmd/dep
-            dep ensure -v
-            go build -o bin/helms3 ./cmd/helms3
+          command: go build -o bin/helms3 ./cmd/helms3
       - run:
           name: Install helm, install plugin
           command: |
@@ -50,22 +62,23 @@ jobs:
       - run:
           name: Install minio client, prepare minio
           command: |
-            nc -vz helm-s3-minio 9000
             curl -sSL https://dl.minio.io/client/mc/release/linux-amd64/mc -o ${GOPATH}/bin/mc
             chmod +x ${GOPATH}/bin/mc
             mc config host add helm-s3-minio http://helm-s3-minio:9000 $AWS_ACCESS_KEY_ID $AWS_SECRET_ACCESS_KEY
             mc mb helm-s3-minio/test-bucket
       - run:
-          name: Run tests
+          name: Run (legacy) integration tests
           command: ./hack/integration-tests.sh
+      - run:
+          name: Run e2e tests
+          command: go test -v ./tests/e2e/...
   release:
     docker:
       - image: circleci/golang:1.9
     working_directory: /go/src/github.com/hypnoglow/helm-s3
     steps:
-      - checkout
-      - run: go get -u -v github.com/golang/dep/cmd/dep
-      - run: dep ensure -v
+      - attach_workspace:
+          at: /go/src/github.com/hypnoglow
       - deploy:
           name: goreleaser
           command: |
@@ -75,23 +88,25 @@ jobs:
 
 workflows:
   version: 2
-  build_test_release:
+  # test-pipeline runs on each push and merge, and does not run on tags.
+  test-pipeline:
     jobs:
-    - build:
-        filters:
-          tags:
-            only: /.*/
-    - test-integration:
-        filters:
-          tags:
-            only: /.*/
-        requires:
-        - build
-    - release:
-        filters:
-          tags:
-            only: /.*/
-          branches:
-            ignore: /.*/
-        requires:
-        - test-integration
+      - dep
+      - test-unit:
+          requires:
+            - dep
+      - test-integration-and-e2e:
+          requires:
+            - dep
+  # release-pipeline runs only on tags.
+  release-pipeline:
+    jobs:
+      - dep:
+          filters:
+            tags:
+              only: /.*/
+            branches:
+              ignore: /.*/
+      - release:
+          requires:
+            - dep

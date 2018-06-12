@@ -116,8 +116,6 @@ The chart is deleted from the repo:
 If your repository somehow became inconsistent or broken, you can use reindex to recreate
 the index in accordance with the charts in the repository.
 
-:warning: *note that this feature is currently in beta*
-
     $ helm s3 reindex mynewrepo
 
 ## Uninstall

@@ -63,6 +63,12 @@
   version = "v1.12.60"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/dustin/go-humanize"
+  packages = ["."]
+  revision = "02af3965c54e8cacf948b97fef38925c4120652c"
+
+[[projects]]
   name = "github.com/ghodss/yaml"
   packages = ["."]
   revision = "0ca9ea5df5451ffdf184b4428c902747c2c11cd7"
@@ -105,10 +111,35 @@
   revision = "0b12d6b5"
 
 [[projects]]
+  name = "github.com/minio/minio-go"
+  packages = [
+    ".",
+    "pkg/credentials",
+    "pkg/encrypt",
+    "pkg/s3signer",
+    "pkg/s3utils",
+    "pkg/set"
+  ]
+  revision = "034ea465b079a920e0720e3e1e0cbf5ccfeb6373"
+  version = "v6.0.2"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/mitchellh/go-homedir"
+  packages = ["."]
+  revision = "3864e76763d94a6df2f9960b16a20a33da9f9a66"
+
+[[projects]]
   name = "github.com/pkg/errors"
   packages = ["."]
   revision = "645ef00459ed84a119197bfb8d8205042c6df63d"
   version = "v0.8.0"
+
+[[projects]]
+  name = "github.com/sirupsen/logrus"
+  packages = ["."]
+  revision = "c155da19408a8799da419ed3eeb0cb5db0ad5dbc"
+  version = "v1.0.5"
 
 [[projects]]
   name = "github.com/spf13/pflag"
@@ -120,6 +151,8 @@
   branch = "master"
   name = "golang.org/x/crypto"
   packages = [
+    "argon2",
+    "blake2b",
     "cast5",
     "openpgp",
     "openpgp/armor",
@@ -127,9 +160,50 @@
     "openpgp/elgamal",
     "openpgp/errors",
     "openpgp/packet",
-    "openpgp/s2k"
+    "openpgp/s2k",
+    "ssh/terminal"
   ]
-  revision = "5f55bce93ad2c89f411e009659bb1fd83da36e7b"
+  revision = "8ac0e0d97ce45cd83d1d7243c060cb8461dda5e9"
+
+[[projects]]
+  branch = "master"
+  name = "golang.org/x/net"
+  packages = [
+    "http/httpguts",
+    "idna"
+  ]
+  revision = "db08ff08e8622530d9ed3a0e8ac279f6d4c02196"
+
+[[projects]]
+  branch = "master"
+  name = "golang.org/x/sys"
+  packages = [
+    "cpu",
+    "unix",
+    "windows"
+  ]
+  revision = "a9e25c09b96b8870693763211309e213c6ef299d"
+
+[[projects]]
+  name = "golang.org/x/text"
+  packages = [
+    "collate",
+    "collate/build",
+    "internal/colltab",
+    "internal/gen",
+    "internal/tag",
+    "internal/triegen",
+    "internal/ucd",
+    "language",
+    "secure/bidirule",
+    "transform",
+    "unicode/bidi",
+    "unicode/cldr",
+    "unicode/norm",
+    "unicode/rangetable"
+  ]
+  revision = "f21a4dfb5e38f5895301dc265a8def02365cc3d0"
+  version = "v0.3.0"
 
 [[projects]]
   name = "gopkg.in/alecthomas/kingpin.v2"
@@ -178,6 +252,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "78de3d78c47d19334c488bed5d00b1102621cc46c6691e62e97c45b25ef5ee3b"
+  inputs-digest = "1c37f33f7392eb209ae20e0ab289d98a41e6158a2c710ec7fc20c2a708400745"
   solver-name = "gps-cdcl"
   solver-version = 1
