@@ -18,6 +18,12 @@ import (
 	"k8s.io/helm/pkg/chartutil"
 	"k8s.io/helm/pkg/proto/hapi/chart"
 	"k8s.io/helm/pkg/provenance"
+	"os"
+)
+
+const (
+	// selects serverside encryption for bucket
+	awsS3encryption = "AWS_S3_SSE"
 )
 
 var (
@@ -227,14 +233,14 @@ func (s *Storage) PutChart(ctx context.Context, uri string, r io.Reader, chartMe
 	if err != nil {
 		return "", err
 	}
-
 	result, err := s3manager.NewUploader(s.session).UploadWithContext(
 		ctx,
 		&s3manager.UploadInput{
-			Bucket: aws.String(bucket),
-			Key:    aws.String(key),
-			ACL:    aws.String(acl),
-			Body:   r,
+			Bucket:               aws.String(bucket),
+			Key:                  aws.String(key),
+			ACL:                  aws.String(acl),
+			ServerSideEncryption: aws.String(os.Getenv(awsS3encryption)),
+			Body:                 r,
 			Metadata: map[string]*string{
 				metaChartMetadata: aws.String(chartMeta),
 				metaChartDigest:   aws.String(chartDigest),
@@ -259,14 +265,14 @@ func (s *Storage) PutIndex(ctx context.Context, uri string, acl string, r io.Rea
 	if err != nil {
 		return err
 	}
-
 	_, err = s3manager.NewUploader(s.session).UploadWithContext(
 		ctx,
 		&s3manager.UploadInput{
-			Bucket: aws.String(bucket),
-			Key:    aws.String(key),
-			ACL:    aws.String(acl),
-			Body:   r,
+			Bucket:               aws.String(bucket),
+			Key:                  aws.String(key),
+			ACL:                  aws.String(acl),
+			ServerSideEncryption: aws.String(os.Getenv(awsS3encryption)),
+			Body:                 r,
 		})
 	if err != nil {
 		return errors.Wrap(err, "upload index to S3 bucket")
