@@ -148,6 +148,10 @@ and others. To configure the plugin to work alternative S3 backend, just define
 
 See [these integration tests](https://github.com/hypnoglow/helm-s3/blob/master/hack/integration-tests-local.sh#L10) that use local minio docker container for a complete example.
 
+## Using S3 bucket ServerSide Encryption
+
+To enable S3 SSE export environment variable `AWS_S3_SSE` and set it to disired type for example `AES256`
+
 ## Documentation
 
 Additional documentation is available in the [docs](docs) directory. This currently includes:
