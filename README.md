@@ -36,6 +36,50 @@ To minimize security issues, remember to configure your IAM user policies proper
 As an example, a setup can provide only read access for users, and write access
 for a CI that builds and pushes charts to your repository.
 
+**Example Read Only IAM policy**
+
+```json
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "s3:ListBucket",
+                "s3:GetObject"
+            ],
+            "Resource": [
+                "arn:aws:s3:::bucket-name",
+                "arn:aws:s3:::bucket-name/*"
+            ]
+        }
+    ]
+}
+```
+
+**Example Read and Write IAM policy**
+
+```json
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "s3:ListBucket",
+                "s3:GetObject",
+                "s3:PutObject",
+                "s3:DeleteObject"
+            ],
+            "Resource": [
+                "arn:aws:s3:::bucket-name",
+                "arn:aws:s3:::bucket-name/*"
+            ]
+        }
+    ]
+}
+```
+
 ## Usage
 
 For now let's omit the process of uploading repository index and charts to s3 and assume
@@ -99,7 +143,7 @@ add `--force` flag to a push command:
 
 To see other available options, use `--help` flag:
 
-    $ helm s3 push --help 
+    $ helm s3 push --help
 
 ### Delete
 
