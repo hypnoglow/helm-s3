@@ -194,7 +194,7 @@ See [these integration tests](https://github.com/hypnoglow/helm-s3/blob/master/h
 
 ## Using S3 bucket ServerSide Encryption
 
-To enable S3 SSE export environment variable `AWS_S3_SSE` and set it to disired type for example `AES256`
+To enable S3 SSE export environment variable `AWS_S3_SSE` and set it to desired type for example `AES256`.
 
 ## Documentation
 
