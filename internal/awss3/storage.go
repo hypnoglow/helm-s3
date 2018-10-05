@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/url"
+	"os"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -18,7 +19,6 @@ import (
 	"k8s.io/helm/pkg/chartutil"
 	"k8s.io/helm/pkg/proto/hapi/chart"
 	"k8s.io/helm/pkg/provenance"
-	"os"
 )
 
 const (
@@ -37,6 +37,15 @@ var (
 // New returns a new Storage.
 func New(session *session.Session) *Storage {
 	return &Storage{session: session}
+}
+
+// Returns desired encryption
+func getSSE() *string {
+	sse := os.Getenv(awsS3encryption)
+	if sse == "" {
+		return nil
+	}
+	return &sse
 }
 
 // Storage provides an interface to work with AWS S3 objects by s3 protocol.
@@ -239,7 +248,7 @@ func (s *Storage) PutChart(ctx context.Context, uri string, r io.Reader, chartMe
 			Bucket:               aws.String(bucket),
 			Key:                  aws.String(key),
 			ACL:                  aws.String(acl),
-			ServerSideEncryption: aws.String(os.Getenv(awsS3encryption)),
+			ServerSideEncryption: aws.String(*getSSE()),
 			Body:                 r,
 			Metadata: map[string]*string{
 				metaChartMetadata: aws.String(chartMeta),
@@ -271,7 +280,7 @@ func (s *Storage) PutIndex(ctx context.Context, uri string, acl string, r io.Rea
 			Bucket:               aws.String(bucket),
 			Key:                  aws.String(key),
 			ACL:                  aws.String(acl),
-			ServerSideEncryption: aws.String(os.Getenv(awsS3encryption)),
+			ServerSideEncryption: aws.String(*getSSE()),
 			Body:                 r,
 		})
 	if err != nil {
