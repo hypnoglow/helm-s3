@@ -248,7 +248,7 @@ func (s *Storage) PutChart(ctx context.Context, uri string, r io.Reader, chartMe
 			Bucket:               aws.String(bucket),
 			Key:                  aws.String(key),
 			ACL:                  aws.String(acl),
-			ServerSideEncryption: aws.String(*getSSE()),
+			ServerSideEncryption: getSSE(),
 			Body:                 r,
 			Metadata: map[string]*string{
 				metaChartMetadata: aws.String(chartMeta),
@@ -280,7 +280,7 @@ func (s *Storage) PutIndex(ctx context.Context, uri string, acl string, r io.Rea
 			Bucket:               aws.String(bucket),
 			Key:                  aws.String(key),
 			ACL:                  aws.String(acl),
-			ServerSideEncryption: aws.String(*getSSE()),
+			ServerSideEncryption: getSSE(),
 			Body:                 r,
 		})
 	if err != nil {
