@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/url"
+	"os"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -20,6 +21,11 @@ import (
 	"k8s.io/helm/pkg/provenance"
 )
 
+const (
+	// selects serverside encryption for bucket
+	awsS3encryption = "AWS_S3_SSE"
+)
+
 var (
 	// ErrBucketNotFound signals that a bucket was not found.
 	ErrBucketNotFound = errors.New("bucket not found")
@@ -31,6 +37,15 @@ var (
 // New returns a new Storage.
 func New(session *session.Session) *Storage {
 	return &Storage{session: session}
+}
+
+// Returns desired encryption
+func getSSE() *string {
+	sse := os.Getenv(awsS3encryption)
+	if sse == "" {
+		return nil
+	}
+	return &sse
 }
 
 // Storage provides an interface to work with AWS S3 objects by s3 protocol.
@@ -227,14 +242,14 @@ func (s *Storage) PutChart(ctx context.Context, uri string, r io.Reader, chartMe
 	if err != nil {
 		return "", err
 	}
-
 	result, err := s3manager.NewUploader(s.session).UploadWithContext(
 		ctx,
 		&s3manager.UploadInput{
-			Bucket: aws.String(bucket),
-			Key:    aws.String(key),
-			ACL:    aws.String(acl),
-			Body:   r,
+			Bucket:               aws.String(bucket),
+			Key:                  aws.String(key),
+			ACL:                  aws.String(acl),
+			ServerSideEncryption: getSSE(),
+			Body:                 r,
 			Metadata: map[string]*string{
 				metaChartMetadata: aws.String(chartMeta),
 				metaChartDigest:   aws.String(chartDigest),
@@ -259,14 +274,14 @@ func (s *Storage) PutIndex(ctx context.Context, uri string, acl string, r io.Rea
 	if err != nil {
 		return err
 	}
-
 	_, err = s3manager.NewUploader(s.session).UploadWithContext(
 		ctx,
 		&s3manager.UploadInput{
-			Bucket: aws.String(bucket),
-			Key:    aws.String(key),
-			ACL:    aws.String(acl),
-			Body:   r,
+			Bucket:               aws.String(bucket),
+			Key:                  aws.String(key),
+			ACL:                  aws.String(acl),
+			ServerSideEncryption: getSSE(),
+			Body:                 r,
 		})
 	if err != nil {
 		return errors.Wrap(err, "upload index to S3 bucket")
