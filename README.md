@@ -6,7 +6,8 @@
 
 The Helm plugin that provides s3 protocol support.
 
-This allows you to have private Helm chart repositories hosted on Amazon S3.
+This allows you to have private Helm chart repositories hosted on Amazon S3. Refer to [this article](https://andrewlock.net/how-to-create-a-helm-chart-repository-using-amazon-s3/)
+written by [@andrewlock](https://github.com/andrewlock) to get a detailed use case overview.
 
 ## Install
 
