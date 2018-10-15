@@ -104,6 +104,39 @@ if helm search test-repo/postgres | grep -q 0.8.3 ; then
 fi
 
 #
+# Test: push with content-type
+#
+expected_content_type='application/x-gzip'
+helm s3 push --content-type=${expected_content_type} postgresql-0.8.3.tgz test-repo
+if [ $? -ne 0 ]; then
+    echo "Failed to push chart to repo"
+    exit 1
+fi
+
+helm search test-repo/postgres | grep -q 0.8.3
+if [ $? -ne 0 ]; then
+    echo "Failed to find uploaded chart"
+    exit 1
+fi
+
+mc ls helm-s3-minio/test-bucket/charts/postgresql-0.8.3.tgz
+if [ $? -ne 0 ]; then
+    echo "Chart was not actually uploaded"
+    exit 1
+fi
+
+actual_content_type=$(mc stat helm-s3-minio/test-bucket/charts/postgresql-0.8.3.tgz | awk '/Content-Type/{print $NF}')
+if [ $? -ne 0 ]; then
+    echo "failed to stat uploaded chart"
+    exit 1
+fi
+
+if [ "${expected_content_type}" != "${actual_content_type}" ]; then
+    echo "content-type, expected '${expected_content_type}', actual '${actual_content_type}'"
+    exit 1
+fi
+
+#
 # Tear down
 #
 

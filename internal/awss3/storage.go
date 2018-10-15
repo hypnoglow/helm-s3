@@ -237,7 +237,7 @@ func (s *Storage) Exists(ctx context.Context, uri string) (bool, error) {
 
 // PutChart puts the chart file to the storage.
 // uri must be in the form of s3 protocol: s3://bucket-name/key[...].
-func (s *Storage) PutChart(ctx context.Context, uri string, r io.Reader, chartMeta, acl string, chartDigest string) (string, error) {
+func (s *Storage) PutChart(ctx context.Context, uri string, r io.Reader, chartMeta, acl string, chartDigest string, contentType string) (string, error) {
 	bucket, key, err := parseURI(uri)
 	if err != nil {
 		return "", err
@@ -248,6 +248,7 @@ func (s *Storage) PutChart(ctx context.Context, uri string, r io.Reader, chartMe
 			Bucket:               aws.String(bucket),
 			Key:                  aws.String(key),
 			ACL:                  aws.String(acl),
+			ContentType:          aws.String(contentType),
 			ServerSideEncryption: getSSE(),
 			Body:                 r,
 			Metadata: map[string]*string{

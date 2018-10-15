@@ -15,11 +15,13 @@ docker container run -d --name helm-s3-minio \
     -e MINIO_SECRET_KEY=$AWS_SECRET_ACCESS_KEY \
     minio/minio:latest server /data &>/dev/null
 
+MCGOPATH=${GOPATH}/src/github.com/minio/mc
 if [ ! -x "$(which mc 2>/dev/null)" ]; then
     go get -d github.com/minio/mc
-    (cd ${GOPATH}/src/github.com/minio/mc && make)
+    (cd ${MCGOPATH} && make)
 fi
 
+PATH=${MCGOPATH}:${PATH}
 mc config host add helm-s3-minio http://localhost:9000 $AWS_ACCESS_KEY_ID $AWS_SECRET_ACCESS_KEY
 mc mb helm-s3-minio/test-bucket
 

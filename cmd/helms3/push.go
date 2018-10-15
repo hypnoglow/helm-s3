@@ -40,6 +40,7 @@ type pushAction struct {
 	dryRun         bool
 	ignoreIfExists bool
 	acl            string
+	contentType    string
 }
 
 func (act pushAction) Run(ctx context.Context) error {
@@ -125,7 +126,7 @@ func (act pushAction) Run(ctx context.Context) error {
 	}
 
 	if !act.dryRun {
-		if _, err := storage.PutChart(ctx, repoEntry.URL+"/"+fname, fchart, string(serializedChartMeta), act.acl, hash); err != nil {
+		if _, err := storage.PutChart(ctx, repoEntry.URL+"/"+fname, fchart, string(serializedChartMeta), act.acl, hash, act.contentType); err != nil {
 			return errors.WithMessage(err, "upload chart to s3")
 		}
 	}
