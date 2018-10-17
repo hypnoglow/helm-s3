@@ -101,7 +101,7 @@ func (s *Storage) traverse(ctx context.Context, repoURI string, items chan<- Cha
 				continue
 			}
 
-			if !strings.Contains(key, ".tgz") {
+			if !strings.HasSuffix(key, ".tgz") {
 				// Ignore any file that isn't a chart
 				// This could include index.yaml
 				// or any other kind of file that might be in the repo
