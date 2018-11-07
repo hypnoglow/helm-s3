@@ -24,6 +24,9 @@ const (
 	defaultTimeout       = time.Minute * 5
 	defaultTimeoutString = "5m"
 
+	// duplicated in e2e package for testing.
+	defaultChartsContentType = "application/gzip"
+
 	helpFlagTimeout = `Timeout for the whole operation to complete. Defaults to 5 minutes.
 
 If you don't use MFA, it may be reasonable to lower the timeout
@@ -87,6 +90,10 @@ func main() {
 		Bool()
 	pushIgnoreIfExists := pushCmd.Flag("ignore-if-exists", "If the chart already exists, exit normally and do not trigger an error.").
 		Bool()
+	pushContentType := pushCmd.Flag("content-type", "Set the Charts content-type").
+		Default(defaultChartsContentType).
+		OverrideDefaultFromEnvar("S3_CHART_CONTENT_TYPE").
+		String()
 
 	reindexCmd := cli.Command(actionReindex, "Reindex the repository.")
 	reindexTargetRepository := reindexCmd.Arg("repo", "Target repository to reindex").
@@ -131,6 +138,7 @@ func main() {
 			dryRun:         *pushDryRun,
 			ignoreIfExists: *pushIgnoreIfExists,
 			acl:            *acl,
+			contentType:    *pushContentType,
 		}
 
 	case actionReindex:
