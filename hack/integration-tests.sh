@@ -106,7 +106,7 @@ fi
 #
 # Test: push with content-type
 #
-expected_content_type='application/x-gzip'
+expected_content_type='application/gzip'
 helm s3 push --content-type=${expected_content_type} postgresql-0.8.3.tgz test-repo
 if [ $? -ne 0 ]; then
     echo "Failed to push chart to repo"

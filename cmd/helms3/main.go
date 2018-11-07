@@ -25,7 +25,7 @@ const (
 	defaultTimeoutString = "5m"
 
 	// duplicated in e2e package for testing.
-	defaultChartsContentType = "application/x-gzip"
+	defaultChartsContentType = "application/gzip"
 
 	helpFlagTimeout = `Timeout for the whole operation to complete. Defaults to 5 minutes.
 

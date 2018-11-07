@@ -10,7 +10,7 @@ import (
 
 const (
 	// copied from main
-	defaultChartsContentType = "application/x-gzip"
+	defaultChartsContentType = "application/gzip"
 )
 
 func TestPush(t *testing.T) {
