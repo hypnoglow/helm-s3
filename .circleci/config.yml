@@ -72,6 +72,35 @@ jobs:
       - run:
           name: Run e2e tests
           command: go test -v ./tests/e2e/...
+  test-install:
+    docker:
+      - image: circleci/buildpack-deps:stretch-curl
+    working_directory: /tmp
+    steps:
+      - run:
+          name: Install helm
+          command: |
+            tar_filename="helm-v2.10.0-linux-amd64.tar.gz"
+            checksum_filename="helm-v2.10.0-linux-amd64.tar.gz.sha256"
+            curl -sSL https://storage.googleapis.com/kubernetes-helm/${tar_filename} -O
+            curl -sSL https://storage.googleapis.com/kubernetes-helm/${checksum_filename} -O
+            echo "$(cat ${checksum_filename})  ${tar_filename}" | sha256sum -c
+            tar xzf ${tar_filename}
+            sudo mv linux-amd64/helm /usr/local/bin/helm
+            rm -rf linux-amd64 ${tar_filename} ${checksum_filename}
+            helm init -c
+      - run:
+          name: Install helm-s3 plugin
+          command: |
+            sudo apt-get install -y make
+
+            version="${CIRCLE_SHA1}"
+            if [ -n "${CIRCLE_TAG}" ]; then
+              version="${CIRCLE_TAG#v*}"
+            fi
+
+            echo "Check installation of version ${version}"
+            helm plugin install https://github.com/hypnoglow/helm-s3.git --version ${version}
   release:
     docker:
       - image: circleci/golang:1.9
@@ -98,10 +127,21 @@ workflows:
       - test-integration-and-e2e:
           requires:
             - dep
+      - test-install:
+          requires:
+            - dep
   # release-pipeline runs only on tags.
   release-pipeline:
     jobs:
       - dep:
+          filters:
+            tags:
+              only: /.*/
+            branches:
+              ignore: /.*/
+      - test-install:
+          requires:
+            - dep
           filters:
             tags:
               only: /.*/
