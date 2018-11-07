@@ -130,6 +130,9 @@ workflows:
       - test-install:
           requires:
             - dep
+          filters:
+            branches:
+              only: master
   # release-pipeline runs only on tags.
   release-pipeline:
     jobs:
