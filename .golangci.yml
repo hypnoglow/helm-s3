@@ -1,0 +1,7 @@
+linters:
+  enable-all: true
+  disable:
+    - lll
+
+issues:
+  new-from-rev: master
