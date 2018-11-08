@@ -5,6 +5,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [0.8.0]
+
+### Added
+
+- Added possibility to enable S3 serverside encryption.
+[Refs: [#52](https://github.com/hypnoglow/helm-s3/pull/52)] @nexusix
+
+- Added possibility to specify Content-Type for uploaded charts.
+[Refs: [#59](https://github.com/hypnoglow/helm-s3/issues/59) [#60](https://github.com/hypnoglow/helm-s3/pull/60)] @bashims
+
+- Added checksum verification on plugin installation.
+[Refs: [#63](https://github.com/hypnoglow/helm-s3/pull/63)]
+
+### Changed
+
+- On `helm s3 reindex`, only `*.tgz` files in the bucket directory are taken into
+account, everything else is ignored.
+[Refs: [#57](https://github.com/hypnoglow/helm-s3/issues/57) [#58](https://github.com/hypnoglow/helm-s3/pull/58)] @kylehodgetts
+
+- Default Content-Type for uploaded charts is set to `application/gzip`.
+[Refs: [#59](https://github.com/hypnoglow/helm-s3/issues/59) [#60](https://github.com/hypnoglow/helm-s3/pull/60)] @bashims
+
+- `make` is no longer required to install the plugin.
+[Refs: [#62](https://github.com/hypnoglow/helm-s3/issues/62) [#64](https://github.com/hypnoglow/helm-s3/pull/64)] @willhayslett
+
 ## [0.7.0]
 
 ### Added

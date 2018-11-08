@@ -17,7 +17,7 @@ The installation itself is simple as:
 
 You can install a specific release version:
 
-    $ helm plugin install https://github.com/hypnoglow/helm-s3.git --version 0.6.1
+    $ helm plugin install https://github.com/hypnoglow/helm-s3.git --version 0.7.0
 
 To use the plugin, you do not need any special dependencies. The installer will
 download versioned release with prebuilt binary from [github releases](https://github.com/hypnoglow/helm-s3/releases).
