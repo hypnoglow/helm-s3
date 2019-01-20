@@ -218,16 +218,7 @@ func (s *Storage) FetchRaw(ctx context.Context, uri string) ([]byte, error) {
 
 // Exists returns true if an object exists in the storage.
 func (s *Storage) Exists(ctx context.Context, uri string) (bool, error) {
-	bucket, key, err := parseURI(uri)
-	if err != nil {
-		return false, err
-	}
-
-	_, err = s3.New(s.session).HeadObject(&s3.HeadObjectInput{
-		Bucket: aws.String(bucket),
-		Key:    aws.String(key),
-	})
-	if err != nil {
+	if _, err := s.GetMetadata(ctx, uri); err != nil {
 		// That's weird that there is no NotFound constant in aws sdk.
 		if ae, ok := err.(awserr.Error); ok && ae.Code() == "NotFound" {
 			return false, nil
@@ -236,6 +227,25 @@ func (s *Storage) Exists(ctx context.Context, uri string) (bool, error) {
 	}
 
 	return true, nil
+}
+
+// GetMetadata returns metadata associated with the object in storage
+func (s *Storage) GetMetadata(ctx context.Context, uri string) (map[string]string, error) {
+	bucket, key, err := parseURI(uri)
+	if err != nil {
+		return nil, err
+	}
+
+	result, err := s3.New(s.session).HeadObject(&s3.HeadObjectInput{
+		Bucket: aws.String(bucket),
+		Key:    aws.String(key),
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return aws.StringValueMap(result.Metadata), nil
 }
 
 // PutChart puts the chart file to the storage.
@@ -268,7 +278,7 @@ func (s *Storage) PutChart(ctx context.Context, uri string, r io.Reader, chartMe
 
 // PutIndex puts the index file to the storage.
 // uri must be in the form of s3 protocol: s3://bucket-name/key[...].
-func (s *Storage) PutIndex(ctx context.Context, uri string, acl string, r io.Reader) error {
+func (s *Storage) PutIndex(ctx context.Context, uri string, publishURI string, acl string, r io.Reader) error {
 	if strings.HasPrefix(uri, "index.yaml") {
 		return errors.New("uri must not contain \"index.yaml\" suffix, it appends automatically")
 	}
@@ -286,6 +296,9 @@ func (s *Storage) PutIndex(ctx context.Context, uri string, acl string, r io.Rea
 			ACL:                  aws.String(acl),
 			ServerSideEncryption: getSSE(),
 			Body:                 r,
+			Metadata: map[string]*string{
+				MetaPublishURI: aws.String(publishURI),
+			},
 		})
 	if err != nil {
 		return errors.Wrap(err, "upload index to S3 bucket")
@@ -339,4 +352,7 @@ const (
 
 	// metaChartDigest is a s3 object metadata key that represents chart digest.
 	metaChartDigest = "chart-digest"
+
+	// MetaPublishURI s3 object metadata key that stores the non-s3 URI to publish
+	MetaPublishURI = "helm-s3-publish-uri"
 )

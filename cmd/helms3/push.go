@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/pkg/errors"
 	"k8s.io/helm/pkg/chartutil"
@@ -80,7 +81,8 @@ func (act pushAction) Run(ctx context.Context) error {
 		return err
 	}
 
-	if cachedIndex, err := repo.LoadIndexFile(repoEntry.Cache); err == nil {
+	cachedIndex, err := repo.LoadIndexFile(repoEntry.Cache)
+	if err == nil {
 		// if cached index exists, check if the same chart version exists in it.
 		if cachedIndex.Has(chart.Metadata.Name, chart.Metadata.Version) {
 			if act.ignoreIfExists {
@@ -137,7 +139,8 @@ func (act pushAction) Run(ctx context.Context) error {
 
 	// Fetch current index, update it and upload it back.
 
-	b, err := storage.FetchRaw(ctx, repoEntry.URL+"/index.yaml")
+	indexURI := repoEntry.URL + "/index.yaml"
+	b, err := storage.FetchRaw(ctx, indexURI)
 	if err != nil {
 		return errors.WithMessage(err, "fetch current repo index")
 	}
@@ -147,7 +150,18 @@ func (act pushAction) Run(ctx context.Context) error {
 		return errors.WithMessage(err, "load index from downloaded file")
 	}
 
-	if err := idx.AddOrReplace(chart.GetMetadata(), fname, repoEntry.URL, hash); err != nil {
+	metadata, err := storage.GetMetadata(ctx, indexURI)
+	if err != nil {
+		return err
+	}
+
+	publishURI := metadata[strings.Title(awss3.MetaPublishURI)]
+	uri := repoEntry.URL
+	if publishURI != "" {
+		uri = publishURI
+	}
+
+	if err := idx.AddOrReplace(chart.GetMetadata(), fname, uri, hash); err != nil {
 		return errors.WithMessage(err, "add/replace chart in the index")
 	}
 	idx.SortEntries()
@@ -158,11 +172,17 @@ func (act pushAction) Run(ctx context.Context) error {
 	}
 
 	if !act.dryRun {
-		if err := storage.PutIndex(ctx, repoEntry.URL, act.acl, idxReader); err != nil {
+		if err := storage.PutIndex(ctx, repoEntry.URL, publishURI, act.acl, idxReader); err != nil {
 			return errors.WithMessage(err, "upload index to s3")
 		}
 
-		if err := idx.WriteFile(repoEntry.Cache, 0644); err != nil {
+		localIndex := &index.Index{IndexFile: cachedIndex}
+		if err := localIndex.AddOrReplace(chart.GetMetadata(), fname, repoEntry.URL, hash); err != nil {
+			return errors.WithMessage(err, "add/replace chart in the index")
+		}
+		localIndex.SortEntries()
+
+		if err := localIndex.WriteFile(repoEntry.Cache, 0644); err != nil {
 			return errors.WithMessage(err, "update local index")
 		}
 	}

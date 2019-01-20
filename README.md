@@ -117,6 +117,20 @@ To work with this repo by it's name, first you need to add it using native helm 
 
     $ helm repo add mynewrepo s3://bucket-name/charts
 
+To store the repository in S3, but to publish it at a different URI you can specify the
+URI when initializing. This will rewrite the URIs in the repository index so that they are
+downloadable via the published URI. This is useful in case you want to keep the S3
+bucket private and expose the repository over HTTP(S) via CloudFront or a web server.
+The delete and push commands will automatically take into account this publish URI when
+updating the index.
+
+    $ helm s3 init s3://bucket-name/charts --publish https://charts.my-company.tld
+
+The repository owner can continue to use the S3 URIs while the repository user can
+consume the repository via its published URI:
+
+   $ helm repo add publishedrepo https://charts.my-company.tld
+
 ### Push
 
 Now you can push your chart to this repo:
@@ -165,6 +179,10 @@ If your repository somehow became inconsistent or broken, you can use reindex to
 the index in accordance with the charts in the repository.
 
     $ helm s3 reindex mynewrepo
+
+Alternatively, you can specify `--publish uri` to reindex an existing repository with a
+different published URI. If you don't specify a publish URI, it will reset the repository
+back to using S3 URIs.
 
 ## Uninstall
 

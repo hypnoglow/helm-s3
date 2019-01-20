@@ -7,7 +7,7 @@ import (
 	"os"
 	"time"
 
-	"gopkg.in/alecthomas/kingpin.v2"
+	kingpin "gopkg.in/alecthomas/kingpin.v2"
 )
 
 var (
@@ -76,6 +76,9 @@ func main() {
 	initURI := initCmd.Arg("uri", "URI of repository, e.g. s3://awesome-bucket/charts").
 		Required().
 		String()
+	initPublish := initCmd.Flag("publish", "The URI where the S3 bucket should be published").
+		Default("").
+		String()
 
 	pushCmd := cli.Command(actionPush, "Push chart to the repository.")
 	pushChartPath := pushCmd.Arg("chartPath", "Path to a chart, e.g. ./epicservice-0.5.1.tgz").
@@ -98,6 +101,9 @@ func main() {
 	reindexCmd := cli.Command(actionReindex, "Reindex the repository.")
 	reindexTargetRepository := reindexCmd.Arg("repo", "Target repository to reindex").
 		Required().
+		String()
+	reindexPublish := reindexCmd.Flag("publish", "The URI where the S3 bucket should be published").
+		Default("").
 		String()
 
 	deleteCmd := cli.Command(actionDelete, "Delete chart from the repository.").Alias("del")
@@ -125,8 +131,9 @@ func main() {
 
 	case actionInit:
 		act = initAction{
-			uri: *initURI,
-			acl: *acl,
+			uri:        *initURI,
+			publishURI: *initPublish,
+			acl:        *acl,
 		}
 		defer fmt.Printf("Initialized empty repository at %s\n", *initURI)
 
@@ -143,8 +150,9 @@ func main() {
 
 	case actionReindex:
 		act = reindexAction{
-			repoName: *reindexTargetRepository,
-			acl:      *acl,
+			repoName:   *reindexTargetRepository,
+			publishURI: *reindexPublish,
+			acl:        *acl,
 		}
 		defer fmt.Printf("Repository %s was successfully reindexed.\n", *reindexTargetRepository)
 

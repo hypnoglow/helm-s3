@@ -3,8 +3,10 @@ package main
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/pkg/errors"
+	"k8s.io/helm/pkg/repo"
 
 	"github.com/hypnoglow/helm-s3/internal/awss3"
 	"github.com/hypnoglow/helm-s3/internal/awsutil"
@@ -29,7 +31,8 @@ func (act deleteAction) Run(ctx context.Context) error {
 	storage := awss3.New(sess)
 
 	// Fetch current index.
-	b, err := storage.FetchRaw(ctx, repoEntry.URL+"/index.yaml")
+	indexURI := repoEntry.URL + "/index.yaml"
+	b, err := storage.FetchRaw(ctx, indexURI)
 	if err != nil {
 		return errors.WithMessage(err, "fetch current repo index")
 	}
@@ -56,16 +59,35 @@ func (act deleteAction) Run(ctx context.Context) error {
 	if len(chartVersion.URLs) < 1 {
 		return fmt.Errorf("chart version index record has no urls")
 	}
-	uri := chartVersion.URLs[0]
+
+	metadata, err := storage.GetMetadata(ctx, indexURI)
+	if err != nil {
+		return err
+	}
+
+	publishURI := metadata[strings.Title(awss3.MetaPublishURI)]
+	uri := fmt.Sprintf("%s/%s-%s.tgz", repoEntry.URL, chartVersion.Metadata.Name, chartVersion.Metadata.Version)
 
 	if err := storage.Delete(ctx, uri); err != nil {
 		return errors.WithMessage(err, "delete chart file from s3")
 	}
-	if err := storage.PutIndex(ctx, repoEntry.URL, act.acl, idxReader); err != nil {
+	if err := storage.PutIndex(ctx, repoEntry.URL, publishURI, act.acl, idxReader); err != nil {
 		return errors.WithMessage(err, "upload new index to s3")
 	}
 
-	if err := idx.WriteFile(repoEntry.Cache, 0644); err != nil {
+	localIndexFile, err := repo.LoadIndexFile(repoEntry.Cache)
+	if err != nil {
+		return err
+	}
+
+	localIndex := &index.Index{IndexFile: localIndexFile}
+
+	_, err = localIndex.Delete(act.name, act.version)
+	if err != nil {
+		return errors.WithMessage(err, "delete chart from local index")
+	}
+
+	if err := localIndex.WriteFile(repoEntry.Cache, 0644); err != nil {
 		return errors.WithMessage(err, "update local index")
 	}
 
