@@ -129,7 +129,7 @@ updating the index.
 The repository owner can continue to use the S3 URIs while the repository user can
 consume the repository via its published URI:
 
-   $ helm repo add publishedrepo https://charts.my-company.tld
+    $ helm repo add publishedrepo https://charts.my-company.tld
 
 ### Push
 

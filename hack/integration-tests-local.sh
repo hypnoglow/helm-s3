@@ -30,9 +30,6 @@ go build -o bin/helms3 ./cmd/helms3
 ## Test
 
 bash "$(dirname ${BASH_SOURCE[0]})/integration-tests.sh"
-if [ $? -eq 0 ] ; then
-    echo -e "\nAll tests passed!"
-fi
 
 ## Tear down
 
