@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"path"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -16,6 +15,8 @@ type proxyCmd struct {
 	uri string
 }
 
+const indexYaml = "index.yaml"
+
 func (act proxyCmd) Run(ctx context.Context) error {
 	sess, err := awsutil.Session(awsutil.AssumeRoleTokenProvider(awsutil.StderrTokenProvider))
 	if err != nil {
@@ -25,8 +26,8 @@ func (act proxyCmd) Run(ctx context.Context) error {
 
 	b, err := storage.FetchRaw(ctx, act.uri)
 	if err != nil {
-		if strings.HasSuffix(act.uri, "index.yaml") && err == awss3.ErrObjectNotFound {
-			return fmt.Errorf("The index file does not exist by the path %s. If you haven't initialized the repository yet, try running \"helm s3 init %s\"", act.uri, path.Dir(act.uri))
+		if strings.HasSuffix(act.uri, indexYaml) && err == awss3.ErrObjectNotFound {
+			return fmt.Errorf("The index file does not exist by the path %s. If you haven't initialized the repository yet, try running \"helm s3 init %s\"", act.uri, act.uri[0:len(indexYaml)])
 		}
 		return errors.WithMessage(err, "fetch from s3")
 	}
