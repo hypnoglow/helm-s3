@@ -27,7 +27,12 @@ func (act proxyCmd) Run(ctx context.Context) error {
 	b, err := storage.FetchRaw(ctx, act.uri)
 	if err != nil {
 		if strings.HasSuffix(act.uri, indexYaml) && err == awss3.ErrObjectNotFound {
-			return fmt.Errorf("The index file does not exist by the path %s. If you haven't initialized the repository yet, try running \"helm s3 init %s\"", act.uri, act.uri[0:len(indexYaml)])
+			return fmt.Errorf(
+				"The index file does not exist by the path %s. "+
+					"If you haven't initialized the repository yet, try running \"helm s3 init %s\"",
+				act.uri,
+				strings.TrimSuffix(strings.TrimSuffix(act.uri, indexYaml), "/"),
+			)
 		}
 		return errors.WithMessage(err, "fetch from s3")
 	}
