@@ -23,7 +23,7 @@ func TestIndex_MarshalBinary(t *testing.T) {
 
 	expected := `apiVersion: foo
 entries: null
-generated: 2018-01-01T00:00:00Z
+generated: "2018-01-01T00:00:00Z"
 `
 	if string(b) != expected {
 		t.Errorf("Expected %q but got %q", expected, string(b))
