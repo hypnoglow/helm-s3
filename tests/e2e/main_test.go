@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/minio/minio-go"
+	"github.com/minio/minio-go/v6"
 )
 
 var mc *minio.Client
