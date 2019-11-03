@@ -1,8 +1,10 @@
 PKG := github.com/hypnoglow/helm-s3
 
-.PHONY: dep
-dep:
-	@dep ensure -v -vendor-only
+.PHONY: deps
+deps:
+	@go mod download
+	@go mod vendor
+	@go mod tidy
 
 .PHONY: build
 build:

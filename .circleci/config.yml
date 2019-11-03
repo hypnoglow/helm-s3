@@ -6,22 +6,23 @@ version: 2
 jobs:
   dep:
     docker:
-      - image: circleci/golang:1.9
+      - image: circleci/golang:1.12
+        environment:
+          GO111MODULE: "on"
     working_directory: /go/src/github.com/hypnoglow/helm-s3
     steps:
       - checkout
-      - run:
-          command: |
-            curl -sSL https://github.com/golang/dep/releases/download/v0.4.1/dep-linux-amd64 -o /go/bin/dep
-            chmod +x /go/bin/dep
-      - run: dep ensure -v -vendor-only
+      - run: make deps
       - persist_to_workspace:
           root: /go/src/github.com/hypnoglow
           paths:
             - helm-s3
   test-unit:
     docker:
-      - image: circleci/golang:1.10
+      - image: circleci/golang:1.12
+        environment:
+          GO111MODULE: "on"
+          GOFLAGS: "-mod=vendor"
     working_directory: /go/src/github.com/hypnoglow/helm-s3
     steps:
       - attach_workspace:
@@ -30,7 +31,7 @@ jobs:
       - run: bash <(curl -s https://codecov.io/bash)
   test-integration-and-e2e:
     docker:
-      - image: circleci/golang:1.9
+      - image: circleci/golang:1.12
         environment:
           AWS_ACCESS_KEY_ID: EXAMPLEKEY123
           AWS_SECRET_ACCESS_KEY: EXAMPLESECRET123456
@@ -38,6 +39,8 @@ jobs:
           AWS_ENDPOINT: helm-s3-minio:9000
           AWS_DISABLE_SSL: true
           HELM_VERSION: v2.6.2
+          GO111MODULE: "on"
+          GOFLAGS: "-mod=vendor"
       - image: minio/minio:latest
         name: helm-s3-minio
         environment:
@@ -103,7 +106,10 @@ jobs:
             helm plugin install https://github.com/hypnoglow/helm-s3.git --version ${version}
   release:
     docker:
-      - image: circleci/golang:1.9
+      - image: circleci/golang:1.12
+        environment:
+          GO111MODULE: "on"
+          GOFLAGS: "-mod=vendor"
     working_directory: /go/src/github.com/hypnoglow/helm-s3
     steps:
       - attach_workspace:
