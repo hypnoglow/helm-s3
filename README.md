@@ -24,7 +24,16 @@ download versioned release with prebuilt binary from [github releases](https://g
 However, if you want to build the plugin from source, or you want to contribute
 to the plugin, please see [these instructions](.github/CONTRIBUTING.md).
 
-#### Note on AWS authentication
+### Docker Images
+
+[![Docker Pulls](https://img.shields.io/docker/pulls/hypnoglow/helm-s3)](https://hub.docker.com/r/hypnoglow/helm-s3)
+
+The plugin is also distributed as Docker images. Images are pushed to Docker Hub tagged with plugin release 
+version and suffixed with Helm version. The image built from master branch is also available, note that it should be
+only used for playing and testing, it is **strongly discouraged** to use that image for production use cases. 
+Refer to https://hub.docker.com/r/hypnoglow/helm-s3 for details and all available tags.
+
+### Note on AWS authentication
 
 Because this plugin assumes private access to S3, you need to provide valid AWS credentials.
 You can do this in [the same manner](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html) as for `AWS CLI` tool.

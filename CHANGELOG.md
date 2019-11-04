@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Added
+
+- The plugin is now also distributed as Docker images. Images are pushed to Docker Hub tagged with plugin release 
+version and suffixed with Helm version. The image built from master branch is also available, note that it should be
+only used for playing and testing, it is **strongly discouraged** to use that image for production use cases. 
+Refer to https://hub.docker.com/r/hypnoglow/helm-s3 for details and all available tags.
+[Refs: [#79](https://github.com/hypnoglow/helm-s3/issues/79) [#88](https://github.com/hypnoglow/helm-s3/pull/88)]
+
 ### Fixed
 
 - Fixed incorrect s3 url when "proxy" runs on uninitialized repository.
