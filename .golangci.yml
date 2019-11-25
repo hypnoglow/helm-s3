@@ -2,6 +2,9 @@ linters:
   enable-all: true
   disable:
     - lll
+    - funlen
+    - gochecknoglobals
+    - wsl
 
 issues:
   new-from-rev: master

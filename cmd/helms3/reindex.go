@@ -28,13 +28,13 @@ func (act reindexAction) Run(ctx context.Context) error {
 	}
 	storage := awss3.New(sess)
 
-	items, errs := storage.Traverse(ctx, repoEntry.URL)
+	items, errs := storage.Traverse(ctx, repoEntry.URL())
 
 	builtIndex := make(chan *index.Index, 1)
 	go func() {
 		idx := index.New()
 		for item := range items {
-			idx.Add(item.Meta, item.Filename, repoEntry.URL, item.Hash)
+			idx.Add(item.Meta, item.Filename, repoEntry.URL(), item.Hash)
 		}
 		idx.SortEntries()
 
@@ -52,11 +52,11 @@ func (act reindexAction) Run(ctx context.Context) error {
 		return errors.Wrap(err, "get index reader")
 	}
 
-	if err := storage.PutIndex(ctx, repoEntry.URL, act.acl, r); err != nil {
+	if err := storage.PutIndex(ctx, repoEntry.URL(), act.acl, r); err != nil {
 		return errors.Wrap(err, "upload index to the repository")
 	}
 
-	if err := idx.WriteFile(repoEntry.Cache, 0644); err != nil {
+	if err := idx.WriteFile(repoEntry.CacheFile(), 0644); err != nil {
 		return errors.WithMessage(err, "update local index")
 	}
 

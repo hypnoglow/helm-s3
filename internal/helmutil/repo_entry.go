@@ -1,41 +1,29 @@
 package helmutil
 
-import (
-	"os"
+type RepoEntry interface {
+	// URL returns repo URL.
+	// Examples:
+	// - https://kubernetes-charts.storage.googleapis.com/
+	// - s3://my-charts
+	URL() string
 
-	"github.com/pkg/errors"
-	"k8s.io/helm/pkg/helm/environment"
-	"k8s.io/helm/pkg/helm/helmpath"
-	"k8s.io/helm/pkg/repo"
-)
+	// IndexURI returns repo index file URL.
+	// Examples:
+	// - https://kubernetes-charts.storage.googleapis.com/index.yaml
+	// - s3://my-charts/index.yaml
+	IndexURL() string
 
-const (
-	envHelmHome = "HELM_HOME"
-)
-
-func getHome() helmpath.Home {
-	h := helmpath.Home(environment.DefaultHelmHome)
-	if os.Getenv(envHelmHome) != "" {
-		h = helmpath.Home(os.Getenv(envHelmHome))
-	}
-
-	return h
+	// CacheFile returns repo local cache file path.
+	// Examples:
+	// - /Users/foo/Library/Caches/helm/repository/my-charts-index.yaml (on macOS)
+	// - /home/foo/.cache/helm/repository/my-charts-index.yaml (on Linux)
+	CacheFile() string
 }
 
 // LookupRepoEntry returns an entry from helm's repositories.yaml file by name.
-func LookupRepoEntry(name string) (*repo.Entry, error) {
-	h := getHome()
-
-	repoFile, err := repo.LoadRepositoriesFile(h.RepositoryFile())
-	if err != nil {
-		return nil, errors.Wrap(err, "load repo file")
+func LookupRepoEntry(name string) (RepoEntry, error) {
+	if IsHelm3() {
+		return lookupV3(name)
 	}
-
-	for _, r := range repoFile.Repositories {
-		if r.Name == name {
-			return r, nil
-		}
-	}
-
-	return nil, errors.Errorf("repo with name %s not found, try `helm repo add %s <uri>`", name, name)
+	return lookupV2(name)
 }

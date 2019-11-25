@@ -7,6 +7,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/hypnoglow/helm-s3/internal/helmutil"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 
@@ -48,6 +49,8 @@ type Action interface {
 }
 
 func main() {
+	helmutil.SetupHelm()
+
 	log.SetFlags(0)
 
 	if len(os.Args) == 5 && !isAction(os.Args[1]) {

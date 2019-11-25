@@ -80,7 +80,7 @@ func (act pushAction) Run(ctx context.Context) error {
 		return err
 	}
 
-	if cachedIndex, err := repo.LoadIndexFile(repoEntry.Cache); err == nil {
+	if cachedIndex, err := repo.LoadIndexFile(repoEntry.CacheFile()); err == nil {
 		// if cached index exists, check if the same chart version exists in it.
 		if cachedIndex.Has(chart.Metadata.Name, chart.Metadata.Version) {
 			if act.ignoreIfExists {
@@ -109,7 +109,7 @@ func (act pushAction) Run(ctx context.Context) error {
 		return errors.Wrap(err, "encode chart metadata to json")
 	}
 
-	exists, err := storage.Exists(ctx, repoEntry.URL+"/"+fname)
+	exists, err := storage.Exists(ctx, repoEntry.URL()+"/"+fname)
 	if err != nil {
 		return errors.WithMessage(err, "check if chart already exists in the repository")
 	}
@@ -126,7 +126,7 @@ func (act pushAction) Run(ctx context.Context) error {
 	}
 
 	if !act.dryRun {
-		if _, err := storage.PutChart(ctx, repoEntry.URL+"/"+fname, fchart, string(serializedChartMeta), act.acl, hash, act.contentType); err != nil {
+		if _, err := storage.PutChart(ctx, repoEntry.URL()+"/"+fname, fchart, string(serializedChartMeta), act.acl, hash, act.contentType); err != nil {
 			return errors.WithMessage(err, "upload chart to s3")
 		}
 	}
@@ -137,7 +137,7 @@ func (act pushAction) Run(ctx context.Context) error {
 
 	// Fetch current index, update it and upload it back.
 
-	b, err := storage.FetchRaw(ctx, repoEntry.URL+"/index.yaml")
+	b, err := storage.FetchRaw(ctx, repoEntry.IndexURL())
 	if err != nil {
 		return errors.WithMessage(err, "fetch current repo index")
 	}
@@ -147,7 +147,7 @@ func (act pushAction) Run(ctx context.Context) error {
 		return errors.WithMessage(err, "load index from downloaded file")
 	}
 
-	if err := idx.AddOrReplace(chart.GetMetadata(), fname, repoEntry.URL, hash); err != nil {
+	if err := idx.AddOrReplace(chart.GetMetadata(), fname, repoEntry.URL(), hash); err != nil {
 		return errors.WithMessage(err, "add/replace chart in the index")
 	}
 	idx.SortEntries()
@@ -158,11 +158,11 @@ func (act pushAction) Run(ctx context.Context) error {
 	}
 
 	if !act.dryRun {
-		if err := storage.PutIndex(ctx, repoEntry.URL, act.acl, idxReader); err != nil {
+		if err := storage.PutIndex(ctx, repoEntry.URL(), act.acl, idxReader); err != nil {
 			return errors.WithMessage(err, "upload index to s3")
 		}
 
-		if err := idx.WriteFile(repoEntry.Cache, 0644); err != nil {
+		if err := idx.WriteFile(repoEntry.CacheFile(), 0644); err != nil {
 			return errors.WithMessage(err, "update local index")
 		}
 	}
