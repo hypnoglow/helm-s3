@@ -1,5 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
+
+# NOTE:
+# For helm v2, the command is `helm search foo/bar`
+# For helm v3, the command is `helm search repo foo/bar`
+search_arg=""
+IT_HELM_VERSION="${IT_HELM_VERSION:-}"
+if [ "${IT_HELM_VERSION:0:1}" == "3" ]; then
+  search_arg="repo"
+fi
+
 set -x
 
 #
@@ -47,7 +57,7 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-helm search test-repo/postgres | grep -q 0.8.3
+helm search ${search_arg} test-repo/postgres | grep -q 0.8.3
 if [ $? -ne 0 ]; then
     echo "Failed to find uploaded chart"
     exit 1
@@ -98,7 +108,7 @@ if mc ls -q helm-s3-minio/test-bucket/charts/postgresql-0.8.3.tgz 2>/dev/null ; 
     exit 1
 fi
 
-if helm search test-repo/postgres | grep -q 0.8.3 ; then
+if helm search ${search_arg} test-repo/postgres | grep -q 0.8.3 ; then
     echo "Failed to delete chart from index"
     exit 1
 fi
@@ -113,7 +123,7 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-helm search test-repo/postgres | grep -q 0.8.3
+helm search ${search_arg} test-repo/postgres | grep -q 0.8.3
 if [ $? -ne 0 ]; then
     echo "Failed to find uploaded chart"
     exit 1
