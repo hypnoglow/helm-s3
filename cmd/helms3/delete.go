@@ -29,7 +29,7 @@ func (act deleteAction) Run(ctx context.Context) error {
 	storage := awss3.New(sess)
 
 	// Fetch current index.
-	b, err := storage.FetchRaw(ctx, repoEntry.URL+"/index.yaml")
+	b, err := storage.FetchRaw(ctx, repoEntry.IndexURL())
 	if err != nil {
 		return errors.WithMessage(err, "fetch current repo index")
 	}
@@ -61,11 +61,11 @@ func (act deleteAction) Run(ctx context.Context) error {
 	if err := storage.Delete(ctx, uri); err != nil {
 		return errors.WithMessage(err, "delete chart file from s3")
 	}
-	if err := storage.PutIndex(ctx, repoEntry.URL, act.acl, idxReader); err != nil {
+	if err := storage.PutIndex(ctx, repoEntry.URL(), act.acl, idxReader); err != nil {
 		return errors.WithMessage(err, "upload new index to s3")
 	}
 
-	if err := idx.WriteFile(repoEntry.Cache, 0644); err != nil {
+	if err := idx.WriteFile(repoEntry.CacheFile(), 0644); err != nil {
 		return errors.WithMessage(err, "update local index")
 	}
 

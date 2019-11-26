@@ -97,7 +97,7 @@ jobs:
       - run:
           name: Install helm, install plugin
           command: |
-            curl -sSL https://storage.googleapis.com/kubernetes-helm/helm-${HELM_VERSION}-linux-amd64.tar.gz | tar xz
+            curl -sSL https://get.helm.sh/helm-${HELM_VERSION}-linux-amd64.tar.gz | tar xz
             mv linux-amd64/helm ${GOPATH}/bin/helm
             rm -rf linux-amd64
             helm init --client-only
@@ -111,10 +111,12 @@ jobs:
             mc mb helm-s3-minio/test-bucket
       - run:
           name: Run (legacy) integration tests
-          command: ./hack/integration-tests.sh
+          command: |
+            ./hack/integration-tests.sh
       - run:
           name: Run e2e tests
-          command: go test -v ./tests/e2e/...
+          command: |
+            go test -v ./tests/e2e/...
   test-install:
     docker:
       - image: circleci/buildpack-deps:stretch-curl
@@ -182,6 +184,28 @@ jobs:
           version: 18.06.0-ce
       - build_push_docker_image:
           helm_version: 2.15.2
+  docker-helm-2_16:
+    docker:
+      - image: circleci/buildpack-deps:stretch
+    working_directory: ~/workspace/helm-s3
+    steps:
+      - attach_workspace:
+          at: ~/workspace
+      - setup_remote_docker:
+          version: 18.06.0-ce
+      - build_push_docker_image:
+          helm_version: 2.16.1
+  docker-helm-3_0:
+    docker:
+      - image: circleci/buildpack-deps:stretch
+    working_directory: ~/workspace/helm-s3
+    steps:
+      - attach_workspace:
+          at: ~/workspace
+      - setup_remote_docker:
+          version: 18.06.0-ce
+      - build_push_docker_image:
+          helm_version: 3.0.0
 
 workflows:
   version: 2
@@ -211,6 +235,24 @@ workflows:
             branches:
               only: master
       - docker-helm-2_15:
+          requires:
+            - dep
+            - test-unit
+            - test-integration-and-e2e
+            - test-install
+          filters:
+            branches:
+              only: master
+      - docker-helm-2_16:
+          requires:
+            - dep
+            - test-unit
+            - test-integration-and-e2e
+            - test-install
+          filters:
+            branches:
+              only: master
+      - docker-helm-3_0:
           requires:
             - dep
             - test-unit
@@ -254,12 +296,32 @@ workflows:
               only: /.*/
             branches:
               ignore: /.*/
+      - docker-helm-2_16:
+          requires:
+            - dep
+            - test-install
+          filters:
+            tags:
+              only: /.*/
+            branches:
+              ignore: /.*/
+      - docker-helm-3_0:
+          requires:
+            - dep
+            - test-install
+          filters:
+            tags:
+              only: /.*/
+            branches:
+              ignore: /.*/
       - release:
           requires:
             - dep
             - test-install
             - docker-helm-2_14
             - docker-helm-2_15
+            - docker-helm-2_16
+            - docker-helm-3_0
           filters:
             tags:
               only: /.*/
