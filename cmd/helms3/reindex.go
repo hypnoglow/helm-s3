@@ -2,13 +2,13 @@ package main
 
 import (
 	"context"
+	"log"
 
 	"github.com/pkg/errors"
 
 	"github.com/hypnoglow/helm-s3/internal/awss3"
 	"github.com/hypnoglow/helm-s3/internal/awsutil"
 	"github.com/hypnoglow/helm-s3/internal/helmutil"
-	"github.com/hypnoglow/helm-s3/internal/index"
 )
 
 type reindexAction struct {
@@ -30,11 +30,13 @@ func (act reindexAction) Run(ctx context.Context) error {
 
 	items, errs := storage.Traverse(ctx, repoEntry.URL())
 
-	builtIndex := make(chan *index.Index, 1)
+	builtIndex := make(chan helmutil.Index, 1)
 	go func() {
-		idx := index.New()
+		idx := helmutil.NewIndex()
 		for item := range items {
-			idx.Add(item.Meta, item.Filename, repoEntry.URL(), item.Hash)
+			if err := idx.Add(item.Meta.Value(), item.Filename, repoEntry.URL(), item.Hash); err != nil {
+				log.Printf("[ERROR] failed to add chart to the index: %s", err)
+			}
 		}
 		idx.SortEntries()
 

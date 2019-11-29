@@ -2,14 +2,12 @@ package main
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/pkg/errors"
 
 	"github.com/hypnoglow/helm-s3/internal/awss3"
 	"github.com/hypnoglow/helm-s3/internal/awsutil"
 	"github.com/hypnoglow/helm-s3/internal/helmutil"
-	"github.com/hypnoglow/helm-s3/internal/index"
 )
 
 type deleteAction struct {
@@ -34,14 +32,14 @@ func (act deleteAction) Run(ctx context.Context) error {
 		return errors.WithMessage(err, "fetch current repo index")
 	}
 
-	idx := &index.Index{}
+	idx := helmutil.NewIndex()
 	if err := idx.UnmarshalBinary(b); err != nil {
 		return errors.WithMessage(err, "load index from downloaded file")
 	}
 
 	// Update index.
 
-	chartVersion, err := idx.Delete(act.name, act.version)
+	url, err := idx.Delete(act.name, act.version)
 	if err != nil {
 		return err
 	}
@@ -53,14 +51,12 @@ func (act deleteAction) Run(ctx context.Context) error {
 
 	// Delete the file from S3 and replace index file.
 
-	if len(chartVersion.URLs) < 1 {
-		return fmt.Errorf("chart version index record has no urls")
+	if url != "" {
+		if err := storage.Delete(ctx, url); err != nil {
+			return errors.WithMessage(err, "delete chart file from s3")
+		}
 	}
-	uri := chartVersion.URLs[0]
 
-	if err := storage.Delete(ctx, uri); err != nil {
-		return errors.WithMessage(err, "delete chart file from s3")
-	}
 	if err := storage.PutIndex(ctx, repoEntry.URL(), act.acl, idxReader); err != nil {
 		return errors.WithMessage(err, "upload new index to s3")
 	}

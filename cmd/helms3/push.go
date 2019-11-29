@@ -2,20 +2,14 @@ package main
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
 	"os"
 	"path/filepath"
 
 	"github.com/pkg/errors"
-	"k8s.io/helm/pkg/chartutil"
-	"k8s.io/helm/pkg/provenance"
-	"k8s.io/helm/pkg/repo"
 
 	"github.com/hypnoglow/helm-s3/internal/awss3"
 	"github.com/hypnoglow/helm-s3/internal/awsutil"
 	"github.com/hypnoglow/helm-s3/internal/helmutil"
-	"github.com/hypnoglow/helm-s3/internal/index"
 )
 
 var (
@@ -70,9 +64,9 @@ func (act pushAction) Run(ctx context.Context) error {
 	// Load chart, calculate required params like hash,
 	// and upload the chart right away.
 
-	chart, err := chartutil.LoadFile(fname)
+	chart, err := helmutil.LoadChart(fname)
 	if err != nil {
-		return fmt.Errorf("file %s is not a helm chart archive", fname)
+		return err
 	}
 
 	repoEntry, err := helmutil.LookupRepoEntry(act.repoName)
@@ -80,9 +74,9 @@ func (act pushAction) Run(ctx context.Context) error {
 		return err
 	}
 
-	if cachedIndex, err := repo.LoadIndexFile(repoEntry.CacheFile()); err == nil {
+	if cachedIndex, err := helmutil.LoadIndex(repoEntry.CacheFile()); err == nil {
 		// if cached index exists, check if the same chart version exists in it.
-		if cachedIndex.Has(chart.Metadata.Name, chart.Metadata.Version) {
+		if cachedIndex.Has(chart.Name(), chart.Version()) {
 			if act.ignoreIfExists {
 				return nil
 			}
@@ -94,7 +88,7 @@ func (act pushAction) Run(ctx context.Context) error {
 		}
 	}
 
-	hash, err := provenance.DigestFile(fname)
+	hash, err := helmutil.DigestFile(fname)
 	if err != nil {
 		return errors.WithMessage(err, "get chart digest")
 	}
@@ -102,11 +96,6 @@ func (act pushAction) Run(ctx context.Context) error {
 	fchart, err := os.Open(fname)
 	if err != nil {
 		return errors.Wrap(err, "open chart file")
-	}
-
-	serializedChartMeta, err := json.Marshal(chart.Metadata)
-	if err != nil {
-		return errors.Wrap(err, "encode chart metadata to json")
 	}
 
 	exists, err := storage.Exists(ctx, repoEntry.URL()+"/"+fname)
@@ -126,7 +115,11 @@ func (act pushAction) Run(ctx context.Context) error {
 	}
 
 	if !act.dryRun {
-		if _, err := storage.PutChart(ctx, repoEntry.URL()+"/"+fname, fchart, string(serializedChartMeta), act.acl, hash, act.contentType); err != nil {
+		chartMetaJSON, err := chart.Metadata().MarshalJSON()
+		if err != nil {
+			return err
+		}
+		if _, err := storage.PutChart(ctx, repoEntry.URL()+"/"+fname, fchart, string(chartMetaJSON), act.acl, hash, act.contentType); err != nil {
 			return errors.WithMessage(err, "upload chart to s3")
 		}
 	}
@@ -142,12 +135,11 @@ func (act pushAction) Run(ctx context.Context) error {
 		return errors.WithMessage(err, "fetch current repo index")
 	}
 
-	idx := &index.Index{}
+	idx := helmutil.NewIndex()
 	if err := idx.UnmarshalBinary(b); err != nil {
 		return errors.WithMessage(err, "load index from downloaded file")
 	}
-
-	if err := idx.AddOrReplace(chart.GetMetadata(), fname, repoEntry.URL(), hash); err != nil {
+	if err := idx.AddOrReplace(chart.Metadata().Value(), fname, repoEntry.URL(), hash); err != nil {
 		return errors.WithMessage(err, "add/replace chart in the index")
 	}
 	idx.SortEntries()
