@@ -3,7 +3,6 @@ package awss3
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
 	"net/url"
@@ -16,9 +15,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/pkg/errors"
-	"k8s.io/helm/pkg/chartutil"
-	"k8s.io/helm/pkg/proto/hapi/chart"
-	"k8s.io/helm/pkg/provenance"
+
+	"github.com/hypnoglow/helm-s3/internal/helmutil"
 )
 
 const (
@@ -143,26 +141,29 @@ func (s *Storage) traverse(ctx context.Context, repoURI string, items chan<- Cha
 				buf := &bytes.Buffer{}
 				tr := io.TeeReader(objectOut.Body, buf)
 
-				ch, err := chartutil.LoadArchive(tr)
+				ch, err := helmutil.LoadArchive(tr)
 				objectOut.Body.Close()
 				if err != nil {
 					errs <- errors.Wrap(err, "load archive from s3 object")
 					return
 				}
 
-				reindexItem.Meta = ch.Metadata
-				reindexItem.Hash, err = provenance.Digest(buf)
+				digest, err := helmutil.Digest(buf)
 				if err != nil {
 					errs <- errors.WithMessage(err, "get chart hash")
 					return
 				}
+
+				reindexItem.Meta = ch.Metadata()
+				reindexItem.Hash = digest
 			} else {
-				reindexItem.Meta = &chart.Metadata{}
-				if err := json.Unmarshal([]byte(*serializedChartMeta), reindexItem.Meta); err != nil {
+				meta := helmutil.NewChartMetadata()
+				if err := meta.UnmarshalJSON([]byte(*serializedChartMeta)); err != nil {
 					errs <- errors.Wrap(err, "unserialize chart meta")
 					return
 				}
 
+				reindexItem.Meta = meta
 				reindexItem.Hash = *chartDigest
 			}
 
@@ -180,7 +181,7 @@ func (s *Storage) traverse(ctx context.Context, repoURI string, items chan<- Cha
 
 // ChartInfo contains info about particular chart.
 type ChartInfo struct {
-	Meta     *chart.Metadata
+	Meta     helmutil.ChartMetadata
 	Filename string
 	Hash     string
 }

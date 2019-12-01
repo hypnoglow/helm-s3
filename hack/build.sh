@@ -11,7 +11,10 @@ if [ ! -e "${GOPATH}/src/${pkg}" ]; then
     ln -sfn "${projectRoot}" "${GOPATH}/src/${pkg}"
 fi
 
-version="$(cat plugin.yaml | grep "version" | cut -d '"' -f 2)"
+version="${HELM_S3_PLUGIN_VERSION:-}"
+if [ -z "${version}" ]; then
+  version="$(cat plugin.yaml | grep "version" | cut -d '"' -f 2)"
+fi
 
 cd "${GOPATH}/src/${pkg}"
 go build -o bin/helms3 -ldflags "-X main.version=${version}" ./cmd/helms3

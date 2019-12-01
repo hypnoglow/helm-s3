@@ -16,6 +16,10 @@ deps:
 build:
 	@./hack/build.sh $(CURDIR) $(PKG)
 
+.PHONY: build-local
+build-local:
+	HELM_S3_PLUGIN_VERSION=$(shell date -u +"%Y-%m-%dT%H:%M:%SZ") $(MAKE) build
+
 .PHONY: install
 install:
 	@./hack/install.sh

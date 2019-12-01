@@ -7,7 +7,7 @@ import (
 
 	"github.com/hypnoglow/helm-s3/internal/awss3"
 	"github.com/hypnoglow/helm-s3/internal/awsutil"
-	"github.com/hypnoglow/helm-s3/internal/index"
+	"github.com/hypnoglow/helm-s3/internal/helmutil"
 )
 
 type initAction struct {
@@ -16,7 +16,7 @@ type initAction struct {
 }
 
 func (act initAction) Run(ctx context.Context) error {
-	r, err := index.New().Reader()
+	r, err := helmutil.NewIndex().Reader()
 	if err != nil {
 		return errors.WithMessage(err, "get index reader")
 	}
