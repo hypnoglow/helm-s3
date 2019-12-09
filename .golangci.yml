@@ -1,7 +1,12 @@
 linters:
   enable-all: true
   disable:
+    - dupl
+    - funlen
+    - gochecknoglobals
+    - godox
     - lll
+    - wsl
 
 issues:
   new-from-rev: master

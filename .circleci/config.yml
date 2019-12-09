@@ -42,7 +42,66 @@ commands:
             IMAGE_TAG_HELM_MINOR="${PLUGIN_VERSION}-helm${HELM_VERSION%*.*}"
             docker tag ${IMAGE_NAME}:local ${IMAGE_NAME}:${IMAGE_TAG_HELM_MINOR}
             docker push ${IMAGE_NAME}:${IMAGE_TAG_HELM_MINOR}
+  run_integration_tests:
+    description: "Runs integration tests"
+    parameters:
+      helm_version:
+        type: string
+    steps:
+      - run:
+          name: Prepare environment
+          command: |
+            tmp_dir="$(mktemp -d)"
+            echo "export IT_PLUGIN_VERSION=commit.${CIRCLE_SHA1}" >> $BASH_ENV
+            echo "export IT_TEMP_DIR=${tmp_dir}" >> $BASH_ENV
+            echo "export IT_HELM_VERSION=<< parameters.helm_version >>" >> $BASH_ENV
+      - run:
+          name: Install helm
+          command: |
+            curl -sSL https://get.helm.sh/helm-v${IT_HELM_VERSION}-linux-amd64.tar.gz | tar xz
+            mv linux-amd64/helm ${GOPATH}/bin/helm
+            rm -rf linux-amd64
 
+            # Run `helm init` only for helm v2
+            if [ "${IT_HELM_VERSION:0:1}" == "2" ]; then
+              helm init --client-only
+            fi
+
+            # Add `stable` repo only for helm v3
+            if [ "${IT_HELM_VERSION:0:1}" == "3" ]; then
+              helm repo add stable https://kubernetes-charts.storage.googleapis.com/
+            fi
+      - run:
+          name: Build and install the plugin
+          command: |
+            go build -o bin/helms3 \
+              -ldflags "-X main.version=${IT_PLUGIN_VERSION}" \
+              ./cmd/helms3
+
+            # Copy plugin directory to outside of the CircleCI workspace.
+            cp -r /go/src/github.com/hypnoglow/helm-s3 ${IT_TEMP_DIR}
+
+            # Correct the plugin manifest to make installation purely local
+            cd ${IT_TEMP_DIR}/helm-s3
+            sed -i "/^hooks:/,+2 d" plugin.yaml
+            sed -i "s/^version:.*$/version: ${IT_PLUGIN_VERSION}/" plugin.yaml
+
+            helm plugin install ${IT_TEMP_DIR}/helm-s3
+      - run:
+          name: Install minio client, prepare minio
+          command: |
+            curl -sSL https://dl.minio.io/client/mc/release/linux-amd64/mc -o ${GOPATH}/bin/mc
+            chmod +x ${GOPATH}/bin/mc
+            mc config host add helm-s3-minio http://${AWS_ENDPOINT} ${AWS_ACCESS_KEY_ID} ${AWS_SECRET_ACCESS_KEY}
+            mc mb helm-s3-minio/test-bucket
+      - run:
+          name: Run (legacy) integration tests
+          command: |
+            ./hack/integration-tests.sh
+      - run:
+          name: Run e2e tests
+          command: |
+            go test -v ./tests/e2e/...
 jobs:
   dep:
     docker:
@@ -69,18 +128,17 @@ jobs:
           at: /go/src/github.com/hypnoglow
       - run: ./.circleci/testcover.sh
       - run: bash <(curl -s https://codecov.io/bash)
-  test-integration-and-e2e:
+  test-integration-helm-2_14:
     docker:
       - image: circleci/golang:1.12
         environment:
+          GO111MODULE: "on"
+          GOFLAGS: "-mod=vendor"
           AWS_ACCESS_KEY_ID: EXAMPLEKEY123
           AWS_SECRET_ACCESS_KEY: EXAMPLESECRET123456
           AWS_DEFAULT_REGION: us-east-1
           AWS_ENDPOINT: helm-s3-minio:9000
           AWS_DISABLE_SSL: true
-          HELM_VERSION: v2.6.2
-          GO111MODULE: "on"
-          GOFLAGS: "-mod=vendor"
       - image: minio/minio:latest
         name: helm-s3-minio
         environment:
@@ -91,30 +149,77 @@ jobs:
     steps:
       - attach_workspace:
           at: /go/src/github.com/hypnoglow
-      - run:
-          name: Build the plugin
-          command: go build -o bin/helms3 ./cmd/helms3
-      - run:
-          name: Install helm, install plugin
-          command: |
-            curl -sSL https://storage.googleapis.com/kubernetes-helm/helm-${HELM_VERSION}-linux-amd64.tar.gz | tar xz
-            mv linux-amd64/helm ${GOPATH}/bin/helm
-            rm -rf linux-amd64
-            helm init --client-only
-            HELM_S3_PLUGIN_NO_INSTALL_HOOK=true helm plugin install ${GOPATH}/src/github.com/hypnoglow/helm-s3
-      - run:
-          name: Install minio client, prepare minio
-          command: |
-            curl -sSL https://dl.minio.io/client/mc/release/linux-amd64/mc -o ${GOPATH}/bin/mc
-            chmod +x ${GOPATH}/bin/mc
-            mc config host add helm-s3-minio http://helm-s3-minio:9000 $AWS_ACCESS_KEY_ID $AWS_SECRET_ACCESS_KEY
-            mc mb helm-s3-minio/test-bucket
-      - run:
-          name: Run (legacy) integration tests
-          command: ./hack/integration-tests.sh
-      - run:
-          name: Run e2e tests
-          command: go test -v ./tests/e2e/...
+      - run_integration_tests:
+          helm_version: 2.14.3
+  test-integration-helm-2_15:
+    docker:
+      - image: circleci/golang:1.12
+        environment:
+          GO111MODULE: "on"
+          GOFLAGS: "-mod=vendor"
+          AWS_ACCESS_KEY_ID: EXAMPLEKEY123
+          AWS_SECRET_ACCESS_KEY: EXAMPLESECRET123456
+          AWS_DEFAULT_REGION: us-east-1
+          AWS_ENDPOINT: helm-s3-minio:9000
+          AWS_DISABLE_SSL: true
+      - image: minio/minio:latest
+        name: helm-s3-minio
+        environment:
+          MINIO_ACCESS_KEY: EXAMPLEKEY123
+          MINIO_SECRET_KEY: EXAMPLESECRET123456
+        command: ["server", "/data"]
+    working_directory: /go/src/github.com/hypnoglow/helm-s3
+    steps:
+      - attach_workspace:
+          at: /go/src/github.com/hypnoglow
+      - run_integration_tests:
+          helm_version: 2.15.2
+  test-integration-helm-2_16:
+    docker:
+      - image: circleci/golang:1.12
+        environment:
+          GO111MODULE: "on"
+          GOFLAGS: "-mod=vendor"
+          AWS_ACCESS_KEY_ID: EXAMPLEKEY123
+          AWS_SECRET_ACCESS_KEY: EXAMPLESECRET123456
+          AWS_DEFAULT_REGION: us-east-1
+          AWS_ENDPOINT: helm-s3-minio:9000
+          AWS_DISABLE_SSL: true
+      - image: minio/minio:latest
+        name: helm-s3-minio
+        environment:
+          MINIO_ACCESS_KEY: EXAMPLEKEY123
+          MINIO_SECRET_KEY: EXAMPLESECRET123456
+        command: ["server", "/data"]
+    working_directory: /go/src/github.com/hypnoglow/helm-s3
+    steps:
+      - attach_workspace:
+          at: /go/src/github.com/hypnoglow
+      - run_integration_tests:
+          helm_version: 2.16.1
+  test-integration-helm-3_0:
+    docker:
+      - image: circleci/golang:1.12
+        environment:
+          GO111MODULE: "on"
+          GOFLAGS: "-mod=vendor"
+          AWS_ACCESS_KEY_ID: EXAMPLEKEY123
+          AWS_SECRET_ACCESS_KEY: EXAMPLESECRET123456
+          AWS_DEFAULT_REGION: us-east-1
+          AWS_ENDPOINT: helm-s3-minio:9000
+          AWS_DISABLE_SSL: true
+      - image: minio/minio:latest
+        name: helm-s3-minio
+        environment:
+          MINIO_ACCESS_KEY: EXAMPLEKEY123
+          MINIO_SECRET_KEY: EXAMPLESECRET123456
+        command: ["server", "/data"]
+    working_directory: /go/src/github.com/hypnoglow/helm-s3
+    steps:
+      - attach_workspace:
+          at: /go/src/github.com/hypnoglow
+      - run_integration_tests:
+          helm_version: 3.0.0
   test-install:
     docker:
       - image: circleci/buildpack-deps:stretch-curl
@@ -182,6 +287,28 @@ jobs:
           version: 18.06.0-ce
       - build_push_docker_image:
           helm_version: 2.15.2
+  docker-helm-2_16:
+    docker:
+      - image: circleci/buildpack-deps:stretch
+    working_directory: ~/workspace/helm-s3
+    steps:
+      - attach_workspace:
+          at: ~/workspace
+      - setup_remote_docker:
+          version: 18.06.0-ce
+      - build_push_docker_image:
+          helm_version: 2.16.1
+  docker-helm-3_0:
+    docker:
+      - image: circleci/buildpack-deps:stretch
+    working_directory: ~/workspace/helm-s3
+    steps:
+      - attach_workspace:
+          at: ~/workspace
+      - setup_remote_docker:
+          version: 18.06.0-ce
+      - build_push_docker_image:
+          helm_version: 3.0.0
 
 workflows:
   version: 2
@@ -192,7 +319,16 @@ workflows:
       - test-unit:
           requires:
             - dep
-      - test-integration-and-e2e:
+      - test-integration-helm-2_14:
+          requires:
+            - dep
+      - test-integration-helm-2_15:
+          requires:
+            - dep
+      - test-integration-helm-2_16:
+          requires:
+            - dep
+      - test-integration-helm-3_0:
           requires:
             - dep
       - test-install:
@@ -205,7 +341,10 @@ workflows:
           requires:
             - dep
             - test-unit
-            - test-integration-and-e2e
+            - test-integration-helm-2_14
+            - test-integration-helm-2_15
+            - test-integration-helm-2_16
+            - test-integration-helm-3_0
             - test-install
           filters:
             branches:
@@ -214,7 +353,34 @@ workflows:
           requires:
             - dep
             - test-unit
-            - test-integration-and-e2e
+            - test-integration-helm-2_14
+            - test-integration-helm-2_15
+            - test-integration-helm-2_16
+            - test-integration-helm-3_0
+            - test-install
+          filters:
+            branches:
+              only: master
+      - docker-helm-2_16:
+          requires:
+            - dep
+            - test-unit
+            - test-integration-helm-2_14
+            - test-integration-helm-2_15
+            - test-integration-helm-2_16
+            - test-integration-helm-3_0
+            - test-install
+          filters:
+            branches:
+              only: master
+      - docker-helm-3_0:
+          requires:
+            - dep
+            - test-unit
+            - test-integration-helm-2_14
+            - test-integration-helm-2_15
+            - test-integration-helm-2_16
+            - test-integration-helm-3_0
             - test-install
           filters:
             branches:
@@ -254,12 +420,32 @@ workflows:
               only: /.*/
             branches:
               ignore: /.*/
+      - docker-helm-2_16:
+          requires:
+            - dep
+            - test-install
+          filters:
+            tags:
+              only: /.*/
+            branches:
+              ignore: /.*/
+      - docker-helm-3_0:
+          requires:
+            - dep
+            - test-install
+          filters:
+            tags:
+              only: /.*/
+            branches:
+              ignore: /.*/
       - release:
           requires:
             - dep
             - test-install
             - docker-helm-2_14
             - docker-helm-2_15
+            - docker-helm-2_16
+            - docker-helm-3_0
           filters:
             tags:
               only: /.*/
