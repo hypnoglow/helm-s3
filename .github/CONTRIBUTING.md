@@ -15,7 +15,7 @@ Next, you may want to ensure if you have all prerequisites to build
 the plugin from source:
 
     cd ~/.helm/plugins/helm-s3
-    make deps build
+    make deps build-local
 
 If you see no messages - build was successful. Try to run some helm commands
 that involve the plugin, or jump straight into plugin development.
