@@ -9,7 +9,7 @@ import (
 
 func SetupHelm() {
 	setupHelmVersionDetection()
-	if (IsHelmV3()) {
+	if (IsHelm3()) {
 		setupHelm3()
 	} else {
 		setupHelm2()
