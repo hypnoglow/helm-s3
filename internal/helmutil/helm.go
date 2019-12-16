@@ -9,8 +9,11 @@ import (
 
 func SetupHelm() {
 	setupHelmVersionDetection()
-	setupHelm2()
-	setupHelm3()
+	if (IsHelmV3()) {
+		setupHelm3()
+	} else {
+		setupHelm2()
+	}
 }
 
 func indexFile(repoURL string) string {
