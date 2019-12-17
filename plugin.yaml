@@ -1,5 +1,5 @@
 name: "s3"
-version: "0.8.0"
+version: "0.9.0"
 usage: "Manage chart repositories on Amazon S3"
 description: |-
   The plugin allows to use s3 protocol to upload, fetch charts and to work with repositories.
