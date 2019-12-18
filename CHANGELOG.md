@@ -5,15 +5,33 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.9.0] - 2019-12-27
 
 ### Added
+
+- Helm v3 support. The plugin can detect Helm version and use the corresponding "mode" to operate properly. This means
+that Helm v2 is still supported, and will be until the sunset of v2 (approximately until the summer of 2020).
+[Refs: [#95](https://github.com/hypnoglow/helm-s3/pull/95) [#98](https://github.com/hypnoglow/helm-s3/pull/98)]
 
 - The plugin is now also distributed as Docker images. Images are pushed to Docker Hub tagged with plugin release 
 version and suffixed with Helm version. The image built from master branch is also available, note that it should be
 only used for playing and testing, it is **strongly discouraged** to use that image for production use cases. 
 Refer to https://hub.docker.com/r/hypnoglow/helm-s3 for details and all available tags.
 [Refs: [#79](https://github.com/hypnoglow/helm-s3/issues/79) [#88](https://github.com/hypnoglow/helm-s3/pull/88)]
+
+### Changed
+
+- Migrate to go modules & update Go to 1.12.
+[Refs: [#86](https://github.com/hypnoglow/helm-s3/pull/86)] [@moeryomenko](https://github.com/moeryomenko)
+
+- CI now runs tests on multiple Helm versions: v2.14, v2.15, v2.16, v3.0.
+[Refs: [#89](https://github.com/hypnoglow/helm-s3/pull/89) [#97](https://github.com/hypnoglow/helm-s3/pull/97)]
+
+- Huge rework on internal Helm integration code to provide support for both Helm v2 and v3.
+[Refs: [#95](https://github.com/hypnoglow/helm-s3/pull/95) [#98](https://github.com/hypnoglow/helm-s3/pull/98)]
+
+- Bumped almost all dependencies to more actual versions. Helm SDK now includes both v2.16.1 and v3.0.0.
+[Refs: [#74](https://github.com/hypnoglow/helm-s3/pull/74) [#69](https://github.com/hypnoglow/helm-s3/issues/69) [#87](https://github.com/hypnoglow/helm-s3/pull/87)] [@willejs](https://github.com/willejs)
 
 ### Fixed
 

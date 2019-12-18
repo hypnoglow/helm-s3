@@ -331,12 +331,6 @@ workflows:
       - test-integration-helm-3_0:
           requires:
             - dep
-      - test-install:
-          requires:
-            - dep
-          filters:
-            branches:
-              only: master
       - docker-helm-2_14:
           requires:
             - dep
@@ -345,7 +339,6 @@ workflows:
             - test-integration-helm-2_15
             - test-integration-helm-2_16
             - test-integration-helm-3_0
-            - test-install
           filters:
             branches:
               only: master
@@ -357,7 +350,6 @@ workflows:
             - test-integration-helm-2_15
             - test-integration-helm-2_16
             - test-integration-helm-3_0
-            - test-install
           filters:
             branches:
               only: master
@@ -369,7 +361,6 @@ workflows:
             - test-integration-helm-2_15
             - test-integration-helm-2_16
             - test-integration-helm-3_0
-            - test-install
           filters:
             branches:
               only: master
@@ -381,7 +372,6 @@ workflows:
             - test-integration-helm-2_15
             - test-integration-helm-2_16
             - test-integration-helm-3_0
-            - test-install
           filters:
             branches:
               only: master
@@ -394,18 +384,9 @@ workflows:
               only: /.*/
             branches:
               ignore: /.*/
-      - test-install:
-          requires:
-            - dep
-          filters:
-            tags:
-              only: /.*/
-            branches:
-              ignore: /.*/
       - docker-helm-2_14:
           requires:
             - dep
-            - test-install
           filters:
             tags:
               only: /.*/
@@ -414,7 +395,6 @@ workflows:
       - docker-helm-2_15:
           requires:
             - dep
-            - test-install
           filters:
             tags:
               only: /.*/
@@ -423,7 +403,6 @@ workflows:
       - docker-helm-2_16:
           requires:
             - dep
-            - test-install
           filters:
             tags:
               only: /.*/
@@ -432,7 +411,6 @@ workflows:
       - docker-helm-3_0:
           requires:
             - dep
-            - test-install
           filters:
             tags:
               only: /.*/
@@ -441,11 +419,18 @@ workflows:
       - release:
           requires:
             - dep
-            - test-install
             - docker-helm-2_14
             - docker-helm-2_15
             - docker-helm-2_16
             - docker-helm-3_0
+          filters:
+            tags:
+              only: /.*/
+            branches:
+              ignore: /.*/
+      - test-install:
+          requires:
+            - release
           filters:
             tags:
               only: /.*/

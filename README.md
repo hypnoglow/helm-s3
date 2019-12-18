@@ -9,8 +9,7 @@ The Helm plugin that provides s3 protocol support.
 This allows you to have private Helm chart repositories hosted on Amazon S3. Refer to [this article](https://andrewlock.net/how-to-create-a-helm-chart-repository-using-amazon-s3/)
 written by [@andrewlock](https://github.com/andrewlock) to get a detailed use case overview.
 
-⚠️ Due to breaking changes, Helm v3 is not supported yet in this plugin (WIP). We plan to add support for Helm v3 to the next plugin release.
-Also, this plugin will continue supporting Helm v2 until its sunset.
+Plugin supports both Helm v2 and v3 (Helm v3 support is available since [v0.9.0](https://github.com/hypnoglow/helm-s3/releases/tag/v0.9.0)).
 
 ## Install
 
@@ -20,7 +19,7 @@ The installation itself is simple as:
 
 You can install a specific release version:
 
-    $ helm plugin install https://github.com/hypnoglow/helm-s3.git --version 0.7.0
+    $ helm plugin install https://github.com/hypnoglow/helm-s3.git --version 0.9.0
 
 To use the plugin, you do not need any special dependencies. The installer will
 download versioned release with prebuilt binary from [github releases](https://github.com/hypnoglow/helm-s3/releases).
@@ -103,6 +102,9 @@ for a CI that builds and pushes charts to your repository.
 
 ## Usage
 
+*Note: some Helm CLI commands in v3 are incompatible with v2. Example commands below are provided for v2. For commands 
+different in v3 there is a tip 💡 below each example.*
+
 For now let's omit the process of uploading repository index and charts to s3 and assume
 you already have your repository `index.yaml` file on s3 under path `s3://bucket-name/charts/index.yaml`
 and a chart archive `epicservice-0.5.1.tgz` under path `s3://bucket-name/charts/epicservice-0.5.1.tgz`.
@@ -118,11 +120,21 @@ Try:
     NAME                       	VERSION	  DESCRIPTION
     coolcharts/epicservice	    0.5.1     A Helm chart.
 
+💡 *For Helm v3, use `helm search repo coolcharts`*
+
+To install the chart:
+
     $ helm install coolchart/epicservice --version "0.5.1"
 
 Fetching also works:
 
+    $ helm fetch coolchart/epicservice --version "0.5.1"
+    
+Alternatively:
+
     $ helm fetch s3://bucket-name/charts/epicservice-0.5.1.tgz
+    
+💡 *For Helm v3, use `helm pull coolchart/epicservice --version "0.5.1"`*
 
 ### Init
 
@@ -152,6 +164,8 @@ Your pushed chart is available:
     NAME                    VERSION	 DESCRIPTION
     mynewrepo/epicservice   0.7.2    A Helm chart.
 
+💡 *For Helm v3, use `helm search repo mynewrepo`*
+
 Note that the plugin denies push when the chart with the same version already exists
 in the repository. This behavior is intentional. It is useful, for example, in
 CI automated pushing: if someone forgets to bump chart version - the chart would
@@ -178,6 +192,8 @@ The chart is deleted from the repo:
 
     $ helm search mynewrepo/epicservice
     No results found
+
+💡 *For Helm v3, use `helm search repo mynewrepo/epicservice`*
 
 ### Reindex
 
