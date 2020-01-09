@@ -76,17 +76,25 @@ for a CI that builds and pushes charts to your repository.
     "Version": "2012-10-17",
     "Statement": [
         {
+            "Sid": "files",
             "Effect": "Allow",
             "Action": [
-                "s3:ListBucket",
-                "s3:GetObject",
+                "s3:PutObjectAcl",
                 "s3:PutObject",
+                "s3:GetObjectAcl",
+                "s3:GetObject",
                 "s3:DeleteObject"
             ],
             "Resource": [
-                "arn:aws:s3:::bucket-name",
-                "arn:aws:s3:::bucket-name/*"
+                "arn:aws:s3:::bucket-name/repository-name/*",
+                "arn:aws:s3:::bucket-name/repository-name"
             ]
+        },
+        {
+            "Sid": "bucket",
+            "Effect": "Allow",
+            "Action": "s3:ListBucket",
+            "Resource": "arn:aws:s3:::bucket-name"
         }
     ]
 }
