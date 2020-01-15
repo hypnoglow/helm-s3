@@ -7,8 +7,9 @@ import (
 	"os"
 	"time"
 
-	"github.com/hypnoglow/helm-s3/internal/helmutil"
 	"gopkg.in/alecthomas/kingpin.v2"
+
+	"github.com/hypnoglow/helm-s3/internal/helmutil"
 )
 
 var (
@@ -64,7 +65,9 @@ func main() {
 	}
 
 	cli := kingpin.New("helm s3", "")
-	cli.Command(actionVersion, "Show plugin version.")
+	versionCmd := cli.Command(actionVersion, "Show plugin version.")
+	versionMode := versionCmd.Flag("mode", "Also print Helm version mode in which the plugin operates, either v2 or v3. In case when the plugin does not detect Helm version properly, you can forcefully change the mode: set HELM_S3_MODE environment variable to either 2 or 3.").
+		Bool()
 
 	timeout := cli.Flag("timeout", helpFlagTimeout).
 		Default(defaultTimeoutString).
@@ -123,6 +126,15 @@ func main() {
 	var act Action
 	switch action {
 	case actionVersion:
+		if *versionMode {
+			mode := "v2"
+			if helmutil.IsHelm3() {
+				mode = "v3"
+			}
+			fmt.Printf("helm-s3 plugin version: %s\n", version)
+			fmt.Printf("Helm version mode: %s\n", mode)
+			return
+		}
 		fmt.Print(version)
 		return
 

@@ -100,6 +100,27 @@ for a CI that builds and pushes charts to your repository.
 }
 ```
 
+### Helm version mode
+
+The plugin is able to detect if you are using Helm v2 or v3 automatically. If, for some reason, the plugin does not
+detect Helm version properly, you can set `HELM_S3_MODE` environment variable to value `2` or `3` to force the mode.
+
+Example:
+
+    # We have Helm version 3:
+    $ helm version --short
+    v3.0.2+g19e47ee
+    
+    # For some reason, the plugin detects Helm version badly:
+    $ helm s3 version --mode
+    helm-s3 plugin version: 0.9.1
+    Helm version mode: v2
+    
+    # Force the plugin to operate in v3 mode:
+    $ HELM_S3_MODE=3 helm s3 version --mode
+    helm-s3 plugin version: 0.9.1
+    Helm version mode: v3
+
 ## Usage
 
 *Note: some Helm CLI commands in v3 are incompatible with v2. Example commands below are provided for v2. For commands 
