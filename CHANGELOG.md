@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [0.9.2] - 2020-01-23
+
+### Changed
+
+- Updated AWS SDK to v1.25.50, allowing to use IAM roles for service accounts.
+[Refs: [#109](https://github.com/hypnoglow/helm-s3/issues/109) [#110](https://github.com/hypnoglow/helm-s3/pull/110)]
+
 ## [0.9.1] - 2020-01-15
 
 ### Added
