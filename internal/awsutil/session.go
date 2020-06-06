@@ -14,6 +14,10 @@ const (
 
 	// awsDisableSSL can be set to true to disable SSL for AWS S3 server.
 	awsDisableSSL = "AWS_DISABLE_SSL"
+
+	// awsBucketLocation can be set to an AWS region to force the session region
+	// if AWS_DEFAULT_REGION and AWS_REGION cannot be trusted
+	awsBucketLocation = "HELM_S3_REGION"
 )
 
 // SessionOption is an option for session.
@@ -41,6 +45,13 @@ func Session(opts ...SessionOption) (*session.Session, error) {
 		},
 		SharedConfigState:       session.SharedConfigEnable,
 		AssumeRoleTokenProvider: StderrTokenProvider,
+	}
+
+	bucketRegion := os.Getenv(awsBucketLocation)
+	// if not set, we don't update the config,
+	// so that the AWS SDK can still rely on either AWS_REGION or AWS_DEFAULT_REGION
+	if bucketRegion != "" {
+		so.Config.Region = aws.String(bucketRegion)
 	}
 
 	for _, opt := range opts {
