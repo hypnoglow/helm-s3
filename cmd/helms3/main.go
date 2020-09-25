@@ -42,6 +42,8 @@ In opposite, in cases where you want to reindex big repository
 
 For more information on S3 ACLs please see https://docs.aws.amazon.com/AmazonS3/latest/dev/acl-overview.html#canned-acl
 `
+	relativeFlag     = "relative"
+	helpRelativeFlag = "Index using relative URLs (useful when S3 buckets are replicated)"
 )
 
 // Action describes plugin action that can be run.
@@ -100,11 +102,13 @@ func main() {
 		Default(defaultChartsContentType).
 		OverrideDefaultFromEnvar("S3_CHART_CONTENT_TYPE").
 		String()
+	pushRelative := pushCmd.Flag(relativeFlag, helpRelativeFlag).Bool()
 
 	reindexCmd := cli.Command(actionReindex, "Reindex the repository.")
 	reindexTargetRepository := reindexCmd.Arg("repo", "Target repository to reindex").
 		Required().
 		String()
+	reindexRelative := reindexCmd.Flag(relativeFlag, helpRelativeFlag).Bool()
 
 	deleteCmd := cli.Command(actionDelete, "Delete chart from the repository.").Alias("del")
 	deleteChartName := deleteCmd.Arg("chartName", "Name of chart to delete").
@@ -154,12 +158,14 @@ func main() {
 			ignoreIfExists: *pushIgnoreIfExists,
 			acl:            *acl,
 			contentType:    *pushContentType,
+			relative:       *pushRelative,
 		}
 
 	case actionReindex:
 		act = reindexAction{
 			repoName: *reindexTargetRepository,
 			acl:      *acl,
+			relative: *reindexRelative,
 		}
 		defer fmt.Printf("Repository %s was successfully reindexed.\n", *reindexTargetRepository)
 

@@ -176,6 +176,10 @@ Now you can push your chart to this repo:
 
     $ helm s3 push ./epicservice-0.7.2.tgz mynewrepo
 
+When the bucket is replicated you should make the index's URLs relative so that the charts can be accessed from a replica bucket.
+
+    $ helm s3 push --relative ./epicservice-0.7.2.tgz mynewrepo
+
 On push, both remote and local repo indexes are automatically updated (that means
 you don't need to run `helm repo update`).
 
@@ -222,6 +226,10 @@ If your repository somehow became inconsistent or broken, you can use reindex to
 the index in accordance with the charts in the repository.
 
     $ helm s3 reindex mynewrepo
+
+When the bucket is replicated you should make the index's URLs relative so that the charts can be accessed from a replica bucket.
+
+    $ helm s3 reindex --relative mynewrepo
 
 ## Uninstall
 

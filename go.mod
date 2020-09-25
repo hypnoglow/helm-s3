@@ -10,6 +10,7 @@ require (
 	github.com/Masterminds/semver/v3 v3.0.1
 	github.com/aws/aws-sdk-go v1.25.50
 	github.com/ghodss/yaml v1.0.0
+	github.com/google/go-cmp v0.3.1
 	github.com/minio/minio-go/v6 v6.0.40
 	github.com/pkg/errors v0.8.1
 	github.com/smartystreets/goconvey v0.0.0-20190731233626-505e41936337 // indirect

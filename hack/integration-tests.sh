@@ -5,7 +5,8 @@ set -euo pipefail
 # For helm v2, the command is `helm search foo/bar`
 # For helm v3, the command is `helm search repo foo/bar`
 search_arg=""
-IT_HELM_VERSION="${IT_HELM_VERSION:-}"
+IT_HELM_VERSION="${IT_HELM_VERSION:-3}"
+
 if [ "${IT_HELM_VERSION:0:1}" == "3" ]; then
   search_arg="repo"
 fi
@@ -103,7 +104,8 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-if mc ls -q helm-s3-minio/test-bucket/charts/postgresql-0.8.3.tgz 2>/dev/null ; then
+# listing an unknown object no longer seems to exit with a non-zero status.
+if mc ls -q helm-s3-minio/test-bucket/charts/ | grep postgresql-0.8.3.tgz; then
     echo "Chart was not actually deleted"
     exit 1
 fi

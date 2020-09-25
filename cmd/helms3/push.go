@@ -35,6 +35,7 @@ type pushAction struct {
 	ignoreIfExists bool
 	acl            string
 	contentType    string
+	relative       bool
 }
 
 func (act pushAction) Run(ctx context.Context) error {
@@ -139,7 +140,11 @@ func (act pushAction) Run(ctx context.Context) error {
 	if err := idx.UnmarshalBinary(b); err != nil {
 		return errors.WithMessage(err, "load index from downloaded file")
 	}
-	if err := idx.AddOrReplace(chart.Metadata().Value(), fname, repoEntry.URL(), hash); err != nil {
+	baseURL := repoEntry.URL()
+	if act.relative {
+		baseURL = ""
+	}
+	if err := idx.AddOrReplace(chart.Metadata().Value(), fname, baseURL, hash); err != nil {
 		return errors.WithMessage(err, "add/replace chart in the index")
 	}
 	idx.SortEntries()

@@ -1,11 +1,17 @@
 package e2e
 
 import (
+	"bytes"
 	"fmt"
+	"io/ioutil"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/minio/minio-go/v6"
+	"helm.sh/helm/v3/pkg/repo"
 )
 
 const (
@@ -30,12 +36,7 @@ func TestPush(t *testing.T) {
 	if err := cmd.Run(); err != nil {
 		t.Errorf("Unexpected error: %v", err)
 	}
-	if stdout.String() != "" {
-		t.Errorf("Expected stdout to be empty, but got %q", stdout.String())
-	}
-	if stderr.String() != "" {
-		t.Errorf("Expected stderr to be empty, but got %q", stderr.String())
-	}
+	assertEmptyOutput(t, stdout, stderr)
 
 	// Check that chart was actually pushed
 	obj, err := mc.StatObject(name, key, minio.StatObjectOptions{})
@@ -65,12 +66,7 @@ func TestPushWithContentTypeDefault(t *testing.T) {
 	if err := cmd.Run(); err != nil {
 		t.Errorf("Unexpected error: %v", err)
 	}
-	if stdout.String() != "" {
-		t.Errorf("Expected stdout to be empty, but got %q", stdout.String())
-	}
-	if stderr.String() != "" {
-		t.Errorf("Expected stderr to be empty, but got %q", stderr.String())
-	}
+	assertEmptyOutput(t, stdout, stderr)
 
 	assertContentType(t, contentType, name, key)
 }
@@ -93,12 +89,7 @@ func TestPushWithContentTypeCustom(t *testing.T) {
 	if err := cmd.Run(); err != nil {
 		t.Errorf("Unexpected error: %v", err)
 	}
-	if stdout.String() != "" {
-		t.Errorf("Expected stdout to be empty, but got %q", stdout.String())
-	}
-	if stderr.String() != "" {
-		t.Errorf("Expected stderr to be empty, but got %q", stderr.String())
-	}
+	assertEmptyOutput(t, stdout, stderr)
 
 	assertContentType(t, contentType, name, key)
 }
@@ -115,12 +106,7 @@ func TestPushDryRun(t *testing.T) {
 	if err := cmd.Run(); err != nil {
 		t.Errorf("Unexpected error: %v", err)
 	}
-	if stdout.String() != "" {
-		t.Errorf("Expected stdout to be empty, but got %q", stdout.String())
-	}
-	if stderr.String() != "" {
-		t.Errorf("Expected stderr to be empty, but got %q", stderr.String())
-	}
+	assertEmptyOutput(t, stdout, stderr)
 
 	// Check that actually nothing got pushed
 
@@ -149,12 +135,7 @@ func TestPushIgnoreIfExists(t *testing.T) {
 	if err := cmd.Run(); err != nil {
 		t.Errorf("Unexpected error: %v", err)
 	}
-	if stdout.String() != "" {
-		t.Errorf("Expected stdout to be empty, but got %q", stdout.String())
-	}
-	if stderr.String() != "" {
-		t.Errorf("Expected stderr to be empty, but got %q", stderr.String())
-	}
+	assertEmptyOutput(t, stdout, stderr)
 
 	// check that chart was actually pushed and remember last modification time
 
@@ -175,12 +156,7 @@ func TestPushIgnoreIfExists(t *testing.T) {
 	if err := cmd.Run(); err != nil {
 		t.Errorf("Unexpected error: %v", err)
 	}
-	if stdout.String() != "" {
-		t.Errorf("Expected stdout to be empty, but got %q", stdout.String())
-	}
-	if stderr.String() != "" {
-		t.Errorf("Expected stderr to be empty, but got %q", stderr.String())
-	}
+	assertEmptyOutput(t, stdout, stderr)
 
 	// sanity check that chart was not overwritten
 
@@ -206,15 +182,68 @@ func TestPushForceAndIgnoreIfExists(t *testing.T) {
 	if err := cmd.Run(); err == nil {
 		t.Errorf("Expected error")
 	}
-
-	if stdout.String() != "" {
-		t.Errorf("Expected stdout to be empty, but got %q", stdout.String())
-	}
+	assertEmptyOutput(t, stdout, nil)
 
 	expectedErrorMessage := "The --force and --ignore-if-exists flags are mutually exclusive and cannot be specified together."
 	if !strings.HasPrefix(stderr.String(), expectedErrorMessage) {
 		t.Errorf("Expected stderr to begin with %q, but got %q", expectedErrorMessage, stderr.String())
 	}
+}
+
+func TestPushRelative(t *testing.T) {
+	t.Log("Test push action with --relative flag")
+
+	name := "test-push-relative"
+	dir := "charts"
+	chartName := "foo"
+	chartVer := "1.2.3"
+	filename := fmt.Sprintf("%s-%s.tgz", chartName, chartVer)
+
+	setupRepo(t, name, dir)
+	defer teardownRepo(t, name)
+
+	// set a cleanup in beforehand
+	defer removeObject(t, name, dir+"/"+filename)
+
+	cmd, stdout, stderr := command(fmt.Sprintf("helm s3 push --relative testdata/%s %s", filename, name))
+	if err := cmd.Run(); err != nil {
+		t.Errorf("Unexpected error: %v", err)
+	}
+	assertEmptyOutput(t, stdout, stderr)
+
+	tmpdir, err := ioutil.TempDir("", t.Name())
+	if err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+	defer os.RemoveAll(tmpdir)
+
+	indexFile := filepath.Join(tmpdir, "index.yaml")
+
+	if err := mc.FGetObject(name, dir+"/index.yaml", indexFile, minio.GetObjectOptions{}); err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+
+	idx, err := repo.LoadIndexFile(indexFile)
+	if err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+
+	v, err := idx.Get(chartName, chartVer)
+	if err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+
+	expected := []string{filename}
+	if diff := cmp.Diff(expected, v.URLs); diff != "" {
+		t.Errorf("mismatch (-want +got):\n%s", diff)
+	}
+
+	os.Chdir(tmpdir)
+	cmd, stdout, stderr = command(fmt.Sprintf("helm fetch %s/%s --version %s", name, chartName, chartVer))
+	if err := cmd.Run(); err != nil {
+		t.Errorf("Unexpected error: %v", err)
+	}
+	assertEmptyOutput(t, stdout, stderr)
 }
 
 func assertContentType(t *testing.T, contentType, name, key string) {
@@ -229,6 +258,17 @@ func assertContentType(t *testing.T, contentType, name, key string) {
 	}
 	if obj.ContentType != contentType {
 		t.Errorf("Expected ContentType to be %q but got %q", contentType, obj.ContentType)
+	}
+}
+
+func assertEmptyOutput(t *testing.T, stdout, stderr *bytes.Buffer) {
+	t.Helper()
+	if stdout != nil && stdout.String() != "" {
+		t.Errorf("Expected stdout to be empty, but got %q", stdout.String())
+	}
+
+	if stderr != nil && stderr.String() != "" {
+		t.Errorf("Expected stderr to be empty, but got %q", stderr.String())
 	}
 }
 
