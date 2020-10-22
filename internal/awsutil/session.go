@@ -4,6 +4,7 @@ import (
 	"os"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 )
 
@@ -14,6 +15,9 @@ const (
 
 	// awsDisableSSL can be set to true to disable SSL for AWS S3 server.
 	awsDisableSSL = "AWS_DISABLE_SSL"
+
+	// awsSSO can be set to true to enable the SSO credential provider
+	awsSSO = "AWS_SSO"
 )
 
 // SessionOption is an option for session.
@@ -41,6 +45,14 @@ func Session(opts ...SessionOption) (*session.Session, error) {
 		},
 		SharedConfigState:       session.SharedConfigEnable,
 		AssumeRoleTokenProvider: StderrTokenProvider,
+	}
+
+	if os.Getenv(awsSSO) == "true" {
+		ssoCredentialProvider, err := NewSSOCredentialProvider(os.Getenv("AWS_PROFILE"))
+		if err != nil {
+			return nil, err
+		}
+		so.Config.Credentials = credentials.NewCredentials(ssoCredentialProvider)
 	}
 
 	for _, opt := range opts {
