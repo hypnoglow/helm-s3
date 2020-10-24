@@ -254,6 +254,12 @@ See [these integration tests](https://github.com/hypnoglow/helm-s3/blob/master/h
 
 To enable S3 SSE export environment variable `AWS_S3_SSE` and set it to desired type for example `AES256`.
 
+## S3 bucket location
+
+The plugin will look for the bucket in the region inferred by the environment. If the bucket is in another region, the commands will fail.
+
+This can be controlled by exporting one of HELM\_S3\_REGION, AWS\_REGION or AWS\_DEFAULT\_REGION, in order of precedence.
+
 ## Documentation
 
 Additional documentation is available in the [docs](docs) directory. This currently includes:
