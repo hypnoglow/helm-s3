@@ -1,6 +1,6 @@
 ARG HELM_VERSION
 
-FROM golang:1.12-alpine as build
+FROM golang:1.15-alpine as build
 
 ARG PLUGIN_VERSION
 
