@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
-set -uo pipefail
+set -e -uo pipefail
+
+[ -n "${DEBUG:-}" ] && set -x
 
 ## Set up
 
@@ -9,19 +11,38 @@ export AWS_DEFAULT_REGION=us-east-1
 export AWS_ENDPOINT=localhost:9000
 export AWS_DISABLE_SSL=true
 
-docker container run -d --name helm-s3-minio \
+DOCKER_NAME='helm-s3-minio'
+
+cleanup() {
+  if docker container ls | grep -q "${DOCKER_NAME}$" ; then
+    docker container rm --force --volumes "${DOCKER_NAME}" &>/dev/null || :
+  fi
+}
+
+cleanup
+
+on_exit() {
+  if [ -z "${SKIP_CLEANUP:-}" ]; then
+    cleanup
+  fi
+}
+trap on_exit EXIT
+
+docker container run -d --rm --name "${DOCKER_NAME}" \
     -p 9000:9000 \
     -e MINIO_ACCESS_KEY=$AWS_ACCESS_KEY_ID \
     -e MINIO_SECRET_KEY=$AWS_SECRET_ACCESS_KEY \
-    minio/minio:latest server /data &>/dev/null
+    minio/minio:latest server /data >/dev/null
 
-MCGOPATH=${GOPATH}/src/github.com/minio/mc
+PATH=${GOPATH}/bin:${PATH}
 if [ ! -x "$(which mc 2>/dev/null)" ]; then
-    go get -d github.com/minio/mc
-    (cd ${MCGOPATH} && make)
+    pushd /tmp > /dev/null
+    go get github.com/minio/mc
+    popd > /dev/null
 fi
 
-PATH=${MCGOPATH}:${PATH}
+# give minio time to become service available.
+sleep 3
 mc config host add helm-s3-minio http://localhost:9000 $AWS_ACCESS_KEY_ID $AWS_SECRET_ACCESS_KEY
 mc mb helm-s3-minio/test-bucket
 
@@ -29,12 +50,7 @@ go build -o bin/helms3 ./cmd/helms3
 
 ## Test
 
-bash "$(dirname ${BASH_SOURCE[0]})/integration-tests.sh"
+$(dirname ${BASH_SOURCE[0]})/integration-tests.sh
 if [ $? -eq 0 ] ; then
     echo -e "\nAll tests passed!"
 fi
-
-## Tear down
-
-docker container rm -f helm-s3-minio &>/dev/null
-

@@ -14,6 +14,7 @@ import (
 type reindexAction struct {
 	repoName string
 	acl      string
+	relative bool
 }
 
 func (act reindexAction) Run(ctx context.Context) error {
@@ -34,7 +35,11 @@ func (act reindexAction) Run(ctx context.Context) error {
 	go func() {
 		idx := helmutil.NewIndex()
 		for item := range items {
-			if err := idx.Add(item.Meta.Value(), item.Filename, repoEntry.URL(), item.Hash); err != nil {
+			baseURL := repoEntry.URL()
+			if act.relative {
+				baseURL = ""
+			}
+			if err := idx.Add(item.Meta.Value(), item.Filename, baseURL, item.Hash); err != nil {
 				log.Printf("[ERROR] failed to add chart to the index: %s", err)
 			}
 		}

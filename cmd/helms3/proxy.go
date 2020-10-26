@@ -34,7 +34,7 @@ func (act proxyCmd) Run(ctx context.Context) error {
 				strings.TrimSuffix(strings.TrimSuffix(act.uri, indexYaml), "/"),
 			)
 		}
-		return errors.WithMessage(err, "fetch from s3")
+		return errors.WithMessage(err, fmt.Sprintf("fetch from s3 uri=%s", act.uri))
 	}
 
 	fmt.Print(string(b))
