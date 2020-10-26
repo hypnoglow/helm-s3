@@ -264,6 +264,9 @@ jobs:
             if [ -n "$CIRCLE_TAG" ]; then
               curl -sL https://git.io/goreleaser | bash
             fi
+  # Note: it seems that version 2.16.9 is the last version supported on Docker Hub.
+  # https://hub.docker.com/r/alpine/helm/tags
+  # That's why we don't distribute plugin images with Helm 2.17+
   docker-helm-2_16:
     docker:
       - image: circleci/buildpack-deps:stretch
@@ -274,18 +277,7 @@ jobs:
       - setup_remote_docker:
           version: 18.06.0-ce
       - build_push_docker_image:
-          helm_version: 2.16.12
-  docker-helm-2_17:
-    docker:
-      - image: circleci/buildpack-deps:stretch
-    working_directory: ~/workspace/helm-s3
-    steps:
-      - attach_workspace:
-          at: ~/workspace
-      - setup_remote_docker:
-          version: 18.06.0-ce
-      - build_push_docker_image:
-          helm_version: 2.17.0
+          helm_version: 2.16.9
   docker-helm-3_3:
     docker:
       - image: circleci/buildpack-deps:stretch
@@ -338,14 +330,6 @@ workflows:
           filters:
             branches:
               only: master
-      - docker-helm-2_17:
-          requires:
-            - dep
-            - test-unit
-            - test-integration-helm-2_17
-          filters:
-            branches:
-              only: master
       - docker-helm-3_3:
           requires:
             - dep
@@ -388,14 +372,6 @@ workflows:
               only: /.*/
             branches:
               ignore: /.*/
-      - docker-helm-2_17:
-          requires:
-            - dep
-          filters:
-            tags:
-              only: /.*/
-            branches:
-              ignore: /.*/
       - docker-helm-3_3:
           requires:
             - dep
@@ -416,7 +392,6 @@ workflows:
           requires:
             - dep
             - docker-helm-2_16
-            - docker-helm-2_17
             - docker-helm-3_3
             - docker-helm-3_4
           filters:
