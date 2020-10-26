@@ -22,6 +22,10 @@ import (
 const (
 	// selects serverside encryption for bucket
 	awsS3encryption = "AWS_S3_SSE"
+
+	// s3MetadataSoftLimitBytes is application-specific soft limit
+	// for the number of bytes in S3 object metadata.
+	s3MetadataSoftLimitBytes = 1900
 )
 
 var (
@@ -120,15 +124,16 @@ func (s *Storage) traverse(ctx context.Context, repoURI string, items chan<- Cha
 			serializedChartMeta, hasMeta := metaOut.Metadata[strings.Title(metaChartMetadata)]
 			chartDigest, hasDigest := metaOut.Metadata[strings.Title(metaChartDigest)]
 			if !hasMeta || !hasDigest {
-				// TODO: This is deprecated. Remove in the next major release? Or not?
-				// All charts pushed to the repository
-				// since "reindex" command implementation should have these
-				// meta fields.
-				// But should we support the case when user manually uploads
-				// the ch to the bucket? In this case, there will be no
-				// such meta fields.
-
-				// Anyway, in this case we have to download the ch file itself.
+				// Some charts in the repository can have no metadata.
+				//
+				// This might happen in few cases:
+				// - Chart was uploaded manually, not using 'helm s3 push';
+				// - Chart was pushed before we started adding metadata to objects;
+				// - Chart metadata was too big to add to the S3 object metadata (see issues
+				//   https://github.com/hypnoglow/helm-s3/issues/120 and
+				//   https://github.com/hypnoglow/helm-s3/issues/112 )
+				//
+				// In this case we have to download the ch file itself.
 				objectOut, err := client.GetObject(&s3.GetObjectInput{
 					Bucket: aws.String(bucket),
 					Key:    obj.Key,
@@ -255,11 +260,9 @@ func (s *Storage) PutChart(ctx context.Context, uri string, r io.Reader, chartMe
 			ContentType:          aws.String(contentType),
 			ServerSideEncryption: getSSE(),
 			Body:                 r,
-			Metadata: map[string]*string{
-				metaChartMetadata: aws.String(chartMeta),
-				metaChartDigest:   aws.String(chartDigest),
-			},
-		})
+			Metadata:             assembleObjectMetadata(chartMeta, chartDigest),
+		},
+	)
 	if err != nil {
 		return "", errors.Wrap(err, "upload object to s3")
 	}
@@ -332,6 +335,39 @@ func parseURI(uri string) (bucket, key string, err error) {
 
 	bucket, key = u.Host, strings.TrimPrefix(u.Path, "/")
 	return bucket, key, nil
+}
+
+// assembleObjectMetadata assembles and returns S3 object metadata.
+// May return empty metadata if chart metadata is too big.
+//
+// The user-defined metadata for the object is limited to 2 KB in size.
+// To mitigate the issue with large charts which metadata is more than 2 KB,
+// we simply drop it. This affects 'reindex' operation, so that it has to download
+// the chart file (GET Request) instead of only fetching its metadata (HEAD request).
+func assembleObjectMetadata(chartMeta, chartDigest string) map[string]*string {
+	meta := map[string]*string{
+		metaChartMetadata: aws.String(chartMeta),
+		metaChartDigest:   aws.String(chartDigest),
+	}
+	if objectMetadataSize(meta) > s3MetadataSoftLimitBytes {
+		return nil
+	}
+
+	return meta
+}
+
+// objectMetadataSize calculates object metadata size as described in https://docs.aws.amazon.com/AmazonS3/latest/dev/UsingMetadata.html
+// "The size of user-defined metadata is measured by taking the sum of the number of bytes in the UTF-8 encoding of each key and value.".
+func objectMetadataSize(m map[string]*string) int {
+	var sum int
+	for k, v := range m {
+		sum += len([]byte(k))
+		if v == nil {
+			continue
+		}
+		sum += len([]byte(*v))
+	}
+	return sum
 }
 
 const (
