@@ -11,7 +11,7 @@ if [ "${IT_HELM_VERSION:0:1}" == "3" ]; then
   search_arg="repo"
 fi
 
-set -x
+[ -n "${DEBUG:-}" ] && set -x
 
 #
 # Set up

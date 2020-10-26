@@ -238,7 +238,12 @@ func TestPushRelative(t *testing.T) {
 		t.Errorf("mismatch (-want +got):\n%s", diff)
 	}
 
-	os.Chdir(tmpdir)
+	wd, _ := os.Getwd()
+	if err := os.Chdir(tmpdir); err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+	defer os.Chdir(wd)
+
 	cmd, stdout, stderr = command(fmt.Sprintf("helm fetch %s/%s --version %s", name, chartName, chartVer))
 	if err := cmd.Run(); err != nil {
 		t.Errorf("Unexpected error: %v", err)
