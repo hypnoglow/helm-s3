@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [0.10.0] - 2020-10-27
+
+### Added
+
+- Added support for `HELM_S3_REGION` environment variable to override AWS region for bucket location.
+[Refs: [#51](https://github.com/hypnoglow/helm-s3/issues/51) [#117](https://github.com/hypnoglow/helm-s3/pull/117)]
+
+- Added support for relative URLs in repository index: charts can be pushed with `--relative` flag.
+[Refs: [#121](https://github.com/hypnoglow/helm-s3/pull/121) [#122](https://github.com/hypnoglow/helm-s3/pull/122)]
+
+### Changed
+
+- Update Helm versions the plugin is tested against: v2.16, v2.17, v3.3, v3.4.
+[Refs: [#125](https://github.com/hypnoglow/helm-s3/pull/125)]
+
+### Fixed
+
+- Fixed issues when pushing large charts.
+[Refs: [#112](https://github.com/hypnoglow/helm-s3/issues/112) [#120](https://github.com/hypnoglow/helm-s3/issues/120) [#124](https://github.com/hypnoglow/helm-s3/pull/124)]
+
 ## [0.9.2] - 2020-01-23
 
 ### Changed
