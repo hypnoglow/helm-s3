@@ -242,8 +242,10 @@ jobs:
             sudo apt-get install -y make
 
             version="${CIRCLE_SHA1}"
+            export HELM_S3_PLUGIN_NO_INSTALL_HOOK=true
             if [ -n "${CIRCLE_TAG}" ]; then
               version="${CIRCLE_TAG#v*}"
+              export HELM_S3_PLUGIN_NO_INSTALL_HOOK=
             fi
 
             echo "Check installation of version ${version}"
