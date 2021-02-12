@@ -160,6 +160,7 @@ func main() {
 			contentType:    *pushContentType,
 			relative:       *pushRelative,
 		}
+		defer fmt.Printf("Successfully pushed chart %s to %s\n", *pushChartPath, *pushTargetRepository)
 
 	case actionReindex:
 		act = reindexAction{
@@ -176,6 +177,7 @@ func main() {
 			repoName: *deleteTargetRepository,
 			acl:      *acl,
 		}
+		defer fmt.Printf("Successfully deleted chart %s-%s from %s\n", *deleteChartName, *deleteChartVersion, *deleteTargetRepository)
 	default:
 		return
 	}
