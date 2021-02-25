@@ -128,29 +128,6 @@ jobs:
           at: /go/src/github.com/hypnoglow
       - run: ./.circleci/testcover.sh
       - run: bash <(curl -s https://codecov.io/bash)
-  test-integration-helm-2_16:
-    docker:
-      - image: circleci/golang:1.15
-        environment:
-          GO111MODULE: "on"
-          GOFLAGS: "-mod=vendor"
-          AWS_ACCESS_KEY_ID: EXAMPLEKEY123
-          AWS_SECRET_ACCESS_KEY: EXAMPLESECRET123456
-          AWS_DEFAULT_REGION: us-east-1
-          AWS_ENDPOINT: helm-s3-minio:9000
-          AWS_DISABLE_SSL: true
-      - image: minio/minio:latest
-        name: helm-s3-minio
-        environment:
-          MINIO_ACCESS_KEY: EXAMPLEKEY123
-          MINIO_SECRET_KEY: EXAMPLESECRET123456
-        command: ["server", "/data"]
-    working_directory: /go/src/github.com/hypnoglow/helm-s3
-    steps:
-      - attach_workspace:
-          at: /go/src/github.com/hypnoglow
-      - run_integration_tests:
-          helm_version: 2.16.12
   test-integration-helm-2_17:
     docker:
       - image: circleci/golang:1.15
@@ -174,29 +151,6 @@ jobs:
           at: /go/src/github.com/hypnoglow
       - run_integration_tests:
           helm_version: 2.17.0
-  test-integration-helm-3_3:
-    docker:
-      - image: circleci/golang:1.15
-        environment:
-          GO111MODULE: "on"
-          GOFLAGS: "-mod=vendor"
-          AWS_ACCESS_KEY_ID: EXAMPLEKEY123
-          AWS_SECRET_ACCESS_KEY: EXAMPLESECRET123456
-          AWS_DEFAULT_REGION: us-east-1
-          AWS_ENDPOINT: helm-s3-minio:9000
-          AWS_DISABLE_SSL: true
-      - image: minio/minio:latest
-        name: helm-s3-minio
-        environment:
-          MINIO_ACCESS_KEY: EXAMPLEKEY123
-          MINIO_SECRET_KEY: EXAMPLESECRET123456
-        command: ["server", "/data"]
-    working_directory: /go/src/github.com/hypnoglow/helm-s3
-    steps:
-      - attach_workspace:
-          at: /go/src/github.com/hypnoglow
-      - run_integration_tests:
-          helm_version: 3.3.4
   test-integration-helm-3_4:
     docker:
       - image: circleci/golang:1.15
@@ -219,7 +173,30 @@ jobs:
       - attach_workspace:
           at: /go/src/github.com/hypnoglow
       - run_integration_tests:
-          helm_version: 3.4.0
+          helm_version: 3.4.2
+  test-integration-helm-3_5:
+    docker:
+      - image: circleci/golang:1.15
+        environment:
+          GO111MODULE: "on"
+          GOFLAGS: "-mod=vendor"
+          AWS_ACCESS_KEY_ID: EXAMPLEKEY123
+          AWS_SECRET_ACCESS_KEY: EXAMPLESECRET123456
+          AWS_DEFAULT_REGION: us-east-1
+          AWS_ENDPOINT: helm-s3-minio:9000
+          AWS_DISABLE_SSL: true
+      - image: minio/minio:latest
+        name: helm-s3-minio
+        environment:
+          MINIO_ACCESS_KEY: EXAMPLEKEY123
+          MINIO_SECRET_KEY: EXAMPLESECRET123456
+        command: ["server", "/data"]
+    working_directory: /go/src/github.com/hypnoglow/helm-s3
+    steps:
+      - attach_workspace:
+          at: /go/src/github.com/hypnoglow
+      - run_integration_tests:
+          helm_version: 3.5.2
   test-install:
     docker:
       - image: circleci/buildpack-deps:stretch-curl
@@ -266,10 +243,7 @@ jobs:
             if [ -n "$CIRCLE_TAG" ]; then
               curl -sL https://git.io/goreleaser | bash
             fi
-  # Note: it seems that version 2.16.9 is the last version supported on Docker Hub.
-  # https://hub.docker.com/r/alpine/helm/tags
-  # That's why we don't distribute plugin images with Helm 2.17+
-  docker-helm-2_16:
+  docker-helm-2_17:
     docker:
       - image: circleci/buildpack-deps:stretch
     working_directory: ~/workspace/helm-s3
@@ -279,18 +253,7 @@ jobs:
       - setup_remote_docker:
           version: 18.06.0-ce
       - build_push_docker_image:
-          helm_version: 2.16.9
-  docker-helm-3_3:
-    docker:
-      - image: circleci/buildpack-deps:stretch
-    working_directory: ~/workspace/helm-s3
-    steps:
-      - attach_workspace:
-          at: ~/workspace
-      - setup_remote_docker:
-          version: 18.06.0-ce
-      - build_push_docker_image:
-          helm_version: 3.3.4
+          helm_version: 2.17.0
   docker-helm-3_4:
     docker:
       - image: circleci/buildpack-deps:stretch
@@ -301,7 +264,18 @@ jobs:
       - setup_remote_docker:
           version: 18.06.0-ce
       - build_push_docker_image:
-          helm_version: 3.4.0
+          helm_version: 3.4.2
+  docker-helm-3_5:
+    docker:
+      - image: circleci/buildpack-deps:stretch
+    working_directory: ~/workspace/helm-s3
+    steps:
+      - attach_workspace:
+          at: ~/workspace
+      - setup_remote_docker:
+          version: 18.06.0-ce
+      - build_push_docker_image:
+          helm_version: 3.5.2
 
 workflows:
   version: 2
@@ -312,31 +286,20 @@ workflows:
       - test-unit:
           requires:
             - dep
-      - test-integration-helm-2_16:
-          requires:
-            - dep
       - test-integration-helm-2_17:
-          requires:
-            - dep
-      - test-integration-helm-3_3:
           requires:
             - dep
       - test-integration-helm-3_4:
           requires:
             - dep
-      - docker-helm-2_16:
+      - test-integration-helm-3_5:
+          requires:
+            - dep
+      - docker-helm-2_17:
           requires:
             - dep
             - test-unit
-            - test-integration-helm-2_16
-          filters:
-            branches:
-              only: master
-      - docker-helm-3_3:
-          requires:
-            - dep
-            - test-unit
-            - test-integration-helm-3_3
+            - test-integration-helm-2_17
           filters:
             branches:
               only: master
@@ -348,12 +311,19 @@ workflows:
           filters:
             branches:
               only: master
+      - docker-helm-3_5:
+          requires:
+            - dep
+            - test-unit
+            - test-integration-helm-3_5
+          filters:
+            branches:
+              only: master
       - test-install:
           requires:
-            - test-integration-helm-2_16
             - test-integration-helm-2_17
-            - test-integration-helm-3_3
             - test-integration-helm-3_4
+            - test-integration-helm-3_5
           filters:
             branches:
               only: master
@@ -366,15 +336,7 @@ workflows:
               only: /.*/
             branches:
               ignore: /.*/
-      - docker-helm-2_16:
-          requires:
-            - dep
-          filters:
-            tags:
-              only: /.*/
-            branches:
-              ignore: /.*/
-      - docker-helm-3_3:
+      - docker-helm-2_17:
           requires:
             - dep
           filters:
@@ -390,12 +352,20 @@ workflows:
               only: /.*/
             branches:
               ignore: /.*/
+      - docker-helm-3_5:
+          requires:
+            - dep
+          filters:
+            tags:
+              only: /.*/
+            branches:
+              ignore: /.*/
       - release:
           requires:
             - dep
-            - docker-helm-2_16
-            - docker-helm-3_3
+            - docker-helm-2_17
             - docker-helm-3_4
+            - docker-helm-3_5
           filters:
             tags:
               only: /.*/
