@@ -50,7 +50,7 @@ go build -o bin/helms3 ./cmd/helms3
 
 ## Test
 
-$(dirname ${BASH_SOURCE[0]})/integration-tests.sh
+go test -v ./tests/e2e/...
 if [ $? -eq 0 ] ; then
     echo -e "\nAll tests passed!"
 fi

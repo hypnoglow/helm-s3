@@ -95,10 +95,6 @@ commands:
             mc config host add helm-s3-minio http://${AWS_ENDPOINT} ${AWS_ACCESS_KEY_ID} ${AWS_SECRET_ACCESS_KEY}
             mc mb helm-s3-minio/test-bucket
       - run:
-          name: Run (legacy) integration tests
-          command: |
-            ./hack/integration-tests.sh
-      - run:
           name: Run e2e tests
           command: |
             go test -v ./tests/e2e/...

@@ -28,10 +28,10 @@ install:
 test-unit:
 	go test $$(go list ./... | grep -v e2e)
 
-.PHONY: test-integration
-test-integration:
-	@./hack/integration-tests-local.sh
-
 .PHONY: test-e2e
 test-e2e:
 	go test -v ./tests/e2e/...
+
+.PHONY: test-e2e-local
+test-e2e-local:
+	@./hack/test-e2e-local.sh

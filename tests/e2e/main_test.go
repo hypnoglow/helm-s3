@@ -9,6 +9,10 @@ import (
 	"testing"
 
 	"github.com/minio/minio-go/v6"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
+	"github.com/hypnoglow/helm-s3/internal/helmutil"
 )
 
 var mc *minio.Client
@@ -51,33 +55,58 @@ func teardown() {
 
 // helper functions
 
+func setupBucket(t *testing.T, name string) {
+	t.Helper()
+
+	exists, err := mc.BucketExists(name)
+	require.NoError(t, err, "check if bucket exists")
+	if exists {
+		teardownBucket(t, name)
+	}
+
+	err = mc.MakeBucket(name, "")
+	require.NoError(t, err, "create bucket")
+}
+
+func teardownBucket(t *testing.T, name string) {
+	t.Helper()
+
+	done := make(chan struct{})
+	defer close(done)
+
+	for obj := range mc.ListObjectsV2(name, "", true, done) {
+		err := mc.RemoveObject(name, obj.Key)
+		assert.NoError(t, err)
+	}
+
+	err := mc.RemoveBucket(name)
+	require.NoError(t, err, "remove bucket")
+}
+
 func setupRepo(t *testing.T, name, dir string) {
+	t.Helper()
+
+	setupBucket(t, name)
+
 	url := fmt.Sprintf("s3://%s", name)
 	if dir != "" {
 		url += "/" + dir
 	}
 
-	if exists, err := mc.BucketExists(name); err != nil {
-		t.Fatalf("check bucket exists: %v", err.Error())
-	} else if !exists {
-		if err = mc.MakeBucket(name, ""); err != nil {
-			t.Fatalf("create bucket: %v", err)
-		}
-	}
+	out, err := exec.Command("helm", "s3", "init", url).CombinedOutput()
+	require.NoError(t, err, "helm s3 init: %s", string(out))
 
-	if out, err := exec.Command("helm", "s3", "init", url).CombinedOutput(); err != nil {
-		t.Fatalf("init repo: %v %q", err, string(out))
-	}
-
-	if out, err := exec.Command("helm", "repo", "add", name, url).CombinedOutput(); err != nil {
-		t.Fatalf("add repo: %v %q", err, string(out))
-	}
+	out, err = exec.Command("helm", "repo", "add", name, url).CombinedOutput()
+	require.NoError(t, err, "helm repo add: %s", string(out))
 }
 
 func teardownRepo(t *testing.T, name string) {
-	if err := exec.Command("helm", "repo", "remove", name).Run(); err != nil {
-		t.Fatalf("remove repo: %v", err)
-	}
+	t.Helper()
+
+	err := exec.Command("helm", "repo", "remove", name).Run()
+	require.NoError(t, err)
+
+	teardownBucket(t, name)
 }
 
 func command(c string) (cmd *exec.Cmd, stdout, stderr *bytes.Buffer) {
@@ -90,4 +119,17 @@ func command(c string) (cmd *exec.Cmd, stdout, stderr *bytes.Buffer) {
 	cmd.Stderr = stderr
 
 	return
+}
+
+// For helm v2, the command is `helm search foo/bar`
+// For helm v3, the command is `helm search repo foo/bar`
+func makeSearchCommand(repoName, chartName string) string {
+	c := "helm search"
+
+	helmutil.SetupHelm()
+	if helmutil.IsHelm3() {
+		c += " repo"
+	}
+
+	return fmt.Sprintf("%s %s/%s", c, repoName, chartName)
 }
