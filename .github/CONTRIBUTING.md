@@ -19,3 +19,17 @@ the plugin from source:
 
 If you see no messages - build was successful. Try to run some helm commands
 that involve the plugin, or jump straight into plugin development.
+
+## Testing
+
+Run unit tests:
+
+```shell
+make test-unit
+```
+
+Run e2e tests locally:
+
+```shell
+make test-e2e-local
+```

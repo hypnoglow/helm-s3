@@ -256,7 +256,7 @@ and others. To configure the plugin to work alternative S3 backend, just define
     $ export AWS_ENDPOINT=localhost:9000
     $ export AWS_DISABLE_SSL=true
 
-See [these integration tests](https://github.com/hypnoglow/helm-s3/blob/master/hack/integration-tests-local.sh#L10) that use local minio docker container for a complete example.
+See [these integration tests](https://github.com/hypnoglow/helm-s3/blob/master/hack/test-e2e-local.sh) that use local minio docker container for a complete example.
 
 ## Using S3 bucket ServerSide Encryption
 
