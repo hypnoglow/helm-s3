@@ -1,4 +1,4 @@
-# helm-s3
+<p align="left"><img src=".github/assets/icon_with_name.png" width="500" alt="helm-s3 Logo"></p>
 
 [![CircleCI](https://circleci.com/gh/hypnoglow/helm-s3/tree/master.svg?style=shield)](https://circleci.com/gh/hypnoglow/helm-s3/tree/master)
 [![License MIT](https://img.shields.io/badge/license-MIT-blue.svg?style=flat)](LICENSE)
