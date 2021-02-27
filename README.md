@@ -4,12 +4,34 @@
 [![License MIT](https://img.shields.io/badge/license-MIT-blue.svg?style=flat)](LICENSE)
 [![GitHub release](https://img.shields.io/github/release/hypnoglow/helm-s3.svg)](https://github.com/hypnoglow/helm-s3/releases)
 
-The Helm plugin that provides s3 protocol support.
+The Helm plugin that provides Amazon S3 protocol support.
 
-This allows you to have private Helm chart repositories hosted on Amazon S3. Refer to [this article](https://andrewlock.net/how-to-create-a-helm-chart-repository-using-amazon-s3/)
-written by [@andrewlock](https://github.com/andrewlock) to get a detailed use case overview.
+This allows you to have private or public Helm chart repositories hosted on Amazon S3. See [this guide](https://docs.aws.amazon.com/prescriptive-guidance/latest/patterns/set-up-a-helm-v3-chart-repository-in-amazon-s3.html) to get a detailed example use case overview.
 
-Plugin supports both Helm v2 and v3 (Helm v3 support is available since [v0.9.0](https://github.com/hypnoglow/helm-s3/releases/tag/v0.9.0)).
+The plugin supports both Helm v2 and v3 (Helm v3 support is available since [v0.9.0](https://github.com/hypnoglow/helm-s3/releases/tag/v0.9.0)).
+
+## Table of contents
+
+   * [Install](#install)
+      * [Docker Images](#docker-images)
+   * [Configuration](#configuration)
+      * [AWS Access](#aws-access)
+      * [Helm version mode](#helm-version-mode)
+   * [Usage](#usage)
+      * [Init](#init)
+      * [Push](#push)
+      * [Delete](#delete)
+      * [Reindex](#reindex)
+   * [Uninstall](#uninstall)
+   * [Advanced Features](#advanced-features)
+      * [ACLs](#acls)
+      * [Using alternative S3-compatible vendors](#using-alternative-s3-compatible-vendors)
+      * [Using S3 bucket ServerSide Encryption](#using-s3-bucket-serverside-encryption)
+      * [S3 bucket location](#s3-bucket-location)
+   * [Additional Documentation](#additional-documentation)
+   * [Community and Related Projects](#community-and-related-projects)
+   * [Contributing](#contributing)
+   * [License](#license)
 
 ## Install
 
@@ -35,13 +57,15 @@ version and suffixed with Helm version. The image built from master branch is al
 only used for playing and testing, it is **strongly discouraged** to use that image for production use cases. 
 Refer to https://hub.docker.com/r/hypnoglow/helm-s3 for details and all available tags.
 
-### Note on AWS authentication
+## Configuration
 
-Because this plugin assumes private access to S3, you need to provide valid AWS credentials.
-You can do this in [the same manner](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html) as for `AWS CLI` tool.
+### AWS Access
+
+To publish charts to buckets and to fetch from private buckets, you need to provide valid AWS credentials.
+You can do this in [the same manner](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html) as for `AWS CLI` tool.
 
 So, if you want to use the plugin and you are already using `AWS CLI` - you are
-good to go, no additional configuration required. Otherwise, follow [the official guide](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html)
+good to go, no additional configuration required. Otherwise, follow [the official guide](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html)
 to set up credentials.
 
 To minimize security issues, remember to configure your IAM user policies properly.
@@ -235,7 +259,9 @@ When the bucket is replicated you should make the index's URLs relative so that 
 
     $ helm plugin remove s3
 
-## ACLs
+## Advanced Features
+
+### ACLs
 
 In use cases where you share a repo across multiple AWS accounts,
 you may want the ability to define object ACLS to allow charts to persist there
@@ -246,7 +272,7 @@ To do so, add the flag `--acl="ACL_POLICY"`. The list of ACLs can be [found here
 
 You can also set the default ACL be setting the `S3_ACL` environment variable.
 
-## Using alternative S3-compatible vendors
+### Using alternative S3-compatible vendors
 
 The plugin assumes Amazon S3 by default. However, it can work with any S3-compatible
 object storage, like [minio](https://www.minio.io/), [DreamObjects](https://www.dreamhost.com/cloud/storage/)
@@ -258,22 +284,29 @@ and others. To configure the plugin to work alternative S3 backend, just define
 
 See [these integration tests](https://github.com/hypnoglow/helm-s3/blob/master/hack/test-e2e-local.sh) that use local minio docker container for a complete example.
 
-## Using S3 bucket ServerSide Encryption
+### Using S3 bucket ServerSide Encryption
 
 To enable S3 SSE export environment variable `AWS_S3_SSE` and set it to desired type for example `AES256`.
 
-## S3 bucket location
+### S3 bucket location
 
 The plugin will look for the bucket in the region inferred by the environment. If the bucket is in another region, the commands will fail.
 
-This can be controlled by exporting one of HELM\_S3\_REGION, AWS\_REGION or AWS\_DEFAULT\_REGION, in order of precedence.
+This can be controlled by exporting one of `HELM_S3_REGION`, `AWS_REGION` or `AWS_DEFAULT_REGION`, in order of precedence.
 
-## Documentation
+## Additional Documentation
 
 Additional documentation is available in the [docs](docs) directory. This currently includes:
 - estimated [usage cost calculation](docs/usage-cost.md)
-- [best practices](docs/best-practice.md)
-for organizing your repositories.
+- [best practices](docs/best-practice.md) for organizing your repositories.
+
+## Community and Related Projects
+
+- [Helm | Related Projects and Documentation](https://helm.sh/docs/community/related/)
+- [Set up a Helm v3 chart repository in Amazon S3 - AWS Prescriptive Guidance](https://docs.aws.amazon.com/prescriptive-guidance/latest/patterns/set-up-a-helm-v3-chart-repository-in-amazon-s3.html)
+- [Deploy Kubernetes resources and packages using Amazon EKS and a Helm chart repository in Amazon S3 - AWS Prescriptive Guidance](https://docs.aws.amazon.com/prescriptive-guidance/latest/patterns/deploy-kubernetes-resources-and-packages-using-amazon-eks-and-a-helm-chart-repository-in-amazon-s3.html)
+- [Chart sources - Flux Helm Operator](https://docs.fluxcd.io/projects/helm-operator/en/stable/helmrelease-guide/chart-sources/#extending-the-supported-helm-repository-protocols)
+- [How to create a Helm chart repository using Amazon S3](https://andrewlock.net/how-to-create-a-helm-chart-repository-using-amazon-s3/)
 
 ## Contributing
 
