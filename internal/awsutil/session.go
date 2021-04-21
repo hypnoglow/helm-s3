@@ -51,6 +51,9 @@ func Session(opts ...SessionOption) (*session.Session, error) {
 	// if not set, we don't update the config,
 	// so that the AWS SDK can still rely on either AWS_REGION or AWS_DEFAULT_REGION
 	if bucketRegion != "" {
+		os.Unsetenv("AWS_SESSION_TOKEN")
+		os.Unsetenv("AWS_ACCESS_KEY_ID")
+		os.Unsetenv("AWS_SECRET_ACCESS_KEY")
 		so.Config.Region = aws.String(bucketRegion)
 	}
 
