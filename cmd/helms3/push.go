@@ -44,7 +44,12 @@ func (act pushAction) Run(ctx context.Context) error {
 		return ErrForceAndIgnoreIfExists
 	}
 
-	sess, err := awsutil.Session()
+	repoEntry, err := helmutil.LookupRepoEntry(act.repoName)
+	if err != nil {
+		return err
+	}
+
+	sess, err := awsutil.Session(awsutil.DynamicBucketRegion(repoEntry.URL()))
 	if err != nil {
 		return err
 	}
@@ -66,11 +71,6 @@ func (act pushAction) Run(ctx context.Context) error {
 	// and upload the chart right away.
 
 	chart, err := helmutil.LoadChart(fname)
-	if err != nil {
-		return err
-	}
-
-	repoEntry, err := helmutil.LookupRepoEntry(act.repoName)
 	if err != nil {
 		return err
 	}

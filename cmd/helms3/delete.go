@@ -20,7 +20,7 @@ func (act deleteAction) Run(ctx context.Context) error {
 		return err
 	}
 
-	sess, err := awsutil.Session()
+	sess, err := awsutil.Session(awsutil.DynamicBucketRegion(repoEntry.URL()))
 	if err != nil {
 		return err
 	}
