@@ -417,13 +417,6 @@ workflows:
             - docker-helm-3_4
             - docker-helm-3_5
             - docker-helm-3_6
-          requires:
-            - dep
-          filters:
-            tags:
-              only: /.*/
-            branches:
-              ignore: /.*/
           filters:
             tags:
               only: /.*/
