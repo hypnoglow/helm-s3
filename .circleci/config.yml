@@ -10,7 +10,7 @@ commands:
         type: string
       image_name:
         type: string
-        default: hypnoglow/helm-s3
+        default: josephprem/helm-s3
     steps:
       - run:
           name: Build & push Docker image
@@ -79,7 +79,7 @@ commands:
               ./cmd/helms3
 
             # Copy plugin directory to outside of the CircleCI workspace.
-            cp -r /go/src/github.com/hypnoglow/helm-s3 ${IT_TEMP_DIR}
+            cp -r /go/src/github.com/josephprem/helm-s3 ${IT_TEMP_DIR}
 
             # Correct the plugin manifest to make installation purely local
             cd ${IT_TEMP_DIR}/helm-s3
@@ -104,12 +104,12 @@ jobs:
       - image: circleci/golang:1.15
         environment:
           GO111MODULE: "on"
-    working_directory: /go/src/github.com/hypnoglow/helm-s3
+    working_directory: /go/src/github.com/josephprem/helm-s3
     steps:
       - checkout
       - run: make deps
       - persist_to_workspace:
-          root: /go/src/github.com/hypnoglow
+          root: /go/src/github.com/josephprem
           paths:
             - helm-s3
   test-unit:
@@ -118,10 +118,10 @@ jobs:
         environment:
           GO111MODULE: "on"
           GOFLAGS: "-mod=vendor"
-    working_directory: /go/src/github.com/hypnoglow/helm-s3
+    working_directory: /go/src/github.com/josephprem/helm-s3
     steps:
       - attach_workspace:
-          at: /go/src/github.com/hypnoglow
+          at: /go/src/github.com/josephprem
       - run: ./.circleci/testcover.sh
       - run: bash <(curl -s https://codecov.io/bash)
   test-integration-helm-2_17:
@@ -141,10 +141,10 @@ jobs:
           MINIO_ACCESS_KEY: EXAMPLEKEY123
           MINIO_SECRET_KEY: EXAMPLESECRET123456
         command: ["server", "/data"]
-    working_directory: /go/src/github.com/hypnoglow/helm-s3
+    working_directory: /go/src/github.com/josephprem/helm-s3
     steps:
       - attach_workspace:
-          at: /go/src/github.com/hypnoglow
+          at: /go/src/github.com/josephprem
       - run_integration_tests:
           helm_version: 2.17.0
   test-integration-helm-3_4:
@@ -164,10 +164,10 @@ jobs:
           MINIO_ACCESS_KEY: EXAMPLEKEY123
           MINIO_SECRET_KEY: EXAMPLESECRET123456
         command: ["server", "/data"]
-    working_directory: /go/src/github.com/hypnoglow/helm-s3
+    working_directory: /go/src/github.com/josephprem/helm-s3
     steps:
       - attach_workspace:
-          at: /go/src/github.com/hypnoglow
+          at: /go/src/github.com/josephprem
       - run_integration_tests:
           helm_version: 3.4.2
   test-integration-helm-3_5:
@@ -187,10 +187,10 @@ jobs:
           MINIO_ACCESS_KEY: EXAMPLEKEY123
           MINIO_SECRET_KEY: EXAMPLESECRET123456
         command: ["server", "/data"]
-    working_directory: /go/src/github.com/hypnoglow/helm-s3
+    working_directory: /go/src/github.com/josephprem/helm-s3
     steps:
       - attach_workspace:
-          at: /go/src/github.com/hypnoglow
+          at: /go/src/github.com/josephprem
       - run_integration_tests:
           helm_version: 3.5.2
   test-install:
@@ -222,17 +222,17 @@ jobs:
             fi
 
             echo "Check installation of version ${version}"
-            helm plugin install https://github.com/hypnoglow/helm-s3.git --version ${version}
+            helm plugin install https://github.com/josephprem/helm-s3.git --version ${version}
   release:
     docker:
       - image: circleci/golang:1.15
         environment:
           GO111MODULE: "on"
           GOFLAGS: "-mod=vendor"
-    working_directory: /go/src/github.com/hypnoglow/helm-s3
+    working_directory: /go/src/github.com/josephprem/helm-s3
     steps:
       - attach_workspace:
-          at: /go/src/github.com/hypnoglow
+          at: /go/src/github.com/josephprem
       - deploy:
           name: goreleaser
           command: |
