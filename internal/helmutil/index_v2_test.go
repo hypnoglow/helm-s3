@@ -122,3 +122,16 @@ func TestIndexV2_AddOrReplace(t *testing.T) {
 		assert.Equal(t, "sha256:222", i.index.Entries["foo"][0].Digest)
 	})
 }
+
+func TestIndexV2_Timestamp(t *testing.T) {
+	idx := IndexV2{
+		index: &repo.IndexFile{
+			APIVersion: "foo",
+			Generated:  time.Date(2018, 01, 01, 0, 0, 0, 0, time.UTC),
+		},
+	}
+	generatedOld := idx.index.Generated
+	idx.TimeStamp()
+	generatedNew := idx.index.Generated
+	assert.True(t, generatedNew.After(generatedOld), "Expected %s greater than %s", generatedNew.String(), generatedOld.String())
+}

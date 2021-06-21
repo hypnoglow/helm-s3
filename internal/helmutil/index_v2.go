@@ -121,6 +121,10 @@ func (idx *IndexV2) SortEntries() {
 	idx.index.SortEntries()
 }
 
+func (idx *IndexV2) TimeStamp() {
+	idx.index.Generated = time.Now()
+}
+
 func (idx *IndexV2) MarshalBinary() (data []byte, err error) {
 	return yaml.Marshal(idx.index)
 }
