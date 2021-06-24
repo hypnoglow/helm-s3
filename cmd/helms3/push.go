@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
 
@@ -120,8 +121,17 @@ func (act pushAction) Run(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
+
 		if _, err := storage.PutChart(ctx, repoEntry.URL()+"/"+fname, fchart, string(chartMetaJSON), act.acl, hash, act.contentType); err != nil {
 			return errors.WithMessage(err, "upload chart to s3")
+		}
+
+		fprovName := fmt.Sprintf("%s.prov", fname)
+		fprov, err := os.Open(fprovName)
+		if err == nil {
+			if _, err := storage.PutProv(ctx, repoEntry.URL()+"/"+fprovName, fprov, act.acl, act.contentType); err != nil {
+				return errors.WithMessage(err, "upload prov file to s3")
+			}
 		}
 	}
 

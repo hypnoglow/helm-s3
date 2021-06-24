@@ -270,6 +270,31 @@ func (s *Storage) PutChart(ctx context.Context, uri string, r io.Reader, chartMe
 	return result.Location, nil
 }
 
+// PutProv puts the prov file to the storage.
+// uri must be in the form of s3 protocol: s3://bucket-name/key[...].prov.
+func (s *Storage) PutProv(ctx context.Context, uri string, r io.Reader, acl, contentType string) (string, error) {
+	bucket, key, err := parseURI(uri)
+	if err != nil {
+		return "", err
+	}
+	result, err := s3manager.NewUploader(s.session).UploadWithContext(
+		ctx,
+		&s3manager.UploadInput{
+			Bucket:               aws.String(bucket),
+			Key:                  aws.String(key),
+			ACL:                  aws.String(acl),
+			ContentType:          aws.String(contentType),
+			ServerSideEncryption: getSSE(),
+			Body:                 r,
+		},
+	)
+	if err != nil {
+		return "", errors.Wrap(err, "upload object to s3")
+	}
+
+	return result.Location, nil
+}
+
 // PutIndex puts the index file to the storage.
 // uri must be in the form of s3 protocol: s3://bucket-name/key[...].
 func (s *Storage) PutIndex(ctx context.Context, uri string, acl string, r io.Reader) error {
