@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/pkg/errors"
 
@@ -54,6 +55,18 @@ func (act deleteAction) Run(ctx context.Context) error {
 	if url != "" {
 		if err := storage.Delete(ctx, url); err != nil {
 			return errors.WithMessage(err, "delete chart file from s3")
+		}
+
+		provUrl := fmt.Sprintf("%s.prov", url)
+		exists, err := storage.Exists(ctx, provUrl)
+		if err != nil {
+			return errors.WithMessage(err, "check if prov file exists in the repository")
+		}
+
+		if exists {
+			if err := storage.Delete(ctx, provUrl); err != nil {
+				return errors.WithMessage(err, "delete prov file from s3")
+			}
 		}
 	}
 
