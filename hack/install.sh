@@ -28,16 +28,16 @@ echo "Downloading and installing helm-s3 v${version} ..."
 
 binary_url=""
 if [ "$(uname)" == "Darwin" ]; then
-    binary_url="https://github.com/hypnoglow/helm-s3/releases/download/v${version}/helm-s3_${version}_darwin_amd64.tar.gz"
+    binary_url="https://github.com/amezousan/helm-s3/releases/download/v${version}/helm-s3_${version}_darwin_amd64.tar.gz"
 elif [ "$(uname)" == "Linux" ] ; then
-    binary_url="https://github.com/hypnoglow/helm-s3/releases/download/v${version}/helm-s3_${version}_linux_amd64.tar.gz"
+    binary_url="https://github.com/amezousan/helm-s3/releases/download/v${version}/helm-s3_${version}_linux_amd64.tar.gz"
 fi
 
 if [ -z "${binary_url}" ]; then
     echo "Unsupported OS type"
     exit 1
 fi
-checksum_url="https://github.com/hypnoglow/helm-s3/releases/download/v${version}/helm-s3_${version}_checksums.txt"
+checksum_url="https://github.com/amezousan/helm-s3/releases/download/v${version}/helm-s3_${version}_checksums.txt"
 
 mkdir -p "bin"
 mkdir -p "releases/v${version}"
