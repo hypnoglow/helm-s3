@@ -3,9 +3,7 @@ package awss3
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"io"
-	"net/url"
 	"os"
 	"strings"
 
@@ -16,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/pkg/errors"
 
+	"github.com/hypnoglow/helm-s3/internal/awsutil"
 	"github.com/hypnoglow/helm-s3/internal/helmutil"
 )
 
@@ -70,7 +69,7 @@ func (s *Storage) traverse(ctx context.Context, repoURI string, items chan<- Cha
 	defer close(items)
 	defer close(errs)
 
-	bucket, prefixKey, err := parseURI(repoURI)
+	bucket, prefixKey, _, err := awsutil.ParseURI(repoURI)
 	if err != nil {
 		errs <- err
 		return
@@ -194,7 +193,7 @@ type ChartInfo struct {
 // FetchRaw downloads the object from URI and returns it in the form of byte slice.
 // uri must be in the form of s3 protocol: s3://bucket-name/key[...].
 func (s *Storage) FetchRaw(ctx context.Context, uri string) ([]byte, error) {
-	bucket, key, err := parseURI(uri)
+	bucket, key, _, err := awsutil.ParseURI(uri)
 	if err != nil {
 		return nil, err
 	}
@@ -224,7 +223,7 @@ func (s *Storage) FetchRaw(ctx context.Context, uri string) ([]byte, error) {
 
 // Exists returns true if an object exists in the storage.
 func (s *Storage) Exists(ctx context.Context, uri string) (bool, error) {
-	bucket, key, err := parseURI(uri)
+	bucket, key, _, err := awsutil.ParseURI(uri)
 	if err != nil {
 		return false, err
 	}
@@ -247,7 +246,7 @@ func (s *Storage) Exists(ctx context.Context, uri string) (bool, error) {
 // PutChart puts the chart file to the storage.
 // uri must be in the form of s3 protocol: s3://bucket-name/key[...].
 func (s *Storage) PutChart(ctx context.Context, uri string, r io.Reader, chartMeta, acl string, chartDigest string, contentType string) (string, error) {
-	bucket, key, err := parseURI(uri)
+	bucket, key, _, err := awsutil.ParseURI(uri)
 	if err != nil {
 		return "", err
 	}
@@ -278,7 +277,7 @@ func (s *Storage) PutIndex(ctx context.Context, uri string, acl string, r io.Rea
 	}
 	uri += "/index.yaml"
 
-	bucket, key, err := parseURI(uri)
+	bucket, key, _, err := awsutil.ParseURI(uri)
 	if err != nil {
 		return err
 	}
@@ -301,7 +300,7 @@ func (s *Storage) PutIndex(ctx context.Context, uri string, acl string, r io.Rea
 // Delete deletes the object by uri.
 // uri must be in the form of s3 protocol: s3://bucket-name/key[...].
 func (s *Storage) Delete(ctx context.Context, uri string) error {
-	bucket, key, err := parseURI(uri)
+	bucket, key, _, err := awsutil.ParseURI(uri)
 	if err != nil {
 		return err
 	}
@@ -318,23 +317,6 @@ func (s *Storage) Delete(ctx context.Context, uri string) error {
 	}
 
 	return nil
-}
-
-// parseURI returns bucket and key from URIs like:
-// - s3://bucket-name/dir
-// - s3://bucket-name/dir/file.ext
-func parseURI(uri string) (bucket, key string, err error) {
-	if !strings.HasPrefix(uri, "s3://") {
-		return "", "", fmt.Errorf("uri %s protocol is not s3", uri)
-	}
-
-	u, err := url.Parse(uri)
-	if err != nil {
-		return "", "", errors.Wrapf(err, "parse uri %s", uri)
-	}
-
-	bucket, key = u.Host, strings.TrimPrefix(u.Path, "/")
-	return bucket, key, nil
 }
 
 // assembleObjectMetadata assembles and returns S3 object metadata.

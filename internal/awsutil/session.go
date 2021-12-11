@@ -30,6 +30,20 @@ func AssumeRoleTokenProvider(provider func() (string, error)) SessionOption {
 	}
 }
 
+// WithRegionFromURI allows a session to be constructed with a region
+func WithRegionFromURI(uri string) SessionOption {
+	return func(options *session.Options) {
+		_, _, region, err := ParseURI(uri)
+		if err != nil {
+			return
+		}
+
+		if region != "" {
+			options.Config.Region = &region
+		}
+	}
+}
+
 // Session returns an AWS session as described http://docs.aws.amazon.com/sdk-for-go/v1/developer-guide/configuring-sdk.html
 func Session(opts ...SessionOption) (*session.Session, error) {
 	disableSSL := false
