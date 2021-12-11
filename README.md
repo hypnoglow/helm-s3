@@ -290,9 +290,11 @@ To enable S3 SSE export environment variable `AWS_S3_SSE` and set it to desired 
 
 ### S3 bucket location
 
-The plugin will look for the bucket in the region inferred by the environment. If the bucket is in another region, the commands will fail.
+You may specify a region for the bucket within the URL like so `s3://region@bucket-name/charts`.
 
-This can be controlled by exporting one of `HELM_S3_REGION`, `AWS_REGION` or `AWS_DEFAULT_REGION`, in order of precedence.
+Alternatively the plugin will look for the bucket in the region inferred by the environment. If the bucket is in another region, the commands will fail.
+
+This can be controlled by exporting one of `HELM_S3_REGION`, `AWS_REGION` or `AWS_DEFAULT_REGION`, in order of precedence (with URL being highest precedence).
 
 ## Additional Documentation
 
