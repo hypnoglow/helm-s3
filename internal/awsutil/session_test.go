@@ -22,8 +22,8 @@ func TestDynamicBucketRegion(t *testing.T) {
 	}{
 		{
 			caseDescription:      "existing S3 bucket URL with host only (no key) -> success",
-			expectedBucketRegion: "eu-central-1",
-			inputS3URL:           "s3://eu-test-bucket",
+			expectedBucketRegion: "ap-southeast-2",
+			inputS3URL:           "s3://cn-test-bucket",
 		},
 		{
 			caseDescription:      "existing S3 bucket URL with key -> success",

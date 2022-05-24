@@ -5,9 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.11.0] - 2022-05-24
+
+### Added
+
+- Added dynamic bucket region discovery that removes the need for setting region manually via `HELM_S3_REGION` etc. in the majority of cases.
+See [#146](https://github.com/hypnoglow/helm-s3/pull/146)] for details on how this works.
+[Refs: [#146](https://github.com/hypnoglow/helm-s3/pull/146)] Many thanks to @pregnor
+
+### Changed
 
 - Set supported Helm versions to v2.17, v3.4, v3.5.
+[Refs: [#137](https://github.com/hypnoglow/helm-s3/pull/137)]
+
+- Integration tests were reworked into Go e2e tests, all legacy tests removed.
+[Refs: [#136](https://github.com/hypnoglow/helm-s3/pull/136)]
+
+- AWS SDK updated to v1.37.18 to support AWS SSO
+[Refs: [#123](https://github.com/hypnoglow/helm-s3/pull/123) [#138](https://github.com/hypnoglow/helm-s3/pull/138)]
 
 ## [0.10.0] - 2020-10-27
 
