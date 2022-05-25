@@ -19,7 +19,7 @@ const (
 	awsDisableSSL = "AWS_DISABLE_SSL"
 
 	// awsBucketLocation can be set to an AWS region to force the session region
-	// if AWS_DEFAULT_REGION and AWS_REGION cannot be trusted
+	// if AWS_DEFAULT_REGION and AWS_REGION cannot be trusted.
 	awsBucketLocation = "HELM_S3_REGION"
 )
 

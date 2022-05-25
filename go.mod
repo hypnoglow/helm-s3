@@ -1,6 +1,6 @@
 module github.com/hypnoglow/helm-s3
 
-go 1.15
+go 1.16
 
 // See: https://github.com/helm/helm/issues/9354
 replace (

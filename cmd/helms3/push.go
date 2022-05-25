@@ -33,9 +33,9 @@ type pushAction struct {
 	force          bool
 	dryRun         bool
 	ignoreIfExists bool
+	relative       bool
 	acl            string
 	contentType    string
-	relative       bool
 }
 
 func (act pushAction) Run(ctx context.Context) error {

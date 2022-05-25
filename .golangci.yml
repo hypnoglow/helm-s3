@@ -1,12 +1,67 @@
+run:
+  concurrency: 4
+  timeout: 5m
+
 linters:
-  enable-all: true
-  disable:
-    - dupl
-    - funlen
-    - gochecknoglobals
-    - godox
-    - lll
-    - wsl
+  disable-all: true
+  enable:
+    - asciicheck
+    - bodyclose
+    - deadcode
+    - depguard
+    - dogsled
+    - errcheck
+    - exhaustive
+    - exportloopref
+    - gci
+    - gochecknoinits
+#    - gocognit
+    - goconst
+    - gocritic
+    - gocyclo
+#    - godot
+    - gofmt
+    - goheader
+    - goimports
+    - golint
+    - gomnd
+    - gomodguard
+    - goprintffuncname
+    - gosec
+    - gosimple
+    - govet
+    - ineffassign
+    - maligned
+    - misspell
+    - nakedret
+#    - nestif
+    - noctx
+    - nolintlint
+    - prealloc
+    - rowserrcheck
+    - scopelint
+    - sqlclosecheck
+    - staticcheck
+    - structcheck
+    - stylecheck
+    - typecheck
+    - unconvert
+    - unparam
+    - unused
+    - varcheck
+    - whitespace
+
+linters-settings:
+# TODO: enable dodot and uncomment this.
+#  godot:
+#    exclude:
+#      - "^ ?-"
+  goimports:
+    local-prefixes: github.com/hypnoglow/helm-s3
 
 issues:
-  new-from-rev: master
+  exclude-rules:
+    - linters:
+        - golint
+        - stylecheck
+      text: "error strings should not be capitalized"

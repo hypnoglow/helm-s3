@@ -58,11 +58,14 @@ func main() {
 
 	if len(os.Args) == 5 && !isAction(os.Args[1]) {
 		cmd := proxyCmd{uri: os.Args[4]}
+
 		ctx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
-		defer cancel()
-		if err := cmd.Run(ctx); err != nil {
+		err := cmd.Run(ctx)
+		cancel()
+		if err != nil {
 			log.Fatal(err)
 		}
+
 		return
 	}
 
@@ -147,7 +150,6 @@ func main() {
 			uri: *initURI,
 			acl: *acl,
 		}
-		defer fmt.Printf("Initialized empty repository at %s\n", *initURI)
 
 	case actionPush:
 		act = pushAction{
@@ -167,7 +169,6 @@ func main() {
 			acl:      *acl,
 			relative: *reindexRelative,
 		}
-		defer fmt.Printf("Repository %s was successfully reindexed.\n", *reindexTargetRepository)
 
 	case actionDelete:
 		act = deleteAction{
@@ -181,15 +182,22 @@ func main() {
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), *timeout)
-	defer cancel()
-
 	err := act.Run(ctx)
+	cancel()
+
 	switch err {
 	case nil:
 	case ErrChartExists:
 		log.Fatalf("The chart already exists in the repository and cannot be overwritten without an explicit intent. If you want to replace existing chart, use --force flag:\n\n\thelm s3 push --force %s %s\n\n", *pushChartPath, *pushTargetRepository)
 	default:
 		log.Fatal(err)
+	}
+
+	switch action {
+	case actionInit:
+		fmt.Printf("Initialized empty repository at %s\n", *initURI)
+	case actionReindex:
+		fmt.Printf("Repository %s was successfully reindexed.\n", *reindexTargetRepository)
 	}
 }
 

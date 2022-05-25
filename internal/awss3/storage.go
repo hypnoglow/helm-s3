@@ -20,7 +20,7 @@ import (
 )
 
 const (
-	// selects serverside encryption for bucket
+	// selects serverside encryption for bucket.
 	awsS3encryption = "AWS_S3_SSE"
 
 	// s3MetadataSoftLimitBytes is application-specific soft limit
@@ -41,7 +41,7 @@ func New(session *session.Session) *Storage {
 	return &Storage{session: session}
 }
 
-// Returns desired encryption
+// Returns desired encryption.
 func getSSE() *string {
 	sse := os.Getenv(awsS3encryption)
 	if sse == "" {
@@ -66,7 +66,7 @@ func (s *Storage) Traverse(ctx context.Context, repoURI string) (<-chan ChartInf
 // traverse traverses all charts in the repository.
 // It writes an info item about every chart to items, and errors to errs.
 // It always closes both channels when returns.
-func (s *Storage) traverse(ctx context.Context, repoURI string, items chan<- ChartInfo, errs chan<- error) {
+func (s *Storage) traverse(ctx context.Context, repoURI string, items chan<- ChartInfo, errs chan<- error) { //nolint:unparam // TODO: fix this issue.
 	defer close(items)
 	defer close(errs)
 

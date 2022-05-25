@@ -35,3 +35,7 @@ test-e2e:
 .PHONY: test-e2e-local
 test-e2e-local:
 	@./hack/test-e2e-local.sh
+
+.PHONY: lint
+lint:
+	@golangci-lint run
