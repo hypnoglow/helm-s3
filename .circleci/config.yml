@@ -101,7 +101,7 @@ commands:
 jobs:
   dep:
     docker:
-      - image: circleci/golang:1.15
+      - image: circleci/golang:1.16
         environment:
           GO111MODULE: "on"
     working_directory: /go/src/github.com/hypnoglow/helm-s3
@@ -114,7 +114,7 @@ jobs:
             - helm-s3
   test-unit:
     docker:
-      - image: circleci/golang:1.15
+      - image: circleci/golang:1.16
         environment:
           GO111MODULE: "on"
           GOFLAGS: "-mod=vendor"
@@ -126,7 +126,7 @@ jobs:
       - run: bash <(curl -s https://codecov.io/bash)
   test-integration-helm-2_17:
     docker:
-      - image: circleci/golang:1.15
+      - image: circleci/golang:1.16
         environment:
           GO111MODULE: "on"
           GOFLAGS: "-mod=vendor"
@@ -149,7 +149,7 @@ jobs:
           helm_version: 2.17.0
   test-integration-helm-3_4:
     docker:
-      - image: circleci/golang:1.15
+      - image: circleci/golang:1.16
         environment:
           GO111MODULE: "on"
           GOFLAGS: "-mod=vendor"
@@ -172,7 +172,7 @@ jobs:
           helm_version: 3.4.2
   test-integration-helm-3_5:
     docker:
-      - image: circleci/golang:1.15
+      - image: circleci/golang:1.16
         environment:
           GO111MODULE: "on"
           GOFLAGS: "-mod=vendor"
@@ -225,7 +225,7 @@ jobs:
             helm plugin install https://github.com/hypnoglow/helm-s3.git --version ${version}
   release:
     docker:
-      - image: circleci/golang:1.15
+      - image: circleci/golang:1.16
         environment:
           GO111MODULE: "on"
           GOFLAGS: "-mod=vendor"

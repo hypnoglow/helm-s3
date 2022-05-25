@@ -18,7 +18,6 @@ import (
 )
 
 const (
-	// copied from main
 	defaultChartsContentType = "application/gzip"
 )
 

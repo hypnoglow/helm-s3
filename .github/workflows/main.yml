@@ -1,0 +1,41 @@
+name: main
+
+on:
+  push:
+    branches:
+      - $default-branch
+  pull_request:
+    branches:
+      - '*'
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Go
+        uses: actions/setup-go@v3
+        with:
+          go-version-file: 'go.mod'
+
+      - name: Download dependencies
+        run: |
+          go mod download
+
+      - name: Run tests
+        run: |
+          go test -v $(go list ./... | grep -v e2e)
+
+      - name: Run linters
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: v1.31
+          args: --verbose
+
+      - name: Build
+        run: |
+          go build -v -o ./bin/helm-s3 ./cmd/helms3

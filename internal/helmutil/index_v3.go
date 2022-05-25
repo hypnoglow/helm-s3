@@ -12,7 +12,9 @@ import (
 	"github.com/pkg/errors"
 	"helm.sh/helm/v3/pkg/chart"
 	"helm.sh/helm/v3/pkg/repo"
-	"k8s.io/helm/pkg/urlutil" // Note that this is from Helm v2 SDK because in Helm v3 this package is internal.
+
+	// Note that this is from Helm v2 SDK because in Helm v3 this package is internal.
+	"k8s.io/helm/pkg/urlutil"
 	"sigs.k8s.io/yaml"
 )
 
@@ -26,7 +28,9 @@ func (idx *IndexV3) Add(metadata interface{}, filename, baseURL, digest string) 
 		return errors.New("metadata is not *chart.Metadata")
 	}
 
-	idx.index.Add(md, filename, baseURL, digest)
+	if err := idx.index.MustAdd(md, filename, baseURL, digest); err != nil {
+		return fmt.Errorf("add file to the index: %v", err)
+	}
 	return nil
 }
 
