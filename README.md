@@ -1,5 +1,6 @@
 <p align="left"><img src=".github/assets/icon_with_name.png" width="500" alt="helm-s3 Logo"></p>
 
+[![main](https://github.com/hypnoglow/helm-s3/actions/workflows/main.yml/badge.svg)](https://github.com/hypnoglow/helm-s3/actions/workflows/main.yml)
 [![CircleCI](https://circleci.com/gh/hypnoglow/helm-s3/tree/master.svg?style=shield)](https://circleci.com/gh/hypnoglow/helm-s3/tree/master)
 [![License MIT](https://img.shields.io/badge/license-MIT-blue.svg?style=flat)](LICENSE)
 [![GitHub release](https://img.shields.io/github/release/hypnoglow/helm-s3.svg)](https://github.com/hypnoglow/helm-s3/releases)
