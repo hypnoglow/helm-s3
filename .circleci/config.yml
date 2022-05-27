@@ -56,18 +56,6 @@ jobs:
           root: /go/src/github.com/hypnoglow
           paths:
             - helm-s3
-  test-unit:
-    docker:
-      - image: circleci/golang:1.16
-        environment:
-          GO111MODULE: "on"
-          GOFLAGS: "-mod=vendor"
-    working_directory: /go/src/github.com/hypnoglow/helm-s3
-    steps:
-      - attach_workspace:
-          at: /go/src/github.com/hypnoglow
-      - run: ./.circleci/testcover.sh
-      - run: bash <(curl -s https://codecov.io/bash)
   test-install:
     docker:
       - image: circleci/buildpack-deps:stretch-curl
@@ -154,27 +142,21 @@ workflows:
   test-pipeline:
     jobs:
       - dep
-      - test-unit:
-          requires:
-            - dep
       - docker-helm-2_17:
           requires:
             - dep
-            - test-unit
           filters:
             branches:
               only: master
       - docker-helm-3_4:
           requires:
             - dep
-            - test-unit
           filters:
             branches:
               only: master
       - docker-helm-3_5:
           requires:
             - dep
-            - test-unit
           filters:
             branches:
               only: master

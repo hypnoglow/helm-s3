@@ -28,13 +28,19 @@ jobs:
 
       - name: Run tests
         run: |
-          go test -v $(go list ./... | grep -v e2e)
+          go test -v -race -coverprofile=coverage.txt -covermode=atomic $(go list ./... | grep -v e2e)
+
+      - name: Codecov
+        uses: codecov/codecov-action@v3
 
       - name: Run linters
         uses: golangci/golangci-lint-action@v3
         with:
           version: v1.31
           args: --verbose
+          # See: https://github.com/golangci/golangci-lint-action/issues/244
+          skip-pkg-cache: true
+          skip-build-cache: true
 
       - name: Build
         run: |
