@@ -31,6 +31,8 @@ if [ "$(uname)" == "Darwin" ]; then
     binary_url="https://github.com/hypnoglow/helm-s3/releases/download/v${version}/helm-s3_${version}_darwin_amd64.tar.gz"
 elif [ "$(uname)" == "Linux" ] ; then
     binary_url="https://github.com/hypnoglow/helm-s3/releases/download/v${version}/helm-s3_${version}_linux_amd64.tar.gz"
+elif [[ "$(uname)" =~ (CYGWIN|MINGW|MSYS_NT).* ]] ; then
+    binary_url="https://github.com/hypnoglow/helm-s3/releases/download/v${version}/helm-s3_${version}_windows_amd64.tar.gz"
 fi
 
 if [ -z "${binary_url}" ]; then
