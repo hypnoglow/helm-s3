@@ -1,0 +1,137 @@
+name: main
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - '*'
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Go
+        uses: actions/setup-go@v3
+        with:
+          go-version-file: 'go.mod'
+
+      - name: Download dependencies
+        run: |
+          go mod download -x
+
+      - name: Run tests
+        run: |
+          go test -v -race -coverprofile=coverage.txt -covermode=atomic $(go list ./... | grep -v e2e)
+
+      - name: Codecov
+        uses: codecov/codecov-action@v3
+
+      - name: Run linters
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: v1.31
+          args: --verbose
+          # See: https://github.com/golangci/golangci-lint-action/issues/244
+          skip-pkg-cache: true
+          skip-build-cache: true
+
+      - name: Build
+        run: |
+          go build -v -o ./bin/helm-s3 ./cmd/helms3
+
+  test-e2e:
+    name: Run end-to-end tests
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        helm:
+          - 2.17.0
+          - 3.4.2
+          - 3.5.4
+    services:
+      minio:
+        # TODO: use official minio/minio image when this issue is fixed:
+        # https://github.community/t/how-do-i-properly-override-a-service-entrypoint/17435
+        # Meanwhile, there is a workaround with custom image build with CMD set.
+        # See hack/minio/Dockerfile
+        image: hypnoglow/minio:latest
+        env:
+          MINIO_ACCESS_KEY: EXAMPLEKEY123
+          MINIO_SECRET_KEY: EXAMPLESECRET123456
+        ports:
+          - 9000:9000
+    env:
+      AWS_ENDPOINT: localhost:9000
+      AWS_ACCESS_KEY_ID: EXAMPLEKEY123
+      AWS_SECRET_ACCESS_KEY: EXAMPLESECRET123456
+      AWS_DISABLE_SSL: true
+      AWS_DEFAULT_REGION: us-east-1
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Go
+        uses: actions/setup-go@v3
+        with:
+          go-version-file: 'go.mod'
+
+      - name: Download dependencies
+        run: |
+          go mod download -x
+
+      - name: Install helm
+        run: |
+          helm_version="${{ matrix.helm }}"
+
+          curl -sSL https://get.helm.sh/helm-v${helm_version}-linux-amd64.tar.gz | tar xz
+          mv linux-amd64/helm $(go env GOPATH)/bin/helm
+          rm -rf linux-amd64
+
+          # Run `helm init` only for helm v2
+          if [ "${helm_version:0:1}" == "2" ]; then
+            helm init --client-only
+          fi
+
+          # Add `stable` repo only for helm v3
+          if [ "${helm_version:0:1}" == "3" ]; then
+            helm repo add stable https://charts.helm.sh/stable
+          fi
+
+      - name: Build and install the plugin
+        run: |
+          plugin_version="commit.${{ github.sha }}"
+          tmp_dir="$(mktemp -d)"
+
+          go build \
+            -o bin/helms3 \
+            -ldflags "-X main.version=${plugin_version}" \
+            ./cmd/helms3
+
+          # Copy plugin directory to outside of the workspace.
+          cp -r ${{ github.workspace }} ${tmp_dir}
+
+          # Correct the plugin manifest to make installation purely local
+          cd ${tmp_dir}/helm-s3
+          sed -i "/^hooks:/,+2 d" plugin.yaml
+          sed -i "s/^version:.*$/version: ${plugin_version}/" plugin.yaml
+
+          helm plugin install ${tmp_dir}/helm-s3
+
+      - name: Install minio client, prepare minio server
+        run: |
+          curl -sSL https://dl.minio.io/client/mc/release/linux-amd64/mc -o $(go env GOPATH)/bin/mc
+          chmod +x $(go env GOPATH)/bin/mc
+          mc config host add helm-s3-minio http://${AWS_ENDPOINT} ${AWS_ACCESS_KEY_ID} ${AWS_SECRET_ACCESS_KEY}
+          mc mb helm-s3-minio/test-bucket
+
+      - name: Run tests
+        run: |
+          go test -v ./tests/e2e/...

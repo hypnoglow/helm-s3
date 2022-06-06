@@ -19,9 +19,12 @@ var mc *minio.Client
 
 func TestMain(m *testing.M) {
 	setup()
-	defer teardown()
 
-	os.Exit(m.Run())
+	code := m.Run()
+
+	teardown()
+
+	os.Exit(code)
 }
 
 func setup() {
@@ -83,7 +86,7 @@ func teardownBucket(t *testing.T, name string) {
 	require.NoError(t, err, "remove bucket")
 }
 
-func setupRepo(t *testing.T, name, dir string) {
+func setupRepo(t *testing.T, name, dir string) { //nolint:unparam
 	t.Helper()
 
 	setupBucket(t, name)
@@ -114,15 +117,15 @@ func command(c string) (cmd *exec.Cmd, stdout, stderr *bytes.Buffer) {
 	stderr = &bytes.Buffer{}
 	args := strings.Split(c, " ")
 
-	cmd = exec.Command(args[0], args[1:]...)
+	cmd = exec.Command(args[0], args[1:]...) //nolint:gosec
 	cmd.Stdout = stdout
 	cmd.Stderr = stderr
 
 	return
 }
 
-// For helm v2, the command is `helm search foo/bar`
-// For helm v3, the command is `helm search repo foo/bar`
+// For helm v2, the command is `helm search foo/bar`.
+// For helm v3, the command is `helm search repo foo/bar`.
 func makeSearchCommand(repoName, chartName string) string {
 	c := "helm search"
 

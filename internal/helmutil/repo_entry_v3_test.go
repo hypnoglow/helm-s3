@@ -4,9 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"helm.sh/helm/v3/pkg/cli"
-
 	"github.com/stretchr/testify/assert"
+	"helm.sh/helm/v3/pkg/cli"
 	"helm.sh/helm/v3/pkg/repo"
 )
 

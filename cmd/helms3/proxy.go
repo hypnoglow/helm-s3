@@ -18,7 +18,10 @@ type proxyCmd struct {
 const indexYaml = "index.yaml"
 
 func (act proxyCmd) Run(ctx context.Context) error {
-	sess, err := awsutil.Session(awsutil.AssumeRoleTokenProvider(awsutil.StderrTokenProvider))
+	sess, err := awsutil.Session(
+		awsutil.AssumeRoleTokenProvider(awsutil.StderrTokenProvider),
+		awsutil.DynamicBucketRegion(act.uri),
+	)
 	if err != nil {
 		return err
 	}

@@ -1,0 +1,8 @@
+codecov:
+  require_ci_to_pass: no
+
+coverage:
+  range: "40...80"
+
+ignore:
+  - "tests"

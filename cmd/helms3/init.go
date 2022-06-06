@@ -21,7 +21,7 @@ func (act initAction) Run(ctx context.Context) error {
 		return errors.WithMessage(err, "get index reader")
 	}
 
-	sess, err := awsutil.Session()
+	sess, err := awsutil.Session(awsutil.DynamicBucketRegion(act.uri))
 	if err != nil {
 		return err
 	}
