@@ -26,19 +26,28 @@ trap on_exit EXIT
 version="$(cat plugin.yaml | grep "version" | cut -d '"' -f 2)"
 echo "Downloading and installing helm-s3 v${version} ..."
 
-binary_url=""
-if [ "$(uname)" == "Darwin" ]; then
-    binary_url="https://github.com/hypnoglow/helm-s3/releases/download/v${version}/helm-s3_${version}_darwin_amd64.tar.gz"
-elif [ "$(uname)" == "Linux" ] ; then
-    binary_url="https://github.com/hypnoglow/helm-s3/releases/download/v${version}/helm-s3_${version}_linux_amd64.tar.gz"
-elif [[ "$(uname)" =~ (CYGWIN|MINGW|MSYS_NT).* ]] ; then
-    binary_url="https://github.com/hypnoglow/helm-s3/releases/download/v${version}/helm-s3_${version}_windows_amd64.tar.gz"
-fi
-
-if [ -z "${binary_url}" ]; then
-    echo "Unsupported OS type"
+arch=""
+case "$(uname -m)" in
+  x86_64|amd64) arch="amd64" ;;
+  aarch64|arm64) arch="arm64" ;;
+  *)
+    echo "Arch '$(uname -m)' not supported!" >&2
     exit 1
-fi
+    ;;
+esac
+
+os=""
+case "$(uname)" in
+  Darwin) os="darwin" ;;
+  Linux) os="linux" ;;
+  CYGWIN*|MINGW*|MSYS_NT*) os="windows" ;;
+  *)
+    echo "OS '$(uname)' not supported!" >&2
+    exit 1
+    ;;
+esac
+
+binary_url="https://github.com/hypnoglow/helm-s3/releases/download/v${version}/helm-s3_${version}_${os}_${arch}.tar.gz"
 checksum_url="https://github.com/hypnoglow/helm-s3/releases/download/v${version}/helm-s3_${version}_checksums.txt"
 
 mkdir -p "bin"
