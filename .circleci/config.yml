@@ -99,6 +99,7 @@ jobs:
       - deploy:
           name: goreleaser
           command: |
+            export GORELEASER_PREVIOUS_TAG="v0.11.0"
             if [ -n "$CIRCLE_TAG" ]; then
               curl -sL https://git.io/goreleaser | bash
             fi

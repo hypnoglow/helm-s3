@@ -5,12 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- Support for Windows.
+[Refs: [#160](https://github.com/hypnoglow/helm-s3/pull/160)] thanks to @jwenz723
+- Support for Apple Silicon (Mac ARM).
+[Refs: [#167](https://github.com/hypnoglow/helm-s3/pull/167)]
+
+### Changed
+
+- Some parts of CI pipelines were moved to GitHub Actions.
+[Refs: [#162](https://github.com/hypnoglow/helm-s3/pull/162) [#163](https://github.com/hypnoglow/helm-s3/pull/163) [#165](https://github.com/hypnoglow/helm-s3/pull/165)]
+- Go updated to 1.16.
+[Refs: [#162](https://github.com/hypnoglow/helm-s3/pull/162)]
+
 ## [0.11.0] - 2022-05-24
 
 ### Added
 
 - Added dynamic bucket region discovery that removes the need for setting region manually via `HELM_S3_REGION` etc. in the majority of cases.
-See [#146](https://github.com/hypnoglow/helm-s3/pull/146)] for details on how this works.
+See [#146](https://github.com/hypnoglow/helm-s3/pull/146) for details on how this works.
 [Refs: [#146](https://github.com/hypnoglow/helm-s3/pull/146)] Many thanks to @pregnor
 
 ### Changed
