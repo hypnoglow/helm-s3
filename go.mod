@@ -13,12 +13,12 @@ require (
 	github.com/Masterminds/semver/v3 v3.1.1
 	github.com/aws/aws-sdk-go v1.37.18
 	github.com/ghodss/yaml v1.0.0
-	github.com/google/go-cmp v0.5.2
+	github.com/google/go-cmp v0.5.6
 	github.com/minio/minio-go/v6 v6.0.40
 	github.com/pkg/errors v0.9.1
-	github.com/stretchr/testify v1.7.0
+	github.com/stretchr/testify v1.7.1
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6
-	helm.sh/helm/v3 v3.5.2
+	helm.sh/helm/v3 v3.9.0
 	k8s.io/helm v2.17.0+incompatible
-	sigs.k8s.io/yaml v1.2.0
+	sigs.k8s.io/yaml v1.3.0
 )
