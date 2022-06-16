@@ -136,17 +136,6 @@ jobs:
           version: 18.06.0-ce
       - build_push_docker_image:
           helm_version: 3.5.2
-  docker-helm-3_9:
-    docker:
-      - image: circleci/buildpack-deps:stretch
-    working_directory: ~/workspace/helm-s3
-    steps:
-      - attach_workspace:
-          at: ~/workspace
-      - setup_remote_docker:
-          version: 18.06.0-ce
-      - build_push_docker_image:
-          helm_version: 3.9.0
 
 workflows:
   version: 2
@@ -167,12 +156,6 @@ workflows:
             branches:
               only: master
       - docker-helm-3_5:
-          requires:
-            - dep
-          filters:
-            branches:
-              only: master
-      - docker-helm-3_9:
           requires:
             - dep
           filters:
@@ -215,21 +198,12 @@ workflows:
               only: /.*/
             branches:
               ignore: /.*/
-      - docker-helm-3_9:
-          requires:
-            - dep
-          filters:
-            tags:
-              only: /.*/
-            branches:
-              ignore: /.*/
       - release:
           requires:
             - dep
             - docker-helm-2_17
             - docker-helm-3_4
             - docker-helm-3_5
-            - docker-helm-3_9
           filters:
             tags:
               only: /.*/
