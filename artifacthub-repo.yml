@@ -1,6 +1,7 @@
 # Artifact Hub repository metadata file
 # See: https://github.com/artifacthub/hub/blob/master/docs/metadata/artifacthub-repo.yml
 
+repositoryID: 766a5f60-fec8-4f39-a2a8-a173d71705e3
 owners:
   - name: hypnoglow
     email: hypnoglow@gmail.com
