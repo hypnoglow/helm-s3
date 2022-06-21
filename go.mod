@@ -31,6 +31,12 @@ replace (
 	oras.land/oras-go => oras.land/oras-go v1.1.1
 )
 
+// Required to deal with legacy ghodss/yaml as imported by internal/helmutil/index_v2.go
+require gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c //indirect
+
+replace gopkg.in/check.v1 => gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c
+
+// indirect imports
 require (
 	github.com/Azure/go-ansiterm v0.0.0-20210617225240-d185dfc1b5a1 // indirect
 	github.com/BurntSushi/toml v1.0.0 // indirect
