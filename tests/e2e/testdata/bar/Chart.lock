@@ -1,0 +1,6 @@
+dependencies:
+- name: foo
+  repository: s3://acme-corp/charts
+  version: 1.2.3
+digest: sha256:7bf9f3e8a0bd361d26979173c2f2ce44379930774af4be0d3b88bd2cacaac956
+generated: "2022-06-16T01:21:37.589529+03:00"
