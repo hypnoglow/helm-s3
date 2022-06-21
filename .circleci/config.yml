@@ -45,7 +45,7 @@ commands:
 jobs:
   dep:
     docker:
-      - image: cimg/go:1.17
+      - image: circleci/golang:1.17
         environment:
           GO111MODULE: "on"
     working_directory: /go/src/github.com/hypnoglow/helm-s3
@@ -58,7 +58,7 @@ jobs:
             - helm-s3
   test-install:
     docker:
-      - image: cimg/base:stable
+      - image: circleci/buildpack-deps:stretch-curl
     working_directory: /tmp
     steps:
       - run:
@@ -88,7 +88,7 @@ jobs:
             helm plugin install https://github.com/hypnoglow/helm-s3.git --version ${version}
   release:
     docker:
-      - image: cimg/go:1.17
+      - image: circleci/golang:1.17
         environment:
           GO111MODULE: "on"
           GOFLAGS: "-mod=vendor"
@@ -105,7 +105,7 @@ jobs:
             fi
   docker-helm-2_17:
     docker:
-      - image: cimg/base:stable
+      - image: circleci/buildpack-deps:stretch
     working_directory: ~/workspace/helm-s3
     steps:
       - attach_workspace:
@@ -116,7 +116,7 @@ jobs:
           helm_version: 2.17.0
   docker-helm-3_4:
     docker:
-      - image: cimg/base:stable
+      - image: circleci/buildpack-deps:stretch
     working_directory: ~/workspace/helm-s3
     steps:
       - attach_workspace:
@@ -127,7 +127,7 @@ jobs:
           helm_version: 3.4.2
   docker-helm-3_5:
     docker:
-      - image: cimg/base:stable
+      - image: circleci/buildpack-deps:stretch
     working_directory: ~/workspace/helm-s3
     steps:
       - attach_workspace:
@@ -138,7 +138,7 @@ jobs:
           helm_version: 3.5.2
   docker-helm-3_9:
     docker:
-      - image: cimg/base:stable
+      - image: circleci/buildpack-deps:stretch
     working_directory: ~/workspace/helm-s3
     steps:
       - attach_workspace:
