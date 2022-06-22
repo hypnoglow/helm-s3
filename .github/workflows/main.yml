@@ -55,6 +55,7 @@ jobs:
           - 2.17.0
           - 3.4.2
           - 3.5.4
+          - 3.9.0
     services:
       minio:
         # TODO: use official minio/minio image when this issue is fixed:
