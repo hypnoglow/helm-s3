@@ -8,7 +8,10 @@ WORKDIR /workspace/helm-s3
 
 COPY . .
 
-RUN apk add --no-cache git
+RUN apk add --no-cache \
+    git \
+    gcc \
+    musl-dev
 
 RUN go build -o bin/helms3 \
     -mod=vendor \
