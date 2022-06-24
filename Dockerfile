@@ -8,12 +8,9 @@ WORKDIR /workspace/helm-s3
 
 COPY . .
 
-RUN apk add --no-cache \
-    git \
-    gcc \
-    musl-dev
+RUN apk add --no-cache git
 
-RUN go build -o bin/helms3 \
+RUN CGO_ENABLED=0 go build -o bin/helms3 \
     -mod=vendor \
     -ldflags "-X main.version=${PLUGIN_VERSION}" \
     ./cmd/helms3
