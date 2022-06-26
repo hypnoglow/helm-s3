@@ -57,10 +57,10 @@ checksums_filename="releases/v${version}_checksums.txt"
 
 # Download binary and checksums files.
 (
-    if [ -x "$(which curl 2>/dev/null)" ]; then
+    if command -v curl >/dev/null 2>&1; then
         curl -sSL "${binary_url}" -o "${binary_filename}"
         curl -sSL "${checksum_url}" -o "${checksums_filename}"
-    elif [ -x "$(which wget 2>/dev/null)" ]; then
+    elif command -v wget >/dev/null 2>&1; then
         wget -q "${binary_url}" -O "${binary_filename}"
         wget -q "${checksum_url}" -O "${checksums_filename}"
     else
@@ -70,10 +70,10 @@ checksums_filename="releases/v${version}_checksums.txt"
 
 # Verify checksum.
 (
-    if [ -x "$(which sha256sum 2>/dev/null)" ]; then
+    if command -v sha256sum >/dev/null 2>&1; then
         checksum=$(sha256sum ${binary_filename} | awk '{ print $1 }')
         validate_checksum ${checksum} ${checksums_filename}
-    elif [ -x "$(which openssl 2>/dev/null)" ]; then
+    elif command -v openssl >/dev/null 2>&1; then
         checksum=$(openssl dgst -sha256 ${binary_filename} | awk '{ print $2 }')
         validate_checksum ${checksum} ${checksums_filename}
     else
