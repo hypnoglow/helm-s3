@@ -12,3 +12,5 @@ updates:
     directory: "/"
     schedule:
       interval: "monthly"
+    # Disable version updates for Docker dependencies
+    open-pull-requests-limit: 0
