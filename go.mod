@@ -14,13 +14,18 @@ require (
 	github.com/aws/aws-sdk-go v1.37.18
 	github.com/ghodss/yaml v1.0.0
 	github.com/google/go-cmp v0.5.6
-	github.com/minio/minio-go/v6 v6.0.40
+	github.com/minio/minio-go/v6 v6.0.57
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.7.1
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6
 	helm.sh/helm/v3 v3.9.0
 	k8s.io/helm v2.17.0+incompatible
 	sigs.k8s.io/yaml v1.3.0
+)
+
+require (
+	github.com/klauspost/cpuid v1.2.3 // indirect
+	github.com/minio/md5-simd v1.1.0 // indirect
 )
 
 // CVE-2021-25741
