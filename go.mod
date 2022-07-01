@@ -10,7 +10,7 @@ require (
 	github.com/google/go-cmp v0.5.8
 	github.com/minio/minio-go/v6 v6.0.57
 	github.com/pkg/errors v0.9.1
-	github.com/stretchr/testify v1.7.5
+	github.com/stretchr/testify v1.8.0
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6
 	helm.sh/helm/v3 v3.9.0
 	k8s.io/helm v2.17.0+incompatible
