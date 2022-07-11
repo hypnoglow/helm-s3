@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"strings"
 
 	"github.com/pkg/errors"
 
@@ -52,6 +53,11 @@ func (act deleteAction) Run(ctx context.Context) error {
 	// Delete the file from S3 and replace index file.
 
 	if url != "" {
+		// For relative URLs we need to prepend base URL.
+		if !strings.HasPrefix(url, repoEntry.URL()) {
+			url = strings.TrimSuffix(repoEntry.URL(), "/") + "/" + url
+		}
+
 		if err := storage.Delete(ctx, url); err != nil {
 			return errors.WithMessage(err, "delete chart file from s3")
 		}
