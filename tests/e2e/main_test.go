@@ -126,7 +126,7 @@ func command(c string) (cmd *exec.Cmd, stdout, stderr *bytes.Buffer) {
 
 // For helm v2, the command is `helm search foo/bar`.
 // For helm v3, the command is `helm search repo foo/bar`.
-func makeSearchCommand(repoName, chartName string) string {
+func makeSearchCommand(repoName, chartName string) string { //nolint:unparam
 	c := "helm search"
 
 	helmutil.SetupHelm()
