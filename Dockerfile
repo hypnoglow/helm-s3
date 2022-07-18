@@ -1,14 +1,15 @@
+ARG GO_VERSION=1.17
 ARG HELM_VERSION
 
-FROM golang:1.17-alpine as build
+FROM golang:${GO_VERSION}-alpine as build
 
 ARG PLUGIN_VERSION
+
+RUN apk add --no-cache git
 
 WORKDIR /workspace/helm-s3
 
 COPY . .
-
-RUN apk add --no-cache git
 
 RUN CGO_ENABLED=0 go build -o bin/helms3 \
     -mod=vendor \
