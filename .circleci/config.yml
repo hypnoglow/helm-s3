@@ -64,8 +64,8 @@ jobs:
       - run:
           name: Install helm
           command: |
-            tar_filename="helm-v3.4.0-linux-amd64.tar.gz"
-            checksum_filename="helm-v3.4.0-linux-amd64.tar.gz.sha256sum"
+            tar_filename="helm-v3.9.2-linux-amd64.tar.gz"
+            checksum_filename="helm-v3.9.2-linux-amd64.tar.gz.sha256sum"
             curl -sSL https://get.helm.sh/${tar_filename} -O
             curl -sSL https://get.helm.sh/${checksum_filename} -O
             cat ${checksum_filename} | sha256sum -c
@@ -99,7 +99,7 @@ jobs:
       - deploy:
           name: goreleaser
           command: |
-            export GORELEASER_PREVIOUS_TAG="v0.11.0"
+            export GORELEASER_PREVIOUS_TAG="v0.12.0"
             if [ -n "$CIRCLE_TAG" ]; then
               curl -sL https://git.io/goreleaser | bash
             fi
@@ -114,7 +114,7 @@ jobs:
           version: 18.06.0-ce
       - build_push_docker_image:
           helm_version: 2.17.0
-  docker-helm-3_4:
+  docker-helm-3_8:
     docker:
       - image: circleci/buildpack-deps:stretch
     working_directory: ~/workspace/helm-s3
@@ -124,18 +124,7 @@ jobs:
       - setup_remote_docker:
           version: 18.06.0-ce
       - build_push_docker_image:
-          helm_version: 3.4.2
-  docker-helm-3_5:
-    docker:
-      - image: circleci/buildpack-deps:stretch
-    working_directory: ~/workspace/helm-s3
-    steps:
-      - attach_workspace:
-          at: ~/workspace
-      - setup_remote_docker:
-          version: 18.06.0-ce
-      - build_push_docker_image:
-          helm_version: 3.5.2
+          helm_version: 3.8.2
   docker-helm-3_9:
     docker:
       - image: circleci/buildpack-deps:stretch
@@ -160,13 +149,7 @@ workflows:
           filters:
             branches:
               only: master
-      - docker-helm-3_4:
-          requires:
-            - dep
-          filters:
-            branches:
-              only: master
-      - docker-helm-3_5:
+      - docker-helm-3_8:
           requires:
             - dep
           filters:
@@ -199,15 +182,7 @@ workflows:
               only: /.*/
             branches:
               ignore: /.*/
-      - docker-helm-3_4:
-          requires:
-            - dep
-          filters:
-            tags:
-              only: /.*/
-            branches:
-              ignore: /.*/
-      - docker-helm-3_5:
+      - docker-helm-3_8:
           requires:
             - dep
           filters:
@@ -227,8 +202,7 @@ workflows:
           requires:
             - dep
             - docker-helm-2_17
-            - docker-helm-3_4
-            - docker-helm-3_5
+            - docker-helm-3_8
             - docker-helm-3_9
           filters:
             tags:
