@@ -146,7 +146,7 @@ jobs:
       - setup_remote_docker:
           version: 18.06.0-ce
       - build_push_docker_image:
-          helm_version: 3.9.0
+          helm_version: 3.9.2
 
 workflows:
   version: 2
