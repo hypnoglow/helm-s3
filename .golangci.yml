@@ -19,11 +19,10 @@ linters:
     - goconst
     - gocritic
     - gocyclo
-#    - godot
+    - godot
     - gofmt
     - goheader
     - goimports
-    - golint
     - gomnd
     - gomodguard
     - goprintffuncname
@@ -31,15 +30,14 @@ linters:
     - gosimple
     - govet
     - ineffassign
-    - maligned
     - misspell
     - nakedret
 #    - nestif
     - noctx
     - nolintlint
     - prealloc
+    - revive
     - rowserrcheck
-    - scopelint
     - sqlclosecheck
     - staticcheck
     - structcheck
@@ -52,10 +50,11 @@ linters:
     - whitespace
 
 linters-settings:
-# TODO: enable dodot and uncomment this.
-#  godot:
-#    exclude:
-#      - "^ ?-"
+  gci:
+    sections:
+      - standard
+      - default
+      - prefix(github.com/hypnoglow/helm-s3)
   goimports:
     local-prefixes: github.com/hypnoglow/helm-s3
 
@@ -64,4 +63,8 @@ issues:
     - linters:
         - golint
         - stylecheck
+        - revive
       text: "error strings should not be capitalized"
+    - linters:
+        - staticcheck
+      text: "strings.Title has been deprecated"

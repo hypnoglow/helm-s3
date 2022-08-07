@@ -12,9 +12,7 @@ import (
 	"github.com/pkg/errors"
 	"helm.sh/helm/v3/pkg/chart"
 	"helm.sh/helm/v3/pkg/repo"
-
-	// Note that this is from Helm v2 SDK because in Helm v3 this package is internal.
-	"k8s.io/helm/pkg/urlutil"
+	"k8s.io/helm/pkg/urlutil" // Note that this is from Helm v2 SDK because in Helm v3 this package is internal.
 	"sigs.k8s.io/yaml"
 )
 

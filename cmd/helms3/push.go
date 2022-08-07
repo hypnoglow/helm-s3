@@ -159,7 +159,7 @@ func (act pushAction) Run(ctx context.Context) error {
 			return errors.WithMessage(err, "upload index to s3")
 		}
 
-		if err := idx.WriteFile(repoEntry.CacheFile(), 0644); err != nil {
+		if err := idx.WriteFile(repoEntry.CacheFile(), helmutil.DefaultIndexFilePerm); err != nil {
 			return errors.WithMessage(err, "update local index")
 		}
 	}

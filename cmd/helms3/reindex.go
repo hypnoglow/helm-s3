@@ -63,7 +63,7 @@ func (act reindexAction) Run(ctx context.Context) error {
 		return errors.Wrap(err, "upload index to the repository")
 	}
 
-	if err := idx.WriteFile(repoEntry.CacheFile(), 0644); err != nil {
+	if err := idx.WriteFile(repoEntry.CacheFile(), helmutil.DefaultIndexFilePerm); err != nil {
 		return errors.WithMessage(err, "update local index")
 	}
 

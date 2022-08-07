@@ -3,7 +3,6 @@ package e2e
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -64,7 +63,7 @@ func TestPush(t *testing.T) {
 
 	// Check that pushed chart can be fetched.
 
-	tmpdir, err := ioutil.TempDir("", t.Name())
+	tmpdir, err := os.MkdirTemp("", t.Name())
 	require.NoError(t, err)
 	defer os.RemoveAll(tmpdir)
 
@@ -272,7 +271,7 @@ func TestPushRelative(t *testing.T) {
 
 	// Fetch the repo index and check that chart uri is relative.
 
-	tmpdir, err := ioutil.TempDir("", t.Name())
+	tmpdir, err := os.MkdirTemp("", t.Name())
 	require.NoError(t, err)
 	defer os.RemoveAll(tmpdir)
 
