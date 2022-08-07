@@ -7,7 +7,7 @@ import (
 	"helm.sh/helm/v3/pkg/repo"
 )
 
-// RepoEntryV2 implements RepoEntry in Helm v3.
+// RepoEntryV3 implements RepoEntry in Helm v3.
 type RepoEntryV3 struct {
 	entry *repo.Entry
 }

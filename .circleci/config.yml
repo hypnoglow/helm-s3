@@ -45,9 +45,8 @@ commands:
 jobs:
   dep:
     docker:
-      - image: circleci/golang:1.17
-        environment:
-          GO111MODULE: "on"
+      - image: circleci/golang:1.19
+        environment: {}
     working_directory: /go/src/github.com/hypnoglow/helm-s3
     steps:
       - checkout
@@ -88,9 +87,8 @@ jobs:
             helm plugin install https://github.com/hypnoglow/helm-s3.git --version ${version}
   release:
     docker:
-      - image: circleci/golang:1.17
+      - image: circleci/golang:1.19
         environment:
-          GO111MODULE: "on"
           GOFLAGS: "-mod=vendor"
     working_directory: /go/src/github.com/hypnoglow/helm-s3
     steps:
