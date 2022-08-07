@@ -5,6 +5,43 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [0.13.0] - 2022-08-07
+
+### Added
+
+- Added support for Linux ARM.
+[Refs: [#175](https://github.com/hypnoglow/helm-s3/pull/175)]
+
+### Changed
+
+- Go updated to 1.17.
+[Refs: [#170](https://github.com/hypnoglow/helm-s3/pull/170)] thanks to [@allaryin](https://github.com/allaryin)
+
+- Supported (and tested against) Helm versions updated to 3.8.2 and 3.9.2. 
+Deprecated Helm version 2.17.0 is still supported, but will be removed in one of the following plugin releases.
+[Refs: [#176](https://github.com/hypnoglow/helm-s3/pull/176) [#194](https://github.com/hypnoglow/helm-s3/pull/194) [#195](https://github.com/hypnoglow/helm-s3/pull/195)]
+
+### Fixed
+
+- Fixed an issue where `helm s3 delete` failed on charts previously pushed with `--relative` flag.
+[Refs: [#134](https://github.com/hypnoglow/helm-s3/issues/134) [#191](https://github.com/hypnoglow/helm-s3/pull/191)]
+
+- Fixed an issue where plugin installation failed in Alpine images.
+[Refs: [#152](https://github.com/hypnoglow/helm-s3/issues/152) [#159](https://github.com/hypnoglow/helm-s3/pull/159)] thanks to [@sanyer](https://github.com/sanyer)
+
+### Security
+
+- Potentially vulnerable Go module dependencies updated to latest patched versions.
+[Refs: [#169](https://github.com/hypnoglow/helm-s3/pull/169)] thanks to [@allaryin](https://github.com/allaryin)
+
+### Miscellaneous
+
+- Added Dependabot to manage dependency updates.
+[Refs: [#178](https://github.com/hypnoglow/helm-s3/pull/178)]
+
+- The plugin is published to ArtifactHub.
+[Ref: [#173](https://github.com/hypnoglow/helm-s3/pull/173) [#174](https://github.com/hypnoglow/helm-s3/pull/174)]
+
 ## [0.12.0] - 2022-06-12
 
 ### Added
