@@ -321,8 +321,8 @@ func (s *Storage) Delete(ctx context.Context, uri string) error {
 }
 
 // parseURI returns bucket and key from URIs like:
-// - s3://bucket-name/dir
-// - s3://bucket-name/dir/file.ext
+//   - s3://bucket-name/dir
+//   - s3://bucket-name/dir/file.ext
 func parseURI(uri string) (bucket, key string, err error) {
 	if !strings.HasPrefix(uri, "s3://") {
 		return "", "", fmt.Errorf("uri %s protocol is not s3", uri)

@@ -36,7 +36,7 @@ jobs:
       - name: Run linters
         uses: golangci/golangci-lint-action@v3
         with:
-          version: v1.31
+          version: v1.48
           args: --verbose
           # See: https://github.com/golangci/golangci-lint-action/issues/244
           skip-pkg-cache: true

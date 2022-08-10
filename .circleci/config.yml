@@ -45,17 +45,15 @@ commands:
 jobs:
   dep:
     docker:
-      - image: circleci/golang:1.17
-        environment:
-          GO111MODULE: "on"
-    working_directory: /go/src/github.com/hypnoglow/helm-s3
+      - image: cimg/go:1.19
+        environment: {}
     steps:
       - checkout
       - run: make deps
       - persist_to_workspace:
-          root: /go/src/github.com/hypnoglow
+          root: .
           paths:
-            - helm-s3
+            - vendor
   test-install:
     docker:
       - image: circleci/buildpack-deps:stretch-curl
@@ -88,14 +86,12 @@ jobs:
             helm plugin install https://github.com/hypnoglow/helm-s3.git --version ${version}
   release:
     docker:
-      - image: circleci/golang:1.17
+      - image: cimg/go:1.19
         environment:
-          GO111MODULE: "on"
           GOFLAGS: "-mod=vendor"
-    working_directory: /go/src/github.com/hypnoglow/helm-s3
     steps:
       - attach_workspace:
-          at: /go/src/github.com/hypnoglow
+          at: .
       - deploy:
           name: goreleaser
           command: |
@@ -106,10 +102,9 @@ jobs:
   docker-helm-2_17:
     docker:
       - image: circleci/buildpack-deps:stretch
-    working_directory: ~/workspace/helm-s3
     steps:
       - attach_workspace:
-          at: ~/workspace
+          at: .
       - setup_remote_docker:
           version: 18.06.0-ce
       - build_push_docker_image:
@@ -117,10 +112,9 @@ jobs:
   docker-helm-3_8:
     docker:
       - image: circleci/buildpack-deps:stretch
-    working_directory: ~/workspace/helm-s3
     steps:
       - attach_workspace:
-          at: ~/workspace
+          at: .
       - setup_remote_docker:
           version: 18.06.0-ce
       - build_push_docker_image:
@@ -128,10 +122,9 @@ jobs:
   docker-helm-3_9:
     docker:
       - image: circleci/buildpack-deps:stretch
-    working_directory: ~/workspace/helm-s3
     steps:
       - attach_workspace:
-          at: ~/workspace
+          at: .
       - setup_remote_docker:
           version: 18.06.0-ce
       - build_push_docker_image:

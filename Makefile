@@ -1,16 +1,12 @@
 PKG := github.com/hypnoglow/helm-s3
-GO111MODULE := on
-
-.EXPORT_ALL_VARIABLES:
 
 .PHONY: all
 all: deps build
 
 .PHONY: deps
 deps:
-	@go mod download
-	@go mod vendor
 	@go mod tidy
+	@go mod vendor
 
 .PHONY: build
 build:
