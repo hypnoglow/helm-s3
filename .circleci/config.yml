@@ -62,8 +62,8 @@ jobs:
       - run:
           name: Install helm
           command: |
-            tar_filename="helm-v3.9.2-linux-amd64.tar.gz"
-            checksum_filename="helm-v3.9.2-linux-amd64.tar.gz.sha256sum"
+            tar_filename="helm-v3.9.3-linux-amd64.tar.gz"
+            checksum_filename="helm-v3.9.3-linux-amd64.tar.gz.sha256sum"
             curl -sSL https://get.helm.sh/${tar_filename} -O
             curl -sSL https://get.helm.sh/${checksum_filename} -O
             cat ${checksum_filename} | sha256sum -c
@@ -128,7 +128,7 @@ jobs:
       - setup_remote_docker:
           version: 18.06.0-ce
       - build_push_docker_image:
-          helm_version: 3.9.2
+          helm_version: 3.9.3
 
 workflows:
   version: 2
