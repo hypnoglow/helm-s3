@@ -39,7 +39,8 @@ func TestPush(t *testing.T) {
 	cmd, stdout, stderr := command(fmt.Sprintf("helm s3 push %s %s", chartFilepath, repoName))
 	err := cmd.Run()
 	assert.NoError(t, err)
-	assertEmptyOutput(t, stdout, stderr)
+	assertEmptyOutput(t, nil, stderr)
+	assert.Contains(t, stdout.String(), "Successfully uploaded the chart to the repository.")
 
 	// Check that chart was actually pushed.
 
@@ -80,7 +81,7 @@ func TestPush(t *testing.T) {
 	assert.Error(t, err)
 	assertEmptyOutput(t, stdout, nil)
 
-	expected = `The chart already exists in the repository and cannot be overwritten without an explicit intent. If you want to replace existing chart, use --force flag`
+	expected = "The chart already exists in the repository and cannot be overwritten without an explicit intent."
 	assert.Contains(t, stderr.String(), expected)
 }
 
@@ -103,7 +104,8 @@ func TestPushContentType(t *testing.T) {
 	cmd, stdout, stderr := command(fmt.Sprintf("helm s3 push --content-type=%s %s %s", contentType, chartFilepath, repoName))
 	err := cmd.Run()
 	assert.NoError(t, err)
-	assertEmptyOutput(t, stdout, stderr)
+	assertEmptyOutput(t, nil, stderr)
+	assert.Contains(t, stdout.String(), "Successfully uploaded the chart to the repository.")
 
 	// Check that chart was actually pushed.
 
@@ -133,7 +135,8 @@ func TestPushDryRun(t *testing.T) {
 	cmd, stdout, stderr := command(fmt.Sprintf("helm s3 push %s %s --dry-run", chartFilepath, repoName))
 	err := cmd.Run()
 	assert.NoError(t, err)
-	assertEmptyOutput(t, stdout, stderr)
+	assertEmptyOutput(t, nil, stderr)
+	assert.Contains(t, stdout.String(), "Successfully uploaded the chart to the repository.")
 
 	// Check that actually nothing got pushed.
 
@@ -158,7 +161,8 @@ func TestPushForce(t *testing.T) {
 	cmd, stdout, stderr := command(fmt.Sprintf("helm s3 push %s %s", chartFilepath, repoName))
 	err := cmd.Run()
 	assert.NoError(t, err)
-	assertEmptyOutput(t, stdout, stderr)
+	assertEmptyOutput(t, nil, stderr)
+	assert.Contains(t, stdout.String(), "Successfully uploaded the chart to the repository.")
 
 	// Check that chart was actually pushed and remember last modification time.
 
@@ -175,7 +179,8 @@ func TestPushForce(t *testing.T) {
 	cmd, stdout, stderr = command(fmt.Sprintf("helm s3 push %s %s --force", chartFilepath, repoName))
 	err = cmd.Run()
 	assert.NoError(t, err)
-	assertEmptyOutput(t, stdout, stderr)
+	assertEmptyOutput(t, nil, stderr)
+	assert.Contains(t, stdout.String(), "Successfully uploaded the chart to the repository.")
 
 	// Check that chart was overwritten.
 
@@ -201,7 +206,8 @@ func TestPushIgnoreIfExists(t *testing.T) {
 	cmd, stdout, stderr := command(fmt.Sprintf("helm s3 push %s %s", chartFilepath, repoName))
 	err := cmd.Run()
 	assert.NoError(t, err)
-	assertEmptyOutput(t, stdout, stderr)
+	assertEmptyOutput(t, nil, stderr)
+	assert.Contains(t, stdout.String(), "Successfully uploaded the chart to the repository.")
 
 	// Check that chart was actually pushed and remember last modification time.
 
@@ -216,7 +222,8 @@ func TestPushIgnoreIfExists(t *testing.T) {
 	cmd, stdout, stderr = command(fmt.Sprintf("helm s3 push %s %s --ignore-if-exists", chartFilepath, repoName))
 	err = cmd.Run()
 	assert.NoError(t, err)
-	assertEmptyOutput(t, stdout, stderr)
+	assertEmptyOutput(t, nil, stderr)
+	assert.Contains(t, stdout.String(), "The chart already exists in the repository, keep existing chart and ignore push.")
 
 	// Check that chart was not overwritten.
 
@@ -267,7 +274,8 @@ func TestPushRelative(t *testing.T) {
 	cmd, stdout, stderr := command(fmt.Sprintf("helm s3 push --relative %s %s", chartFilepath, repoName))
 	err := cmd.Run()
 	assert.NoError(t, err)
-	assertEmptyOutput(t, stdout, stderr)
+	assertEmptyOutput(t, nil, stderr)
+	assert.Contains(t, stdout.String(), "Successfully uploaded the chart to the repository.")
 
 	// Fetch the repo index and check that chart uri is relative.
 

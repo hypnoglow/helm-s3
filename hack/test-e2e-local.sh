@@ -46,7 +46,7 @@ sleep 3
 mc config host add helm-s3-minio http://localhost:9000 $AWS_ACCESS_KEY_ID $AWS_SECRET_ACCESS_KEY
 mc mb helm-s3-minio/test-bucket
 
-go build -o bin/helms3 ./cmd/helms3
+go build -o bin/helm-s3 ./cmd/helm-s3
 
 ## Test
 
