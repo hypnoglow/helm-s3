@@ -44,7 +44,8 @@ func TestHelmDependencyUpdate(t *testing.T) {
 	cmd, stdout, stderr := command(fmt.Sprintf("helm s3 push %s %s", fooChartFilepath, repoName))
 	err := cmd.Run()
 	assert.NoError(t, err)
-	assertEmptyOutput(t, stdout, stderr)
+	assertEmptyOutput(t, nil, stderr)
+	assert.Contains(t, stdout.String(), "Successfully uploaded the chart to the repository.")
 
 	// 2. Ensure that 'bar' chart has empty 'charts' directory.
 

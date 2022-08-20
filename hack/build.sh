@@ -17,4 +17,4 @@ if [ -z "${version}" ]; then
 fi
 
 cd "${GOPATH}/src/${pkg}"
-go build -o bin/helms3 -ldflags "-X main.version=${version}" ./cmd/helms3
+go build -o bin/helm-s3 -ldflags "-X main.version=${version}" ./cmd/helm-s3

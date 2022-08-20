@@ -44,7 +44,7 @@ jobs:
 
       - name: Build
         run: |
-          go build -v -o ./bin/helm-s3 ./cmd/helms3
+          go build -v -o ./bin/helm-s3 ./cmd/helm-s3
 
   test-e2e:
     name: Run end-to-end tests
@@ -111,9 +111,9 @@ jobs:
           tmp_dir="$(mktemp -d)"
 
           go build \
-            -o bin/helms3 \
+            -o bin/helm-s3 \
             -ldflags "-X main.version=${plugin_version}" \
-            ./cmd/helms3
+            ./cmd/helm-s3
 
           # Copy plugin directory to outside of the workspace.
           cp -r ${{ github.workspace }} ${tmp_dir}

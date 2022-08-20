@@ -11,10 +11,10 @@ WORKDIR /workspace/helm-s3
 
 COPY . .
 
-RUN CGO_ENABLED=0 go build -o bin/helms3 \
+RUN CGO_ENABLED=0 go build -o bin/helm-s3 \
     -mod=vendor \
     -ldflags "-X main.version=${PLUGIN_VERSION}" \
-    ./cmd/helms3
+    ./cmd/helm-s3
 
 # Correct the plugin manifest with docker-specific fixes:
 # - remove hooks, because we are building everything locally from source
@@ -37,7 +37,7 @@ LABEL org.label-schema.build-date=$BUILD_DATE \
       org.label-schema.schema-version="1.0"
 
 COPY --from=build /workspace/helm-s3/plugin.yaml.fixed /root/.helm/cache/plugins/helm-s3/plugin.yaml
-COPY --from=build /workspace/helm-s3/bin/helms3 /root/.helm/cache/plugins/helm-s3/bin/helms3
+COPY --from=build /workspace/helm-s3/bin/helm-s3 /root/.helm/cache/plugins/helm-s3/bin/helm-s3
 
 RUN mkdir -p /root/.helm/plugins \
     && helm plugin install /root/.helm/cache/plugins/helm-s3

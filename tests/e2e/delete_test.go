@@ -29,7 +29,8 @@ func TestDelete(t *testing.T) {
 	cmd, stdout, stderr := command(fmt.Sprintf("helm s3 push %s %s", chartFilepath, repoName))
 	err := cmd.Run()
 	assert.NoError(t, err)
-	assertEmptyOutput(t, stdout, stderr)
+	assertEmptyOutput(t, nil, stderr)
+	assert.Contains(t, stdout.String(), "Successfully uploaded the chart to the repository.")
 
 	// Check that pushed chart exists in the bucket.
 
@@ -52,7 +53,8 @@ func TestDelete(t *testing.T) {
 	cmd, stdout, stderr = command(fmt.Sprintf("helm s3 delete %s --version %s %s", chartName, chartVersion, repoName))
 	err = cmd.Run()
 	assert.NoError(t, err)
-	assertEmptyOutput(t, stdout, stderr)
+	assertEmptyOutput(t, nil, stderr)
+	assert.Contains(t, stdout.String(), "Successfully deleted the chart from the repository.")
 
 	// Check that chart was actually deleted from the bucket.
 
@@ -91,7 +93,8 @@ func TestDeleteRelative(t *testing.T) {
 	cmd, stdout, stderr := command(fmt.Sprintf("helm s3 push --relative %s %s", chartFilepath, repoName))
 	err := cmd.Run()
 	assert.NoError(t, err)
-	assertEmptyOutput(t, stdout, stderr)
+	assertEmptyOutput(t, nil, stderr)
+	assert.Contains(t, stdout.String(), "Successfully uploaded the chart to the repository.")
 
 	// Check that pushed chart exists in the bucket.
 
@@ -114,7 +117,8 @@ func TestDeleteRelative(t *testing.T) {
 	cmd, stdout, stderr = command(fmt.Sprintf("helm s3 delete %s --version %s %s", chartName, chartVersion, repoName))
 	err = cmd.Run()
 	assert.NoError(t, err)
-	assertEmptyOutput(t, stdout, stderr)
+	assertEmptyOutput(t, nil, stderr)
+	assert.Contains(t, stdout.String(), "Successfully deleted the chart from the repository.")
 
 	// Check that chart was actually deleted from the bucket.
 

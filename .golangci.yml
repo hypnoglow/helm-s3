@@ -23,7 +23,7 @@ linters:
     - gofmt
     - goheader
     - goimports
-    - gomnd
+#    - gomnd
     - gomodguard
     - goprintffuncname
     - gosec

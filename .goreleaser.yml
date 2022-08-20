@@ -1,6 +1,6 @@
 builds:
-  - main: ./cmd/helms3
-    binary: ./bin/helms3
+  - main: ./cmd/helm-s3
+    binary: ./bin/helm-s3
     flags:
       - -trimpath
     env:
