@@ -1,8 +1,8 @@
 <p align="left"><img src=".github/assets/icon_with_name.png" width="500" alt="helm-s3 Logo"></p>
 
 [![main](https://github.com/hypnoglow/helm-s3/actions/workflows/main.yml/badge.svg)](https://github.com/hypnoglow/helm-s3/actions/workflows/main.yml)
+[![release](https://github.com/hypnoglow/helm-s3/actions/workflows/release.yml/badge.svg)](https://github.com/hypnoglow/helm-s3/actions/workflows/release.yml)
 [![codecov](https://codecov.io/gh/hypnoglow/helm-s3/branch/master/graph/badge.svg?token=lJqiDsDfPu)](https://codecov.io/gh/hypnoglow/helm-s3)
-[![CircleCI](https://circleci.com/gh/hypnoglow/helm-s3/tree/master.svg?style=shield)](https://circleci.com/gh/hypnoglow/helm-s3/tree/master)
 [![License MIT](https://img.shields.io/badge/license-MIT-blue.svg?style=flat)](LICENSE)
 [![GitHub release](https://img.shields.io/github/release/hypnoglow/helm-s3.svg)](https://github.com/hypnoglow/helm-s3/releases)
 [![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/s3)](https://artifacthub.io/packages/search?repo=s3)
@@ -48,7 +48,7 @@ The installation itself is simple as:
 
 You can install a specific release version:
 
-    $ helm plugin install https://github.com/hypnoglow/helm-s3.git --version 0.13.0
+    $ helm plugin install https://github.com/hypnoglow/helm-s3.git --version 0.14.0
 
 To use the plugin, you do not need any special dependencies. The installer will
 download versioned release with prebuilt binary from [github releases](https://github.com/hypnoglow/helm-s3/releases).
