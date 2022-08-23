@@ -35,3 +35,16 @@ jobs:
           GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GORELEASER_PREVIOUS_TAG: ""
+
+  docker-images:
+    name: Build Docker images
+    uses: ./.github/workflows/reusable-docker-images.yml
+    secrets:
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+
+  test-install:
+    name: Test plugin installation
+    needs:
+      - release
+    uses: ./.github/workflows/reusable-test-install.yml
