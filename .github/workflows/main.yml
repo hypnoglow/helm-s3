@@ -146,9 +146,17 @@ jobs:
           go test -v ./tests/e2e/...
 
   docker-images:
+    name: Build Docker images
     needs:
       - test-e2e
     uses: ./.github/workflows/reusable-docker-images.yml
     secrets:
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
       DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+
+  test-install:
+    name: Test plugin installation
+    needs:
+      - test-e2e
+    uses: ./.github/workflows/reusable-test-install.yml
+    if: github.ref_name == 'master'
