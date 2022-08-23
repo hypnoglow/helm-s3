@@ -2,46 +2,6 @@
 # Ref: https://circleci.com/docs/2.0/configuration-reference/
 version: 2.1
 
-commands:
-  build_push_docker_image:
-    description: "Builds and pushes Docker image"
-    parameters:
-      helm_version:
-        type: string
-      image_name:
-        type: string
-        default: hypnoglow/helm-s3
-    steps:
-      - run:
-          name: Build & push Docker image
-          command: |
-            HELM_VERSION="<< parameters.helm_version >>"
-            IMAGE_NAME="<< parameters.image_name >>"
-
-            PLUGIN_VERSION="commit.${CIRCLE_SHA1}"
-            if [ "${CIRCLE_BRANCH}" == "master" ]; then
-              PLUGIN_VERSION="master"
-            fi
-            if [ -n "${CIRCLE_TAG}" ]; then
-              PLUGIN_VERSION="${CIRCLE_TAG#v*}"
-            fi
-
-            docker build \
-              --build-arg HELM_VERSION=${HELM_VERSION} \
-              --build-arg PLUGIN_VERSION=${PLUGIN_VERSION} \
-              --build-arg BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ") \
-              --build-arg VCS_REF=$(git rev-parse --short HEAD) \
-              -t ${IMAGE_NAME}:local .
-
-            echo "${DOCKERHUB_PASSWORD}" | docker login -u "${DOCKERHUB_USERNAME}" --password-stdin
-
-            IMAGE_TAG="${PLUGIN_VERSION}-helm${HELM_VERSION}"
-            docker tag ${IMAGE_NAME}:local ${IMAGE_NAME}:${IMAGE_TAG}
-            docker push ${IMAGE_NAME}:${IMAGE_TAG}
-
-            IMAGE_TAG_HELM_MINOR="${PLUGIN_VERSION}-helm${HELM_VERSION%*.*}"
-            docker tag ${IMAGE_NAME}:local ${IMAGE_NAME}:${IMAGE_TAG_HELM_MINOR}
-            docker push ${IMAGE_NAME}:${IMAGE_TAG_HELM_MINOR}
 jobs:
   dep:
     docker:
@@ -99,36 +59,6 @@ jobs:
             if [ -n "$CIRCLE_TAG" ]; then
               curl -sL https://git.io/goreleaser | bash
             fi
-  docker-helm-2_17:
-    docker:
-      - image: circleci/buildpack-deps:stretch
-    steps:
-      - attach_workspace:
-          at: .
-      - setup_remote_docker:
-          version: 18.06.0-ce
-      - build_push_docker_image:
-          helm_version: 2.17.0
-  docker-helm-3_8:
-    docker:
-      - image: circleci/buildpack-deps:stretch
-    steps:
-      - attach_workspace:
-          at: .
-      - setup_remote_docker:
-          version: 18.06.0-ce
-      - build_push_docker_image:
-          helm_version: 3.8.2
-  docker-helm-3_9:
-    docker:
-      - image: circleci/buildpack-deps:stretch
-    steps:
-      - attach_workspace:
-          at: .
-      - setup_remote_docker:
-          version: 18.06.0-ce
-      - build_push_docker_image:
-          helm_version: 3.9.3
 
 workflows:
   version: 2
@@ -136,24 +66,6 @@ workflows:
   test-pipeline:
     jobs:
       - dep
-      - docker-helm-2_17:
-          requires:
-            - dep
-          filters:
-            branches:
-              only: master
-      - docker-helm-3_8:
-          requires:
-            - dep
-          filters:
-            branches:
-              only: master
-      - docker-helm-3_9:
-          requires:
-            - dep
-          filters:
-            branches:
-              only: master
       - test-install:
           filters:
             branches:
@@ -167,36 +79,9 @@ workflows:
               only: /.*/
             branches:
               ignore: /.*/
-      - docker-helm-2_17:
-          requires:
-            - dep
-          filters:
-            tags:
-              only: /.*/
-            branches:
-              ignore: /.*/
-      - docker-helm-3_8:
-          requires:
-            - dep
-          filters:
-            tags:
-              only: /.*/
-            branches:
-              ignore: /.*/
-      - docker-helm-3_9:
-          requires:
-            - dep
-          filters:
-            tags:
-              only: /.*/
-            branches:
-              ignore: /.*/
       - release:
           requires:
             - dep
-            - docker-helm-2_17
-            - docker-helm-3_8
-            - docker-helm-3_9
           filters:
             tags:
               only: /.*/
