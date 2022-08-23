@@ -1,0 +1,37 @@
+name: release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # v3.0.2
+        with:
+          fetch-depth: 0
+
+      - name: Setup Go
+        uses: actions/setup-go@84cbf8094393cdc5fe1fe1671ff2647332956b1a # v3.2.1
+        with:
+          cache: true
+          go-version-file: 'go.mod'
+
+      - name: Download dependencies
+        run: |
+          go mod download -x
+
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@68acf3b1adf004ac9c2f0a4259e85c5f66e99bef # v3.0.0
+        with:
+          version: latest
+          args: release --rm-dist --config=.goreleaser.yml
+        env:
+          GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GORELEASER_PREVIOUS_TAG: ""

@@ -44,21 +44,6 @@ jobs:
 
             echo "Check installation of version ${version}"
             helm plugin install https://github.com/hypnoglow/helm-s3.git --version ${version}
-  release:
-    docker:
-      - image: cimg/go:1.19
-        environment:
-          GOFLAGS: "-mod=vendor"
-    steps:
-      - attach_workspace:
-          at: .
-      - deploy:
-          name: goreleaser
-          command: |
-            export GORELEASER_PREVIOUS_TAG="v0.12.0"
-            if [ -n "$CIRCLE_TAG" ]; then
-              curl -sL https://git.io/goreleaser | bash
-            fi
 
 workflows:
   version: 2
@@ -74,14 +59,6 @@ workflows:
   release-pipeline:
     jobs:
       - dep:
-          filters:
-            tags:
-              only: /.*/
-            branches:
-              ignore: /.*/
-      - release:
-          requires:
-            - dep
           filters:
             tags:
               only: /.*/

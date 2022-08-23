@@ -18,3 +18,6 @@ archives:
     files:
       - LICENSE
       - plugin.yaml
+
+release:
+  draft: true
