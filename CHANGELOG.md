@@ -5,13 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.14.0] - 2022-08-24
 
 ### Changed
 
+- The plugin command line interface changed to use [cobra](https://github.com/spf13/cobra)
+instead of kingpin. This provides more compatibility and the same UX as in Helm.
+[Refs: [#202](https://github.com/hypnoglow/helm-s3/pull/202)]
+
 - Go updated to 1.19.
+[Refs: [#199](https://github.com/hypnoglow/helm-s3/pull/199)]
 
 - Supported (and tested against) Helm versions updated to 3.9.3.
+[Refs: [#201](https://github.com/hypnoglow/helm-s3/pull/201)]
+
+- Completed the migration of the CI pipeline to Github Actions.
+[Refs: [#166](https://github.com/hypnoglow/helm-s3/pull/166) [#205](https://github.com/hypnoglow/helm-s3/pull/205)]
+
+### Fixed
+
+- Fixed a bug where the plugin failed to fetch charts with special characters
+in version (e.g. `v1.0.1+build.123`).
+[Refs: [#158](https://github.com/hypnoglow/helm-s3/issues/158) [#204](https://github.com/hypnoglow/helm-s3/pull/204)]
 
 ## [0.13.0] - 2022-08-07
 
