@@ -328,6 +328,85 @@ your repository users won't have to install this plugin.
 To do this, you need your charts to have relative URLs in the index. See
 [Relative chart URLs](#relative-chart-urls).
 
+<details>
+<summary><b>Example of setting up a public repo using <a href="https://docs.aws.amazon.com/AmazonS3/latest/userguide/VirtualHosting.html">Virtual hosting of buckets</a></b></summary>
+
+1. Create S3 bucket named `example-bucket` in EU (Frankfurt) `eu-central-1` region.
+
+2. Go to "Permissions", edit Bucket Policy:
+
+    ```
+    {
+      "Version": "2012-10-17",
+      "Statement": [
+        {
+          "Effect": "Allow",
+          "Principal": "*",
+          "Action": [
+            "s3:ListBucket",
+            "s3:GetObject"
+           ],
+          "Resource": [
+            "arn:aws:s3:::example-bucket",
+            "arn:aws:s3:::example-bucket/*"
+          ]
+        }
+      ]
+    }
+    ```
+
+3. Initialize repository:
+
+    ```
+    $ helm s3 init s3://example-bucket
+    Initialized empty repository at s3://example-bucket
+    ```
+
+4. Add repository:
+
+    ```
+    $ helm repo add example-bucket s3://example-bucket
+    "example-bucket" has been added to your repositories
+    ```
+
+5. Create demo chart:
+
+    ```
+    $ helm create petstore
+    Creating petstore
+
+    $ helm package petstore --version 1.0.0
+    Successfully packaged chart and saved it to: petstore-1.0.0.tgz
+    ```
+
+6. Push chart:
+
+    ```
+    $ helm s3 push ./petstore-1.0.0.tgz --relative
+    Successfully uploaded the chart to the repository.
+    ```
+
+7. The bucket is public and chart repo is set up. Now users can use the repo
+   without the need to install helm-s3 plugin. 
+
+    Add HTTP repo:
+
+    ```
+    $ helm repo add example-bucket-http https://example-bucket.s3.eu-central-1.amazonaws.com/
+    "example-bucket-http" has been added to your repositories
+    ```
+
+    Search and download charts:
+
+    ```
+    $ helm search repo example-bucket-http
+    NAME                            CHART VERSION	APP VERSION	DESCRIPTION
+    example-bucket-http/petstore	1.0.0       	1.16.0     	A Helm chart for Kubernetes
+
+    $ helm pull example-bucket-http/petstore --version 1.0.0
+    ```
+</details>
+
 ### ACLs
 
 In use cases where you share a repo across multiple AWS accounts, you may want

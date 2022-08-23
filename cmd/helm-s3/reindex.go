@@ -89,7 +89,10 @@ func (act *reindexAction) run(ctx context.Context) error {
 			if act.relative {
 				baseURL = ""
 			}
-			if err := idx.Add(item.Meta.Value(), item.Filename, baseURL, item.Hash); err != nil {
+
+			filename := escapeIfRelative(item.Filename, act.relative)
+
+			if err := idx.Add(item.Meta.Value(), filename, baseURL, item.Hash); err != nil {
 				act.printer.PrintErrf("[ERROR] failed to add chart to the index: %s", err)
 			}
 		}
