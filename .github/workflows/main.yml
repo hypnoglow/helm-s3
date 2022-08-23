@@ -15,11 +15,12 @@ jobs:
     steps:
 
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # v3.0.2
 
       - name: Setup Go
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@b22fbbc2921299758641fab08929b4ac52b32923 # v3.2.0
         with:
+          cache: true
           go-version-file: 'go.mod'
 
       - name: Download dependencies
@@ -31,10 +32,10 @@ jobs:
           go test -v -race -coverprofile=coverage.txt -covermode=atomic $(go list ./... | grep -v e2e)
 
       - name: Codecov
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@81cd2dc8148241f03f5839d295e000b8f761e378 # v3.1.0
 
       - name: Run linters
-        uses: golangci/golangci-lint-action@v3
+        uses: golangci/golangci-lint-action@537aa1903e5d359d0b27dbc19ddd22c5087f3fbc # v3.2.0
         with:
           version: v1.48
           args: --verbose
@@ -42,12 +43,19 @@ jobs:
           skip-pkg-cache: true
           skip-build-cache: true
 
+      - name: Run ShellCheck
+        uses: ludeeus/action-shellcheck@94e0aab03ca135d11a35e5bfc14e6746dc56e7e9 # v1.1.0
+        with:
+          severity: warning
+
       - name: Build
         run: |
           go build -v -o ./bin/helm-s3 ./cmd/helm-s3
 
   test-e2e:
     name: Run end-to-end tests
+    needs:
+      - build
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -76,11 +84,12 @@ jobs:
     steps:
 
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # v3.0.2
 
       - name: Setup Go
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@b22fbbc2921299758641fab08929b4ac52b32923 # v3.2.0
         with:
+          cache: true
           go-version-file: 'go.mod'
 
       - name: Download dependencies
@@ -135,3 +144,11 @@ jobs:
       - name: Run tests
         run: |
           go test -v ./tests/e2e/...
+
+  docker-images:
+    needs:
+      - test-e2e
+    uses: ./.github/workflows/reusable-docker-images.yml
+    secrets:
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
