@@ -26,11 +26,11 @@ test-unit:
 
 .PHONY: test-e2e
 test-e2e:
-	go test -v ./tests/e2e/...
+	go test -v ./tests/e2e/... -run $(or $(RUN),.*)
 
 .PHONY: test-e2e-local
 test-e2e-local:
-	@./hack/test-e2e-local.sh
+	@./hack/test-e2e-local.sh $(RUN)
 
 .PHONY: lint
 lint:
