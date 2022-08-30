@@ -276,7 +276,7 @@ func (s *Storage) PutIndex(ctx context.Context, uri string, acl string, r io.Rea
 	if strings.HasPrefix(uri, "index.yaml") {
 		return errors.New("uri must not contain \"index.yaml\" suffix, it appends automatically")
 	}
-	uri += "/index.yaml"
+	uri = helmutil.IndexFileURL(uri)
 
 	bucket, key, err := parseURI(uri)
 	if err != nil {
@@ -296,6 +296,18 @@ func (s *Storage) PutIndex(ctx context.Context, uri string, acl string, r io.Rea
 	}
 
 	return nil
+}
+
+// IndexExists returns true if index file exists in the storage for repository
+// with the provided uri.
+// uri must be in the form of s3 protocol: s3://bucket-name/key[...].
+func (s *Storage) IndexExists(ctx context.Context, uri string) (bool, error) {
+	if strings.HasPrefix(uri, "index.yaml") {
+		return false, errors.New("uri must not contain \"index.yaml\" suffix, it appends automatically")
+	}
+	uri = helmutil.IndexFileURL(uri)
+
+	return s.Exists(ctx, uri)
 }
 
 // Delete deletes the object by uri.

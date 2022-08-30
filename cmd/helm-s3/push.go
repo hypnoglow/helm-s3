@@ -232,7 +232,9 @@ func (act *pushAction) run(ctx context.Context) error {
 }
 
 func (act *pushAction) ignoreIfExistsError() error {
-	act.printer.Printf("The chart already exists in the repository, keep existing chart and ignore push.")
+	act.printer.Printf(
+		"The chart already exists in the repository, keep existing chart and ignore push.\n",
+	)
 	return nil
 }
 

@@ -13,7 +13,8 @@ func SetupHelm() {
 	setupHelm3()
 }
 
-func indexFile(repoURL string) string {
+// IndexFileURL returns index file URL for the provided repository URL.
+func IndexFileURL(repoURL string) string {
 	return strings.TrimSuffix(repoURL, "/") + "/index.yaml"
 }
 

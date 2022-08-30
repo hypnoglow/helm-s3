@@ -12,6 +12,7 @@ export AWS_ENDPOINT=localhost:9000
 export AWS_DISABLE_SSL=true
 
 DOCKER_NAME='helm-s3-minio'
+RUN="${1:-.*}"
 
 cleanup() {
   if docker container ls | grep -q "${DOCKER_NAME}$" ; then
@@ -50,7 +51,7 @@ go build -o bin/helm-s3 ./cmd/helm-s3
 
 ## Test
 
-go test -v ./tests/e2e/...
+go test -v ./tests/e2e/... -run "${RUN}"
 if [ $? -eq 0 ] ; then
     echo -e "\nAll tests passed!"
 fi
