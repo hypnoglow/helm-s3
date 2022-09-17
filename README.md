@@ -407,7 +407,7 @@ To do this, you need your charts to have relative URLs in the index. See
     ```
 </details>
 
-### ACLs
+### ACL
 
 In use cases where you share a repo across multiple AWS accounts, you may want
 the ability to define object ACLs to allow charts to persist their permissions
@@ -418,7 +418,26 @@ can be [found here](https://docs.aws.amazon.com/AmazonS3/latest/dev/acl-overview
 $ helm s3 push --acl="bucket-owner-full-control" ./epicservice-0.7.2.tgz mynewrepo
 ```
 
+Note that if you do use ACL, you need to add `--acl` flag for all commands, even
+for 'delete', because the index file is still updated when you remove a chart.
+
 You can also set the default ACL be setting the `S3_ACL` environment variable.
+
+### Timeout
+
+The default timeout for all commands is 5 minutes. This is an opinionated
+default to be suitable for MFA use, among other things.
+
+If you don't use MFA, it may be reasonable to lower the timeout for most 
+commands, e.g. to 10 seconds. In contrast, in cases where you want to reindex a
+big repository with thousands of charts, you definitely want to increase the 
+timeout.
+
+Example:
+
+```bash
+$ helm s3 push --timeout=10s ./epicservice-0.7.2.tgz mynewrepo
+```
 
 ### Using alternative S3-compatible vendors
 
