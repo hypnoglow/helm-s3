@@ -50,11 +50,12 @@ on_exit() {
     if [ ${exit_code} -ne 0 ]; then
         echo "${PROJECT_NAME} install hook failed. Please remove the plugin using 'helm plugin remove s3' and install again." > /dev/stderr
     fi
+    rm -rf "releases"
     exit ${exit_code}
 }
 trap on_exit EXIT
 
-version="$(cat plugin.yaml | grep "version" | cut -d '"' -f 2)"
+version="$(grep "version" plugin.yaml | cut -d '"' -f 2)"
 echo "Downloading and installing ${PROJECT_NAME} v${version} ..."
 
 initArch
@@ -64,8 +65,7 @@ initOS
 binary_url="https://github.com/${PROJECT_GH}/releases/download/v${version}/${PROJECT_NAME}_${version}_${os}_${arch}.tar.gz"
 checksum_url="https://github.com/${PROJECT_GH}/releases/download/v${version}/${PROJECT_NAME}_${version}_checksums.txt"
 
-mkdir -p "bin"
-mkdir -p "releases/v${version}"
+mkdir "releases"
 binary_filename="releases/v${version}.tar.gz"
 checksums_filename="releases/v${version}_checksums.txt"
 
@@ -96,6 +96,4 @@ checksums_filename="releases/v${version}_checksums.txt"
 )
 
 # Unpack the binary.
-tar xzf "${binary_filename}" -C "releases/v${version}"
-mv "releases/v${version}/bin/${PROJECT_NAME}" "bin/${PROJECT_NAME}"
-exit 0
+tar xzf "${binary_filename}" bin/helm-s3
