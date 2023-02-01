@@ -39,7 +39,7 @@ jobs:
 
       - name: Prepare variables
         id: vars
-        uses: actions/github-script@7dff1a87643417cf3b95bb10b29f4c4bc60d8ebd # v6.3.1
+        uses: actions/github-script@98814c53be79b1d30f795b907e553d8679345975 # v6.4.0
         with:
           script: |
             const { GITHUB_REF_NAME, GITHUB_REF_TYPE, GITHUB_SHA } = process.env
