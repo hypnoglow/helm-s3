@@ -1,4 +1,7 @@
-#!/usr/bin/env bash
+#!/usr/bin/env sh
+
+PROJECT_NAME="helm-s3"
+PROJECT_GH="hypnoglow/$PROJECT_NAME"
 
 set \
   -o errexit \
@@ -18,41 +21,50 @@ validate_checksum() {
     echo "Checksum is valid."
 }
 
+initArch() {
+  arch=$(uname -m)
+  case $arch in
+    x86_64|amd64) arch="amd64" ;;
+    aarch64|arm64) arch="arm64" ;;
+    *)
+      echo "Arch '$(uname -m)' not supported!" >&2
+      exit 1
+      ;;
+  esac
+
+}
+
+initOS() {
+  os=$(uname -s)
+  case "$(uname)" in
+    Darwin) os="darwin" ;;
+    Linux) os="linux" ;;
+    CYGWIN*|MINGW*|MSYS_NT*) os="windows" ;;
+    *)
+      echo "OS '$(uname)' not supported!" >&2
+      exit 1
+      ;;
+  esac
+}
+
 on_exit() {
     exit_code=$?
     if [ ${exit_code} -ne 0 ]; then
-        echo "helm-s3 install hook failed. Please remove the plugin using 'helm plugin remove s3' and install again." > /dev/stderr
+        echo "${PROJECT_NAME} install hook failed. Please remove the plugin using 'helm plugin remove s3' and install again." > /dev/stderr
     fi
     exit ${exit_code}
 }
 trap on_exit EXIT
 
 version="$(cat plugin.yaml | grep "version" | cut -d '"' -f 2)"
-echo "Downloading and installing helm-s3 v${version} ..."
+echo "Downloading and installing ${PROJECT_NAME} v${version} ..."
 
-arch=""
-case "$(uname -m)" in
-  x86_64|amd64) arch="amd64" ;;
-  aarch64|arm64) arch="arm64" ;;
-  *)
-    echo "Arch '$(uname -m)' not supported!" >&2
-    exit 1
-    ;;
-esac
+initArch
 
-os=""
-case "$(uname)" in
-  Darwin) os="darwin" ;;
-  Linux) os="linux" ;;
-  CYGWIN*|MINGW*|MSYS_NT*) os="windows" ;;
-  *)
-    echo "OS '$(uname)' not supported!" >&2
-    exit 1
-    ;;
-esac
+initOS
 
-binary_url="https://github.com/hypnoglow/helm-s3/releases/download/v${version}/helm-s3_${version}_${os}_${arch}.tar.gz"
-checksum_url="https://github.com/hypnoglow/helm-s3/releases/download/v${version}/helm-s3_${version}_checksums.txt"
+binary_url="https://github.com/${PROJECT_GH}/releases/download/v${version}/${PROJECT_NAME}_${version}_${os}_${arch}.tar.gz"
+checksum_url="https://github.com/${PROJECT_GH}/releases/download/v${version}/${PROJECT_NAME}_${version}_checksums.txt"
 
 mkdir -p "bin"
 mkdir -p "releases/v${version}"
@@ -87,5 +99,5 @@ checksums_filename="releases/v${version}_checksums.txt"
 
 # Unpack the binary.
 tar xzf "${binary_filename}" -C "releases/v${version}"
-mv "releases/v${version}/bin/helm-s3" "bin/helm-s3"
+mv "releases/v${version}/bin/${PROJECT_NAME}" "bin/${PROJECT_NAME}"
 exit 0
