@@ -30,7 +30,7 @@ var helm3Detected func() bool
 
 func helmVersionCommand() bool {
 	cmd := exec.Command("helm", "version", "--short", "--client")
-	out, err := cmd.CombinedOutput()
+	out, err := cmd.Output()
 	if err != nil {
 		// Should not happen in normal cases (when helm is properly installed).
 		// Anyway, for now fallback to v2 for backward compatibility for helm-s3 users that are still on v2.
