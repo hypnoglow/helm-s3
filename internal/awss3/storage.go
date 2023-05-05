@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log"
 	"net/url"
 	"os"
 	"strings"
@@ -109,6 +110,8 @@ func (s *Storage) traverse(ctx context.Context, repoURI string, items chan<- Cha
 				// or any other kind of file that might be in the repo
 				continue
 			}
+
+			log.Println(*obj.Key)
 
 			metaOut, err := client.HeadObject(&s3.HeadObjectInput{
 				Bucket: aws.String(bucket),
