@@ -35,6 +35,7 @@ The plugin supports both Helm v2 and v3 (Helm v3 support is available since
       * [Using alternative S3-compatible vendors](#using-alternative-s3-compatible-vendors)
       * [Using S3 bucket ServerSide Encryption](#using-s3-bucket-serverside-encryption)
       * [S3 bucket location](#s3-bucket-location)
+      * [AWS SSO](#aws-sso)
    * [Additional Documentation](#additional-documentation)
    * [Community and Related Projects](#community-and-related-projects)
    * [Contributing](#contributing)
@@ -470,6 +471,35 @@ Since [v0.11.0](https://github.com/hypnoglow/helm-s3/blob/master/CHANGELOG.md#01
 the plugin supports dynamic S3 bucket region retrieval, so in most cases you
 don't need to provide the region. The plugin will detect it automatically and
 work without issues.
+
+### AWS SSO
+
+The plugin supports AWS IAM Identity Center (aka AWS SSO) authentication.
+
+To use AWS SSO, make sure you [configured it via AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/sso-configure-profile-token.html#sso-configure-profile-token-auto-sso):
+
+```bash
+$ aws configure sso
+SSO session name (Recommended): my-sso
+SSO start URL [None]: https://my-sso-portal.awsapps.com/start
+SSO region [None]: us-east-1
+SSO registration scopes [None]: sso:account:access
+
+...
+
+CLI default client Region [None]: us-east-1
+CLI default output format [None]:
+CLI profile name [...]: YOUR-PROFILE-NAME
+```
+
+Then, set `AWS_PROFILE` environment variable to the profile name you used in
+the previous step:
+
+```bash
+$ export AWS_PROFILE=YOUR-PROFILE-NAME
+```
+
+Now you can use the plugin as usual.
 
 ## Additional Documentation
 
