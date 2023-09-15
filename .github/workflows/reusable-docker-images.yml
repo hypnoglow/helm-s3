@@ -12,6 +12,9 @@ jobs:
   docker-images:
     name: Publish docker images
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     strategy:
       matrix:
         helm:
