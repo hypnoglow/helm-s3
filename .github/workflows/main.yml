@@ -154,6 +154,22 @@ jobs:
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
       DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
 
+  # This job's only purpose is to be used for the "Require status checks to pass
+  # before merging" feature.
+  status-check:
+    name: "Status check"
+    needs:
+      - build
+      - test-e2e
+      - docker-images
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Decide whether the needed jobs succeeded or failed
+        uses: re-actors/alls-green@05ac9388f0aebcb5727afa17fcccfecd6f8ec5fe # v1.2.2
+        with:
+          jobs: ${{ toJSON(needs) }}
+
   test-install:
     name: Test plugin installation
     needs:
