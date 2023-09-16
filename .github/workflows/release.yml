@@ -36,6 +36,7 @@ jobs:
         env:
           GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Useful if you want to use not the latest tag for changelog.
           GORELEASER_PREVIOUS_TAG: ""
 
   docker-images:

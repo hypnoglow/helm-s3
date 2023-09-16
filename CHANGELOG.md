@@ -7,7 +7,28 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [0.15.0] - 2023-09-16
+
+### Added
+
+- `helm s3 init` now supports `--force` and `--ignore-if-exists` flags.
+`--force` flag replaces the index file if it exists.
+`--ignore-if-exists` flag allows to exit normally without triggering an error if
+the index file already exists.
+[Refs: [#207](https://github.com/hypnoglow/helm-s3/pull/207) [#73](https://github.com/hypnoglow/helm-s3/issues/73)]
+
+- Added support for AWS IAM Identity Center (aka AWS SSO). See README for instructions.
+[Refs: [#274](https://github.com/hypnoglow/helm-s3/pull/274) [#143](https://github.com/hypnoglow/helm-s3/issues/143)]
+
+### Changed
+
 - Supported (and tested against) Helm versions updated to 3.11.3 and 3.12.3.
+
+### Fixed
+
+- Updated dependencies which fixes potential security vulnerabilities.
+
+- Introduced minor documentation improvements.
 
 ## [0.14.0] - 2022-08-24
 
