@@ -25,6 +25,8 @@ type RepoEntry interface {
 }
 
 // LookupRepoEntry returns an entry from helm's repositories.yaml file by name.
+// If repositories.yaml file is not found, errors.Is(err, fs.ErrNotExist) will
+// return true.
 func LookupRepoEntry(name string) (RepoEntry, error) {
 	if IsHelm3() {
 		return lookupV3(name)
@@ -34,6 +36,8 @@ func LookupRepoEntry(name string) (RepoEntry, error) {
 
 // LookupRepoEntryByURL returns an entry from helm's repositories.yaml file by
 // repo URL. If not found, returns false and <nil> error.
+// If repositories.yaml file is not found, errors.Is(err, fs.ErrNotExist) will
+// return true.
 func LookupRepoEntryByURL(url string) (RepoEntry, bool, error) {
 	if IsHelm3() {
 		return lookupByURLV3(url)

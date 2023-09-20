@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TODO: replace with t.SetEnv.
 func mockEnv(t *testing.T, name, value string) func() {
 	old := os.Getenv(name)
 

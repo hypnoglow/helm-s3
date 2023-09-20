@@ -35,10 +35,10 @@ docker container run -d --rm --name "${DOCKER_NAME}" \
     -e MINIO_SECRET_KEY=$AWS_SECRET_ACCESS_KEY \
     minio/minio:latest server /data >/dev/null
 
-PATH=${GOPATH}/bin:${PATH}
+PATH=$(go env GOPATH)/bin:${PATH}
 if [ ! -x "$(which mc 2>/dev/null)" ]; then
     pushd /tmp > /dev/null
-    go get github.com/minio/mc
+    go install github.com/minio/mc@latest
     popd > /dev/null
 fi
 

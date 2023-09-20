@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"io/fs"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -79,19 +80,8 @@ func (act *initAction) run(ctx context.Context) error {
 		return newSilentError()
 	}
 
-	repoEntry, ok, err := helmutil.LookupRepoEntryByURL(act.uri)
-	if err != nil {
-		return fmt.Errorf("lookup repo entry by url: %v", err)
-	}
-	if ok {
-		if act.ignoreIfExists {
-			return act.ignoreIfExistsError(repoEntry.Name())
-		}
-		if !act.force {
-			return act.alreadyExistsError(repoEntry.Name())
-		}
-
-		// fallthrough on --force
+	if err := act.checkRepoEntry(); err != nil {
+		return err
 	}
 
 	r, err := helmutil.NewIndex().Reader()
@@ -130,6 +120,35 @@ func (act *initAction) run(ctx context.Context) error {
 	// with this plugin?
 
 	act.printer.Printf("Initialized empty repository at %s\n", act.uri)
+	return nil
+}
+
+func (act *initAction) checkRepoEntry() error {
+	repoEntry, ok, err := helmutil.LookupRepoEntryByURL(act.uri)
+	if errors.Is(err, fs.ErrNotExist) {
+		// Repo file may not exist, this is OK for instance when the helm is
+		// just installed (e.g. in docker).
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("lookup repo entry by url: %v", err)
+	}
+
+	if !ok {
+		// Repo entry not found - all is good.
+		return nil
+	}
+
+	// Repo entry exists.
+
+	if act.ignoreIfExists {
+		return act.ignoreIfExistsError(repoEntry.Name())
+	}
+	if !act.force {
+		return act.alreadyExistsError(repoEntry.Name())
+	}
+
+	// fallthrough on --force
 	return nil
 }
 
