@@ -33,7 +33,7 @@ func (r RepoEntryV3) CacheFile() string {
 func lookupV3(name string) (RepoEntryV3, error) {
 	repoFile, err := helm3LoadRepoFile(repoFilePathV3())
 	if err != nil {
-		return RepoEntryV3{}, errors.Wrap(err, "load repo file")
+		return RepoEntryV3{}, fmt.Errorf("load repo file: %w", err)
 	}
 
 	entry := repoFile.Get(name)
@@ -47,7 +47,7 @@ func lookupV3(name string) (RepoEntryV3, error) {
 func lookupByURLV3(url string) (RepoEntryV3, bool, error) {
 	repoFile, err := helm3LoadRepoFile(repoFilePathV3())
 	if err != nil {
-		return RepoEntryV3{}, false, fmt.Errorf("load repo file: %v", err)
+		return RepoEntryV3{}, false, fmt.Errorf("load repo file: %w", err)
 	}
 
 	url = strings.TrimSuffix(url, "/")

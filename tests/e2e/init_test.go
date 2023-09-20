@@ -181,3 +181,29 @@ func TestInitForceAndIgnoreIfExists(t *testing.T) {
 	expectedStderr := "The --force and --ignore-if-exists flags are mutually exclusive and cannot be specified together."
 	assert.Contains(t, stderr.String(), expectedStderr)
 }
+
+func TestInitRepoFileNotFound(t *testing.T) {
+	t.Log("Test init action when repo file not found")
+
+	const (
+		repoName        = "test-init-repo-file-not-found"
+		repoDir         = "charts"
+		indexObjectName = repoDir + "/index.yaml"
+		uri             = "s3://" + repoName + "/" + repoDir
+	)
+
+	setupBucket(t, repoName)
+	defer teardownBucket(t, repoName)
+
+	// Run init.
+
+	t.Setenv("HELM_REPOSITORY_CONFIG", "testdata/file-not-exists.yaml")
+
+	cmd, stdout, stderr := command(fmt.Sprintf("helm s3 init %s", uri))
+	err := cmd.Run()
+	assert.NoError(t, err)
+	assertEmptyOutput(t, nil, stderr)
+	assert.Contains(t, stdout.String(), "Initialized empty repository at "+uri)
+
+	// Skip other checks because they are already covered by TestInit.
+}

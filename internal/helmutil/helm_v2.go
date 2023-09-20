@@ -13,7 +13,16 @@ import (
 // setupHelm2 sets up environment and function bindings for helm v2.
 func setupHelm2() {
 	helm2Home = resolveHome()
-	helm2LoadRepoFile = repo.LoadRepositoriesFile
+	helm2LoadRepoFile = func(path string) (*repo.RepoFile, error) {
+		// This is needed because LoadRepositoriesFile returns custom (not
+		// wrapped) error if the file does not exist.
+		_, err := os.Stat(path)
+		if err != nil {
+			return nil, err
+		}
+
+		return repo.LoadRepositoriesFile(path)
+	}
 }
 
 var (
