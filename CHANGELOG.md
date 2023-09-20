@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [0.15.1] - 2023-09-20
+
+### Fixed
+
+- Fixed a bug introduced in [0.15.0](#0150---2023-09-16) where `helm s3 init`
+failed if the `repositories.yaml` file did not exist, e.g. immediately after
+helm was installed.
+[Refs: [#301](https://github.com/hypnoglow/helm-s3/pull/301) [#300](https://github.com/hypnoglow/helm-s3/issues/300)]
+
 ## [0.15.0] - 2023-09-16
 
 ### Added
