@@ -61,8 +61,8 @@ jobs:
       matrix:
         helm:
           - 2.17.0
-          - 3.11.3
           - 3.12.3
+          - 3.13.1
     services:
       minio:
         # TODO: use official minio/minio image when this issue is fixed:
