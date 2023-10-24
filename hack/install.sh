@@ -3,10 +3,8 @@
 PROJECT_NAME="helm-s3"
 PROJECT_GH="hypnoglow/$PROJECT_NAME"
 
-set \
-  -o errexit \
-  -o nounset \
-  -o pipefail
+set -e
+set -u
 
 if [ -n "${HELM_S3_PLUGIN_NO_INSTALL_HOOK:-}" ]; then
     echo "Development mode: not downloading versioned release."
