@@ -115,7 +115,7 @@ func (s *Storage) traverse(ctx context.Context, repoURI string, items chan<- Cha
 				Key:    obj.Key,
 			})
 			if err != nil {
-				errs <- errors.Wrap(err, "head s3 object")
+				errs <- fmt.Errorf("head s3 object %q: %s", key, err)
 				return
 			}
 
@@ -139,7 +139,7 @@ func (s *Storage) traverse(ctx context.Context, repoURI string, items chan<- Cha
 					Key:    obj.Key,
 				})
 				if err != nil {
-					errs <- errors.Wrap(err, "get s3 object")
+					errs <- fmt.Errorf("get s3 object %q: %s", key, err)
 					return
 				}
 
@@ -149,13 +149,13 @@ func (s *Storage) traverse(ctx context.Context, repoURI string, items chan<- Cha
 				ch, err := helmutil.LoadArchive(tr)
 				objectOut.Body.Close()
 				if err != nil {
-					errs <- errors.Wrap(err, "load archive from s3 object")
+					errs <- fmt.Errorf("load archive from s3 object %q: %s", key, err)
 					return
 				}
 
 				digest, err := helmutil.Digest(buf)
 				if err != nil {
-					errs <- errors.WithMessage(err, "get chart hash")
+					errs <- fmt.Errorf("get chart hash for %q: %s", key, err)
 					return
 				}
 
@@ -164,7 +164,7 @@ func (s *Storage) traverse(ctx context.Context, repoURI string, items chan<- Cha
 			} else {
 				meta := helmutil.NewChartMetadata()
 				if err := meta.UnmarshalJSON([]byte(*serializedChartMeta)); err != nil {
-					errs <- errors.Wrap(err, "unserialize chart meta")
+					errs <- fmt.Errorf("unserialize chart meta for %q: %s", key, err)
 					return
 				}
 

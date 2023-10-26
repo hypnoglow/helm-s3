@@ -40,6 +40,10 @@ The default timeout for all commands is 5 minutes. If you don't use MFA, it may
 be reasonable to lower the timeout for the most commands, e.g. to 10 seconds.
 In contrast, in cases where you want to reindex big repository with thousands of
 charts, you definitely want to increase the timeout.
+
+[Verbose output]
+
+You can enable verbose output with '--verbose' flag.
 `
 
 func newRootCmd() *cobra.Command {
@@ -72,6 +76,7 @@ func newRootCmd() *cobra.Command {
 	flags := cmd.PersistentFlags()
 	flags.StringVar(&opts.acl, "acl", opts.acl, "S3 Object ACL to use for charts and indexes. Can be sourced from S3_ACL environment variable.")
 	flags.DurationVar(&opts.timeout, "timeout", opts.timeout, "Timeout for the whole operation to complete.")
+	flags.BoolVar(&opts.verbose, "verbose", opts.verbose, "Enable verbose output.")
 
 	cmd.SetFlagErrorFunc(func(command *cobra.Command, err error) error {
 		return newBadUsageError(err)
