@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -23,6 +24,7 @@ func newReindexCommand(opts *options) *cobra.Command {
 	act := &reindexAction{
 		printer:  nil,
 		acl:      "",
+		verbose:  false,
 		repoName: "",
 		relative: false,
 	}
@@ -40,6 +42,7 @@ func newReindexCommand(opts *options) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			act.printer = cmd
 			act.acl = opts.acl
+			act.verbose = opts.verbose
 			act.repoName = args[0]
 			return act.run(cmd.Context())
 		},
@@ -56,7 +59,8 @@ type reindexAction struct {
 
 	// global flags
 
-	acl string
+	acl     string
+	verbose bool
 
 	// args
 
@@ -90,6 +94,10 @@ func (act *reindexAction) run(ctx context.Context) error {
 				baseURL = ""
 			}
 
+			if act.verbose {
+				act.printer.Printf("[DEBUG] Adding %s to index.\n", item.Filename)
+			}
+
 			filename := escapeIfRelative(item.Filename, act.relative)
 
 			if err := idx.Add(item.Meta.Value(), filename, baseURL, item.Hash); err != nil {
@@ -102,7 +110,7 @@ func (act *reindexAction) run(ctx context.Context) error {
 	}()
 
 	for err = range errs {
-		return errors.Wrap(err, "traverse the chart repository")
+		return fmt.Errorf("traverse the chart repository: %v", err)
 	}
 
 	idx := <-builtIndex
