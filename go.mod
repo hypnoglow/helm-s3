@@ -14,7 +14,7 @@ require (
 	github.com/stretchr/testify v1.8.4
 	helm.sh/helm/v3 v3.13.1
 	k8s.io/helm v2.17.0+incompatible
-	sigs.k8s.io/yaml v1.3.0
+	sigs.k8s.io/yaml v1.4.0
 )
 
 require (
