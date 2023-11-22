@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Changed
 
 - Supported (and tested against) Helm versions updated to 3.12.3 and 3.13.1.
+- Helm version detection now fallbacks to Helm v3 in case of errors, as Helm v2
+is deprecated for 3 years already.
 
 ## [0.15.1] - 2023-09-20
 

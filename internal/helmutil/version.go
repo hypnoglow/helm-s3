@@ -33,8 +33,9 @@ func helmVersionCommand() bool {
 	out, err := cmd.Output()
 	if err != nil {
 		// Should not happen in normal cases (when helm is properly installed).
-		// Anyway, for now fallback to v2 for backward compatibility for helm-s3 users that are still on v2.
-		return false
+		// Anyway, fallback to v3 since helm v2 was deprecated a long time ago
+		// and the majority of helm-s3 users use v3.
+		return true
 	}
 
 	return strings.HasPrefix(string(out), "v3.")
