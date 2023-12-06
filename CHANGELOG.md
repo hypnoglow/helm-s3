@@ -7,11 +7,34 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [0.16.0] - 2023-12-07
+
+### Added
+
+- Added `--verbose` global flag. This flag enables debug output. Currently only
+`helm s3 reindex` command supports it, but other commands may be updated in the
+future.
+[Refs: [#320](https://github.com/hypnoglow/helm-s3/pull/320)]
+
 ### Changed
 
-- Supported (and tested against) Helm versions updated to 3.12.3 and 3.13.1.
+- Supported (and tested against) Helm versions updated to 3.12.3 and 3.13.2.
+
 - Helm version detection now fallbacks to Helm v3 in case of errors, as Helm v2
 is deprecated for 3 years already.
+[Refs: [#334](https://github.com/hypnoglow/helm-s3/pull/334)]
+
+- Refactored install script so now the plugin does not require _bash_. This
+solves a few issues with installing the plugin on some distributions.
+[Refs: [#262](https://github.com/hypnoglow/helm-s3/pull/262) [#273](https://github.com/hypnoglow/helm-s3/issues/273) [#241](https://github.com/hypnoglow/helm-s3/pull/241)] thanks to [@yonahd](https://github.com/yonahd) and [@jouve](https://github.com/jouve)
+
+### Fixed
+
+- Fixed issues when the plugin was erroneously detecting Helm v2 instead of Helm v3.
+[Refs: [#269](https://github.com/hypnoglow/helm-s3/pull/269) [#221](https://github.com/hypnoglow/helm-s3/issues/221)] thanks to [@clhuang](https://github.com/clhuang)
+
+- Added more context info to errors returned by the plugin, so that it is easier
+to understand what went wrong, e.g. what chart failed during `helm s3 reindex`.
 
 ## [0.15.1] - 2023-09-20
 
