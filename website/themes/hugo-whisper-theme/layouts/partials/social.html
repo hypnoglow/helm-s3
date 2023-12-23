@@ -1,0 +1,7 @@
+{{ if .Site.Data.social }}
+<div class="social">
+    {{ range .Site.Data.social }}
+        <a href="{{ .link }}" target="blank"><img height="20" width="20" src="{{ .image | relURL }}" title="{{ .name }}" alt="{{ .name }}" /></a>
+    {{ end }}
+</div>
+{{ end }}
