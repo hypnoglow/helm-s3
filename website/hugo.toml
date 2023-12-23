@@ -1,0 +1,60 @@
+baseURL = "https://helm-s3.hypnoglow.io/"
+languageCode = "en-us"
+title = "helm-s3"
+theme = "hugo-whisper-theme"
+
+pygmentsCodeFences = true
+pygmentsCodefencesGuessSyntax = true
+pygmentsUseClasses = true
+
+[module]
+  [module.hugoVersion]
+    extended = true
+    min = "0.55.0"
+
+# Controls how many words are printed in the content summary on the docs homepage.
+# See https://gohugo.io/content-management/summaries/
+summaryLength = 30
+
+[[menu.main]]
+    name = "Home"
+    url = "/"
+    weight = 1
+
+[[menu.main]]
+    name = "Docs"
+    url = "/docs/"
+    weight = 2
+
+[[menu.main]]
+    name = "GitHub ↗"
+    url = "https://github.com/hypnoglow/helm-s3"
+    weight = 3
+
+[params]
+  google_analytics_id = ""
+  homepage_button_link = '/docs'
+  homepage_button_text = 'Quickstart'
+  homepage_intro = ""
+  homepage_image = ""
+
+  enable_anchor_link = true
+
+  [params.homepage_meta_tags]
+    meta_description = "helm-s3 is a Helm plugin that provides Amazon S3 protocol support."
+    meta_og_title = "helm-s3"
+    meta_og_type = "website"
+    meta_og_url = "https://helm-s3.hypnoglow.io"
+    meta_og_image = "https://raw.githubusercontent.com/hypnoglow/helm-s3/master/.github/assets/icon_with_name.png"
+    meta_og_description = "helm-s3 is a Helm plugin that provides Amazon S3 protocol support."
+    meta_twitter_card = "summary"
+    meta_twitter_site = "@hypnoglow"
+    meta_twitter_creator = "@hypnoglow"
+
+  [params.logo]
+      mobile = "/images/logo.png"
+      standard  = "/images/logo.png"
+
+  [params.footer]
+    copyright_text = 'Built with 💜 by <a href="https://github.com/hypnoglow">Igor</a> and <a href="https://github.com/hypnoglow/helm-s3/graphs/contributors">contributors</a> / <a href="https://github.com/hypnoglow/helm-s3/blob/master/LICENSE">MIT</a> license.'
+

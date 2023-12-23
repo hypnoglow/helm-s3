@@ -7,13 +7,12 @@
 [![GitHub release](https://img.shields.io/github/release/hypnoglow/helm-s3.svg)](https://github.com/hypnoglow/helm-s3/releases)
 [![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/s3)](https://artifacthub.io/packages/search?repo=s3)
 
-The Helm plugin that provides Amazon S3 protocol support.
+**helm-s3** is a Helm plugin that provides Amazon S3 protocol support.
 
 This allows you to have private or public Helm chart repositories hosted on
 Amazon S3. See [this guide](https://docs.aws.amazon.com/prescriptive-guidance/latest/patterns/set-up-a-helm-v3-chart-repository-in-amazon-s3.html) to get a detailed example use case overview.
 
-The plugin supports both Helm v2 and v3 (Helm v3 support is available since 
-[v0.9.0](https://github.com/hypnoglow/helm-s3/releases/tag/v0.9.0)).
+The plugin supports both Helm v2 and v3.
 
 ## Table of contents
 

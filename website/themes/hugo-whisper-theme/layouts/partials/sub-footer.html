@@ -1,0 +1,16 @@
+<div class="sub-footer">
+  <div class="container">
+    <div class="row">
+      <div class="col-12">
+        <div class="sub-footer-inner">
+          {{ if .Site.Data.social }}
+            {{ partial "social.html" . }}
+          {{ end }}
+          {{ with .Site.Params.footer.copyright_text }}
+            <div class="copyright">{{ . | safeHTML }}</div>
+          {{ end }}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

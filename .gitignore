@@ -1,7 +1,7 @@
-bin/*
+/bin/*
+/releases
+/vendor
 tmp
-releases
-vendor
 
 .env
 coverage.txt

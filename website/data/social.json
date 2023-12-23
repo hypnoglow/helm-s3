@@ -1,0 +1,12 @@
+[
+    {
+        "name": "Github",
+        "link": "https://github.com/hypnoglow/helm-s3",
+        "image": "images/social/github.svg"
+    },
+    {
+        "name": "Twitter",
+        "link": "https://twitter.com/hypnoglow",
+        "image": "images/social/twitter.svg"
+    }
+]

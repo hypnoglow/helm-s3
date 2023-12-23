@@ -1,0 +1,10 @@
+@import '../../themes/hugo-whisper-theme/assets/scss/bootstrap-variables';
+
+$primary: #0001fe;
+$secondary: #cbccfc;
+$link-color: $primary;
+$link-hover-color: lighten($primary, 20%);
+
+.overview {
+  background-color: $secondary !important;
+}
