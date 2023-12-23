@@ -14,6 +14,9 @@ Amazon S3. See [this guide](https://docs.aws.amazon.com/prescriptive-guidance/la
 
 The plugin supports both Helm v2 and v3.
 
+> [!NOTE]
+> The documentation is available on [website](https://helm-s3.hypnoglow.io/).
+
 ## Table of contents
 
    * [Install](#install)
