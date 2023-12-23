@@ -32,7 +32,7 @@ summaryLength = 30
     weight = 3
 
 [params]
-  google_analytics_id = ""
+  google_analytics_id = "G-BX6D5BBDFW"
   homepage_button_link = '/docs'
   homepage_button_text = 'Quickstart'
   homepage_intro = ""
