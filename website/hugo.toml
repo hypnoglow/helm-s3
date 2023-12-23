@@ -1,6 +1,6 @@
 baseURL = "https://helm-s3.hypnoglow.io/"
 languageCode = "en-us"
-title = "helm-s3"
+title = "helm-s3 — a Helm plugin that provides Amazon S3 protocol support"
 theme = "hugo-whisper-theme"
 
 pygmentsCodeFences = true
