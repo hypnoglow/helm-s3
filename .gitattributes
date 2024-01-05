@@ -4,4 +4,4 @@
 #
 
 # Ignore website dir when calculating language stats on GitHub.
-website/* linguist-documentation
+website/** linguist-documentation
