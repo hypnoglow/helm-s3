@@ -308,6 +308,58 @@ func TestPushRelative(t *testing.T) {
 	assert.FileExists(t, filepath.Join(tmpdir, chartFilename))
 }
 
+func TestPushHttps(t *testing.T) {
+	t.Log("Test push action with --https flag")
+
+	const (
+		repoName      = "test-push-https"
+		repoDir       = "charts"
+		chartName     = "foo"
+		chartVersion  = "1.2.3"
+		chartFilename = "foo-1.2.3.tgz"
+		chartFilepath = "testdata/" + chartFilename
+	)
+
+	setupRepo(t, repoName, repoDir)
+	defer teardownRepo(t, repoName)
+
+	cmd, stdout, stderr := command(fmt.Sprintf("helm s3 push --https %s %s", chartFilepath, repoName))
+	err := cmd.Run()
+	assert.NoError(t, err)
+	assertEmptyOutput(t, nil, stderr)
+	assert.Contains(t, stdout.String(), "Successfully uploaded the chart to the repository.")
+
+	// Fetch the repo index and check that chart uri is relative.
+
+	tmpdir, err := os.MkdirTemp("", t.Name())
+	require.NoError(t, err)
+	defer os.RemoveAll(tmpdir)
+
+	indexFile := filepath.Join(tmpdir, "index.yaml")
+
+	err = mc.FGetObject(repoName, repoDir+"/index.yaml", indexFile, minio.GetObjectOptions{})
+	require.NoError(t, err)
+
+	idx, err := repo.LoadIndexFile(indexFile)
+	require.NoError(t, err)
+
+	cv, err := idx.Get(chartName, chartVersion)
+	require.NoError(t, err)
+
+	expected := []string{fmt.Sprintf("https://%s/%s/%s", repoName, repoDir, chartFilename)}
+	if diff := cmp.Diff(expected, cv.URLs); diff != "" {
+		t.Errorf("mismatch (-want +got):\n%s", diff)
+	}
+
+	// Check that chart can be successfully fetched.
+
+	cmd, stdout, stderr = command(fmt.Sprintf("helm fetch %s/%s --version %s --destination %s", repoName, chartName, chartVersion, tmpdir))
+	err = cmd.Run()
+	assert.NoError(t, err)
+	assertEmptyOutput(t, stdout, stderr)
+	assert.FileExists(t, filepath.Join(tmpdir, chartFilename))
+}
+
 func assertEmptyOutput(t *testing.T, stdout, stderr *bytes.Buffer) {
 	t.Helper()
 
