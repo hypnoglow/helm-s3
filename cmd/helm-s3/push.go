@@ -211,6 +211,7 @@ func (act *pushAction) run(ctx context.Context) error {
 		return errors.WithMessage(err, "add/replace chart in the index")
 	}
 	idx.SortEntries()
+	idx.UpdateGeneratedTime()
 
 	idxReader, err := idx.Reader()
 	if err != nil {

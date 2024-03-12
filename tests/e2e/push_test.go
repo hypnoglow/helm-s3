@@ -36,8 +36,28 @@ func TestPush(t *testing.T) {
 	setupRepo(t, repoName, repoDir)
 	defer teardownRepo(t, repoName)
 
+	tmpdir, err := os.MkdirTemp("", t.Name())
+	require.NoError(t, err)
+	defer os.RemoveAll(tmpdir)
+
+	// Fetch the repo index before push to get generated time.
+
+	indexFile := filepath.Join(tmpdir, "index.yaml")
+
+	err = mc.FGetObject(repoName, repoDir+"/index.yaml", indexFile, minio.GetObjectOptions{})
+	require.NoError(t, err)
+
+	idx, err := repo.LoadIndexFile(indexFile)
+	require.NoError(t, err)
+
+	assert.NotEmpty(t, idx.Generated)
+
+	idxGeneratedTimeBeforePush := idx.Generated
+
+	// Push chart.
+
 	cmd, stdout, stderr := command(fmt.Sprintf("helm s3 push %s %s", chartFilepath, repoName))
-	err := cmd.Run()
+	err = cmd.Run()
 	assert.NoError(t, err)
 	assertEmptyOutput(t, nil, stderr)
 	assert.Contains(t, stdout.String(), "Successfully uploaded the chart to the repository.")
@@ -64,10 +84,6 @@ func TestPush(t *testing.T) {
 
 	// Check that pushed chart can be fetched.
 
-	tmpdir, err := os.MkdirTemp("", t.Name())
-	require.NoError(t, err)
-	defer os.RemoveAll(tmpdir)
-
 	cmd, stdout, stderr = command(fmt.Sprintf("helm fetch %s/%s --version %s --destination %s", repoName, chartName, chartVersion, tmpdir))
 	err = cmd.Run()
 	assert.NoError(t, err)
@@ -83,6 +99,16 @@ func TestPush(t *testing.T) {
 
 	expected = "The chart already exists in the repository and cannot be overwritten without an explicit intent."
 	assert.Contains(t, stderr.String(), expected)
+
+	// Fetch the repo index again and check that generated time was updated.
+
+	err = mc.FGetObject(repoName, repoDir+"/index.yaml", indexFile, minio.GetObjectOptions{})
+	require.NoError(t, err)
+
+	idx, err = repo.LoadIndexFile(indexFile)
+	require.NoError(t, err)
+
+	assert.Greater(t, idx.Generated, idxGeneratedTimeBeforePush)
 }
 
 func TestPushContentType(t *testing.T) {

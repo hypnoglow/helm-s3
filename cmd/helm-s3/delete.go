@@ -103,6 +103,7 @@ func (act *deleteAction) run(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+	idx.UpdateGeneratedTime()
 
 	idxReader, err := idx.Reader()
 	if err != nil {
