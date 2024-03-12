@@ -211,7 +211,10 @@ func (act *pushAction) run(ctx context.Context) error {
 		return errors.WithMessage(err, "add/replace chart in the index")
 	}
 	idx.SortEntries()
-
+	
+	// #142: update timestamp of the generated field	
+	idx.TimeStamp()
+	
 	idxReader, err := idx.Reader()
 	if err != nil {
 		return errors.WithMessage(err, "get index reader")

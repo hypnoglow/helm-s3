@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+- Update generated timestamp field in index.yaml when the index is modified.
+
 ## [0.16.0] - 2023-12-07
 
 ### Added

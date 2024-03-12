@@ -308,6 +308,61 @@ func TestPushRelative(t *testing.T) {
 	assert.FileExists(t, filepath.Join(tmpdir, chartFilename))
 }
 
+func TestGeneratedTimeStamp(t *testing.T) {
+	t.Log("Test generated timestamp is updated on push")
+
+	const (
+		repoName      = "test-push-index-timestamp"
+		repoDir       = "charts"
+		chartName     = "foo"
+		chartVersion  = "1.2.3"
+		chartFilename = "foo-1.2.3.tgz"
+		chartFilepath = "testdata/" + chartFilename
+	)
+
+	setupRepo(t, repoName, repoDir)
+	defer teardownRepo(t, repoName)
+
+	cmd, stdout, stderr := command(fmt.Sprintf("helm s3 push %s %s", chartFilepath, repoName))
+	err := cmd.Run()
+	assert.NoError(t, err)
+	assertEmptyOutput(t, stdout, stderr)
+
+	tmpdir, err := ioutil.TempDir("", t.Name())
+	require.NoError(t, err)
+	defer os.RemoveAll(tmpdir)
+
+	// Fetch the repo index and register the generated timestamp
+	indexFile := filepath.Join(tmpdir, "index.yaml")
+
+	err = mc.FGetObject(repoName, repoDir+"/index.yaml", indexFile, minio.GetObjectOptions{})
+	require.NoError(t, err)
+
+	idx, err := repo.LoadIndexFile(indexFile)
+	require.NoError(t, err)
+
+	generatedOld := idx.Generated
+
+	time.Sleep(time.Second)
+
+	// Force push the chart and register the generated timestamp
+	cmd, stdout, stderr = command(fmt.Sprintf("helm s3 push %s %s --force", chartFilepath, repoName))
+	err = cmd.Run()
+	assert.NoError(t, err)
+	assertEmptyOutput(t, stdout, stderr)
+
+	err = mc.FGetObject(repoName, repoDir+"/index.yaml", indexFile, minio.GetObjectOptions{})
+	require.NoError(t, err)
+
+	idx, err = repo.LoadIndexFile(indexFile)
+	require.NoError(t, err)
+
+	generatedNew := idx.Generated
+	// t.Logf("\ngeneratedOld:%s\ngeneratedNew:%s", generatedOld.String(), generatedNew.String())
+	// Assert generatedNew is greater than generatedOld
+	assert.True(t, generatedNew.After(generatedOld), "Expected %s greater than %s", generatedNew.String(), generatedOld.String())
+}
+
 func assertEmptyOutput(t *testing.T, stdout, stderr *bytes.Buffer) {
 	t.Helper()
 

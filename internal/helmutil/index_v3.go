@@ -123,6 +123,10 @@ func (idx *IndexV3) SortEntries() {
 	idx.index.SortEntries()
 }
 
+func (idx *IndexV3) UpdateGeneratedTime() {
+	idx.index.Generated = time.Now()
+}
+
 func (idx *IndexV3) MarshalBinary() (data []byte, err error) {
 	return yaml.Marshal(idx.index)
 }
