@@ -123,7 +123,7 @@ func TestIndexV3_AddOrReplace(t *testing.T) {
 	})
 }
 
-func TestIndexV3_Timestamp(t *testing.T) {
+func TestIndexV3_UpdateGeneratedTime(t *testing.T) {
 	idx := IndexV3{
 		index: &repo.IndexFile{
 			APIVersion: "foo",

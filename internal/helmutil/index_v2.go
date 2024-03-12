@@ -122,7 +122,7 @@ func (idx *IndexV2) SortEntries() {
 }
 
 func (idx *IndexV2) UpdateGeneratedTime() {
-	idx.index.Generated = time.Now()
+	idx.index.Generated = time.Now().UTC()
 }
 
 func (idx *IndexV2) MarshalBinary() (data []byte, err error) {

@@ -29,7 +29,7 @@ type Index interface {
 	// SortEntries sorts the entries by version in descending order.
 	SortEntries()
 
-	// Updated Last indexation TimeStamp.
+	// UpdateGeneratedTime updates time when the index was generated.
 	UpdateGeneratedTime()
 
 	// MarshalBinary encodes index to a binary form.
