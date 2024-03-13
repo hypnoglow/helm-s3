@@ -118,6 +118,7 @@ func (act *reindexAction) run(ctx context.Context) error {
 			}
 		}
 		idx.SortEntries()
+		idx.UpdateGeneratedTime()
 
 		builtIndex <- idx
 	}()
