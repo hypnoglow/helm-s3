@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"fmt"
+	"net/url"
 	"os"
 	"path/filepath"
 
@@ -38,6 +40,7 @@ func newPushCommand(opts *options) *cobra.Command {
 		force:          false,
 		ignoreIfExists: false,
 		relative:       false,
+		https:          false,
 	}
 
 	cmd := &cobra.Command{
@@ -69,6 +72,7 @@ func newPushCommand(opts *options) *cobra.Command {
 	flags.BoolVar(&act.force, "force", act.force, "Replace the chart if it already exists. This can cause the repository to lose existing chart; use it with care.")
 	flags.BoolVar(&act.ignoreIfExists, "ignore-if-exists", act.ignoreIfExists, "If the chart already exists, exit normally and do not trigger an error.")
 	flags.BoolVar(&act.relative, "relative", act.relative, "Use relative chart URL in the index instead of absolute.")
+	flags.BoolVar(&act.https, "https", act.https, "Use HTTPS protocol for chart URLs in the index instead of S3 protocol.")
 
 	return cmd
 }
@@ -92,6 +96,7 @@ type pushAction struct {
 	force          bool
 	ignoreIfExists bool
 	relative       bool
+	https          bool
 }
 
 func (act *pushAction) run(ctx context.Context) error {
@@ -203,6 +208,14 @@ func (act *pushAction) run(ctx context.Context) error {
 	baseURL := repoEntry.URL()
 	if act.relative {
 		baseURL = ""
+	}
+
+	if act.https {
+		parsedS3URL, err := url.Parse(baseURL)
+		if err != nil {
+			act.printer.PrintErrf("[ERROR] failed to parse baseURL: %s", err)
+		}
+		baseURL = fmt.Sprintf("https://%s/%s", parsedS3URL.Host, parsedS3URL.Path)
 	}
 
 	filename := escapeIfRelative(fname, act.relative)
