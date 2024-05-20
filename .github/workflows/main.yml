@@ -32,7 +32,7 @@ jobs:
           go test -v -race -coverprofile=coverage.txt -covermode=atomic $(go list ./... | grep -v e2e)
 
       - name: Codecov
-        uses: codecov/codecov-action@4fe8c5f003fae66aa5ebb77cfd3e7bfbbda0b6b0 # v3.1.5
+        uses: codecov/codecov-action@6d798873df2b1b8e5846dba6fb86631229fbcb17 # v4.4.0
 
       - name: Run linters
         uses: golangci/golangci-lint-action@3cfe3a4abbb849e10058ce4af15d205b6da42804 # v4.0.0
