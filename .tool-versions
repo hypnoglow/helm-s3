@@ -1,3 +1,4 @@
 golang 1.19.13
 helm 3.13.2
 golangci-lint 1.48.0
+goreleaser 2.0.1
