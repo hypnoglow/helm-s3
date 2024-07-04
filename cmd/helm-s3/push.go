@@ -70,6 +70,13 @@ func newPushCommand(opts *options) *cobra.Command {
 	flags.BoolVar(&act.ignoreIfExists, "ignore-if-exists", act.ignoreIfExists, "If the chart already exists, exit normally and do not trigger an error.")
 	flags.BoolVar(&act.relative, "relative", act.relative, "Use relative chart URL in the index instead of absolute.")
 
+	// We don't use cobra's feature
+	//
+	//  cmd.MarkFlagsMutuallyExclusive("force", "ignore-if-exists")
+	//
+	// because the error message is confusing. Instead, we check the flags
+	// manually in run().
+
 	return cmd
 }
 
