@@ -66,7 +66,7 @@ func (s *Storage) Traverse(ctx context.Context, repoURI string) (<-chan ChartInf
 // traverse traverses all charts in the repository.
 // It writes an info item about every chart to items, and errors to errs.
 // It always closes both channels when returns.
-func (s *Storage) traverse(ctx context.Context, repoURI string, items chan<- ChartInfo, errs chan<- error) { //nolint:unparam // TODO: fix this issue.
+func (s *Storage) traverse(ctx context.Context, repoURI string, items chan<- ChartInfo, errs chan<- error) {
 	defer close(items)
 	defer close(errs)
 
@@ -80,7 +80,7 @@ func (s *Storage) traverse(ctx context.Context, repoURI string, items chan<- Cha
 
 	var continuationToken *string
 	for {
-		listOut, err := client.ListObjectsV2(&s3.ListObjectsV2Input{
+		listOut, err := client.ListObjectsV2WithContext(ctx, &s3.ListObjectsV2Input{
 			Bucket:            aws.String(bucket),
 			Prefix:            aws.String(prefixKey),
 			ContinuationToken: continuationToken,
@@ -110,7 +110,7 @@ func (s *Storage) traverse(ctx context.Context, repoURI string, items chan<- Cha
 				continue
 			}
 
-			metaOut, err := client.HeadObject(&s3.HeadObjectInput{
+			metaOut, err := client.HeadObjectWithContext(ctx, &s3.HeadObjectInput{
 				Bucket: aws.String(bucket),
 				Key:    obj.Key,
 			})
@@ -134,7 +134,7 @@ func (s *Storage) traverse(ctx context.Context, repoURI string, items chan<- Cha
 				//   https://github.com/hypnoglow/helm-s3/issues/112 )
 				//
 				// In this case we have to download the ch file itself.
-				objectOut, err := client.GetObject(&s3.GetObjectInput{
+				objectOut, err := client.GetObjectWithContext(ctx, &s3.GetObjectInput{
 					Bucket: aws.String(bucket),
 					Key:    obj.Key,
 				})
@@ -229,7 +229,7 @@ func (s *Storage) Exists(ctx context.Context, uri string) (bool, error) {
 		return false, err
 	}
 
-	_, err = s3.New(s.session).HeadObject(&s3.HeadObjectInput{
+	_, err = s3.New(s.session).HeadObjectWithContext(ctx, &s3.HeadObjectInput{
 		Bucket: aws.String(bucket),
 		Key:    aws.String(key),
 	})

@@ -7,8 +7,6 @@ linters:
   enable:
     - asciicheck
     - bodyclose
-    - deadcode
-    - depguard
     - dogsled
     - errcheck
     - exhaustive
@@ -39,13 +37,11 @@ linters:
     - rowserrcheck
     - sqlclosecheck
     - staticcheck
-    - structcheck
     - stylecheck
     - typecheck
     - unconvert
     - unparam
     - unused
-    - varcheck
     - whitespace
 
 linters-settings:
@@ -67,3 +63,7 @@ issues:
     - linters:
         - staticcheck
       text: "strings.Title has been deprecated"
+    # TODO: fix this later.
+    - linters:
+        - revive
+      text: "^unused-parameter"

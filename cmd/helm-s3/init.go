@@ -52,6 +52,13 @@ func newInitCommand(opts *options) *cobra.Command {
 	flags.BoolVar(&act.force, "force", act.force, "Replace the index file if it already exists.")
 	flags.BoolVar(&act.ignoreIfExists, "ignore-if-exists", act.ignoreIfExists, "If the index file already exists, exit normally and do not trigger an error.")
 
+	// We don't use cobra's feature
+	//
+	//  cmd.MarkFlagsMutuallyExclusive("force", "ignore-if-exists")
+	//
+	// because the error message is confusing. Instead, we check the flags
+	// manually in run().
+
 	return cmd
 }
 
