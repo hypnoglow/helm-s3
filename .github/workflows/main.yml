@@ -35,13 +35,10 @@ jobs:
         uses: codecov/codecov-action@4fe8c5f003fae66aa5ebb77cfd3e7bfbbda0b6b0 # v3.1.5
 
       - name: Run linters
-        uses: golangci/golangci-lint-action@3cfe3a4abbb849e10058ce4af15d205b6da42804 # v4.0.0
+        uses: golangci/golangci-lint-action@a4f60bb28d35aeee14e6880718e0c85ff1882e64 # v6.0.1
         with:
-          version: v1.48
+          version: v1.59.1
           args: --verbose
-          # See: https://github.com/golangci/golangci-lint-action/issues/244
-          skip-pkg-cache: true
-          skip-build-cache: true
 
       - name: Run ShellCheck
         uses: ludeeus/action-shellcheck@00cae500b08a931fb5698e11e79bfbd38e612a38 # v2.0.0
