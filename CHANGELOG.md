@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - `generated` timestamp field in the index file is now updated with current time
 on push, reindex and delete.
 
+- Supported (and tested against) Helm versions updated to 3.14.4 and 3.15.2.
+
 - Go updated to 1.22.
 
 ## [0.16.0] - 2023-12-07
