@@ -7,14 +7,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [0.16.1] - 2024-07-16
+
 ### Changed
 
 - `generated` timestamp field in the index file is now updated with current time
 on push, reindex and delete.
+[Refs: [#325](https://github.com/hypnoglow/helm-s3/pull/325)] thanks to [@josephprem](https://github.com/josephprem)
 
 - Supported (and tested against) Helm versions updated to 3.14.4 and 3.15.2.
+[Refs: [#439](https://github.com/hypnoglow/helm-s3/pull/439)]
 
 - Go updated to 1.22.
+[Refs: [#436](https://github.com/hypnoglow/helm-s3/pull/436)]
 
 ## [0.16.0] - 2023-12-07
 
