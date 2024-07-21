@@ -315,7 +315,7 @@ Thank you for using the plugin! 👋
 
 ### Relative chart URLs
 
-Charts can be `push`-ed with `--releative` flag so their URLs in the index file
+Charts can be `push`-ed with `--relative` flag so their URLs in the index file
 will be relative to your repository root. This can be useful in various
 scenarios, e.g. serving charts via HTTP, serving charts from replicated buckets,
 etc.
