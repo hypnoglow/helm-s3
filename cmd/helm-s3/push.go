@@ -11,6 +11,7 @@ import (
 	"github.com/hypnoglow/helm-s3/internal/awss3"
 	"github.com/hypnoglow/helm-s3/internal/awsutil"
 	"github.com/hypnoglow/helm-s3/internal/helmutil"
+	"github.com/hypnoglow/helm-s3/internal/locks"
 )
 
 const pushDesc = `This command uploads a chart to the repository.
@@ -57,6 +58,8 @@ func newPushCommand(opts *options) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			act.printer = cmd
 			act.acl = opts.acl
+			act.dynamodbLockTableName = opts.dynamodbLockTableName
+			act.lockTimeoutSeconds = opts.lockTimeoutSeconds
 			act.chartPath = args[0]
 			act.repoName = args[1]
 			return act.run(cmd.Context())
@@ -85,7 +88,9 @@ type pushAction struct {
 
 	// global args
 
-	acl string
+	acl                   string
+	lockTimeoutSeconds    int
+	dynamodbLockTableName string
 
 	// args
 
@@ -196,6 +201,23 @@ func (act *pushAction) run(ctx context.Context) error {
 	// See https://github.com/hypnoglow/helm-s3/issues/18 for more info.
 
 	// Fetch current index, update it and upload it back.
+
+	var lock locks.Lock
+	if act.dynamodbLockTableName != "" {
+		lock, err = locks.NewDynamoDBLockWithDefaultConfig(act.dynamodbLockTableName)
+		if err != nil {
+			return errors.WithMessage(err, "loading AWS config")
+		}
+	} else {
+		lock = locks.NewFalseLock()
+	}
+
+	lockID := awss3.LockID(repoEntry.IndexURL())
+	err = locks.WaitForLock(ctx, lock, lockID, act.lockTimeoutSeconds)
+	if err != nil {
+		return errors.WithMessage(err, "waiting for index.yaml lock")
+	}
+	defer lock.Unlock(ctx, lockID)
 
 	b, err := storage.FetchRaw(ctx, repoEntry.IndexURL())
 	if err != nil {

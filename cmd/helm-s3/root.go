@@ -77,6 +77,8 @@ func newRootCmd() *cobra.Command {
 	flags.StringVar(&opts.acl, "acl", opts.acl, "S3 Object ACL to use for charts and indexes. Can be sourced from S3_ACL environment variable.")
 	flags.DurationVar(&opts.timeout, "timeout", opts.timeout, "Timeout for the whole operation to complete.")
 	flags.BoolVar(&opts.verbose, "verbose", opts.verbose, "Enable verbose output.")
+	flags.StringVar(&opts.dynamodbLockTableName, "lock-table-name", opts.dynamodbLockTableName, "DynamoDB table name to use for distributed locking.")
+	flags.IntVar(&opts.lockTimeoutSeconds, "lock-timeout", opts.lockTimeoutSeconds, "How long to wait for a lock to be free in seconds")
 
 	cmd.SetFlagErrorFunc(func(command *cobra.Command, err error) error {
 		return newBadUsageError(err)
@@ -92,6 +94,7 @@ func newRootCmd() *cobra.Command {
 		newReindexCommand(opts),
 		newDeleteCommand(opts),
 		newVersionCommand(),
+		newLockCommand(opts),
 	)
 
 	return cmd
