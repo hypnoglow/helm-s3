@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [0.16.2] - 2024-07-26
+
+### Changed
+
+- Go updated to 1.22.5
+  [Refs: [#448](https://github.com/hypnoglow/helm-s3/pull/448)]
+
 ## [0.16.1] - 2024-07-16
 
 ### Changed
