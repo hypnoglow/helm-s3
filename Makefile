@@ -6,7 +6,6 @@ all: deps build
 .PHONY: deps
 deps:
 	@go mod tidy
-	@go mod vendor
 
 .PHONY: build
 build:

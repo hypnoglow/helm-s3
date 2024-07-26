@@ -1,4 +1,4 @@
-ARG GO_VERSION=1.22
+ARG GO_VERSION=1.22.5
 ARG HELM_VERSION
 
 FROM golang:${GO_VERSION}-alpine as build
@@ -11,9 +11,12 @@ WORKDIR /workspace/helm-s3
 
 COPY . .
 
-RUN CGO_ENABLED=0 go build -o bin/helm-s3 \
+RUN CGO_ENABLED=0 \
+    go build  \
+    -trimpath \
     -mod=vendor \
     -ldflags "-X main.version=${PLUGIN_VERSION}" \
+    -o bin/helm-s3 \
     ./cmd/helm-s3
 
 # Correct the plugin manifest with docker-specific fixes:
