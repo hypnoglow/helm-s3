@@ -10,6 +10,7 @@ import (
 	"github.com/hypnoglow/helm-s3/internal/awss3"
 	"github.com/hypnoglow/helm-s3/internal/awsutil"
 	"github.com/hypnoglow/helm-s3/internal/helmutil"
+	"github.com/hypnoglow/helm-s3/internal/locks"
 )
 
 const reindexDesc = `This command performs a reindex of the repository.
@@ -59,8 +60,10 @@ type reindexAction struct {
 
 	// global flags
 
-	acl     string
-	verbose bool
+	acl                   string
+	verbose               bool
+	dynamodbLockTableName string
+	lockTimeoutSeconds    int
 
 	// args
 
@@ -84,6 +87,23 @@ func (act *reindexAction) run(ctx context.Context) error {
 	storage := awss3.New(sess)
 
 	items, errs := storage.Traverse(ctx, repoEntry.URL())
+
+	var lock locks.Lock
+	if act.dynamodbLockTableName != "" {
+		lock, err = locks.NewDynamoDBLockWithDefaultConfig(act.dynamodbLockTableName)
+		if err != nil {
+			return errors.WithMessage(err, "loading AWS config")
+		}
+	} else {
+		lock = locks.NewFalseLock()
+	}
+
+	lockID := awss3.LockID(repoEntry.IndexURL())
+	err = locks.WaitForLock(ctx, lock, lockID, act.lockTimeoutSeconds)
+	if err != nil {
+		return errors.WithMessage(err, "waiting for index.yaml lock")
+	}
+	defer lock.Unlock(ctx, lockID)
 
 	builtIndex := make(chan helmutil.Index, 1)
 	go func() {

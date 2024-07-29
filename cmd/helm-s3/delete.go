@@ -10,11 +10,12 @@ import (
 	"github.com/hypnoglow/helm-s3/internal/awss3"
 	"github.com/hypnoglow/helm-s3/internal/awsutil"
 	"github.com/hypnoglow/helm-s3/internal/helmutil"
+	"github.com/hypnoglow/helm-s3/internal/locks"
 )
 
 const deleteDesc = `This command removes a chart from the repository.
 
-'helm s3 init' takes two arguments:
+'helm s3 delete' takes two arguments:
 - NAME - name of the chart to delete,
 - REPO - target repository.
 `
@@ -44,6 +45,8 @@ func newDeleteCommand(opts *options) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			act.printer = cmd
 			act.acl = opts.acl
+			act.dynamodbLockTableName = opts.dynamodbLockTableName
+			act.lockTimeoutSeconds = opts.lockTimeoutSeconds
 			act.chartName = args[0]
 			act.repoName = args[1]
 			return act.run(cmd.Context())
@@ -62,7 +65,9 @@ type deleteAction struct {
 
 	// global flags
 
-	acl string
+	acl                   string
+	dynamodbLockTableName string
+	lockTimeoutSeconds    int
 
 	// args
 
@@ -87,6 +92,23 @@ func (act *deleteAction) run(ctx context.Context) error {
 	storage := awss3.New(sess)
 
 	// Fetch current index.
+	var lock locks.Lock
+	if act.dynamodbLockTableName != "" {
+		lock, err = locks.NewDynamoDBLockWithDefaultConfig(act.dynamodbLockTableName)
+		if err != nil {
+			return errors.WithMessage(err, "loading AWS config")
+		}
+	} else {
+		lock = locks.NewFalseLock()
+	}
+
+	lockID := awss3.LockID(repoEntry.IndexURL())
+	err = locks.WaitForLock(ctx, lock, lockID, act.lockTimeoutSeconds)
+	if err != nil {
+		return errors.WithMessage(err, "waiting for index.yaml lock")
+	}
+	defer lock.Unlock(ctx, lockID)
+
 	b, err := storage.FetchRaw(ctx, repoEntry.IndexURL())
 	if err != nil {
 		return errors.WithMessage(err, "fetch current repo index")
