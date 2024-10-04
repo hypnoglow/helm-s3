@@ -34,10 +34,11 @@ initArch() {
 
 initOS() {
   os=$(uname -s)
+  binary_extension=""
   case "$(uname)" in
     Darwin) os="darwin" ;;
     Linux) os="linux" ;;
-    CYGWIN*|MINGW*|MSYS_NT*) os="windows" ;;
+    CYGWIN*|MINGW*|MSYS_NT*) os="windows"; binary_extension=".exe" ;;
     *)
       echo "OS '$(uname)' not supported!" >&2
       exit 1
@@ -96,4 +97,4 @@ checksums_filename="releases/v${version}_checksums.txt"
 )
 
 # Unpack the binary.
-tar xzf "${binary_filename}" bin/helm-s3
+tar xzf "${binary_filename}" "bin/helm-s3${binary_extension}"
