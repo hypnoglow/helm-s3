@@ -20,30 +20,29 @@ validate_checksum() {
 }
 
 initArch() {
-  arch=$(uname -m)
-  case $arch in
-    x86_64|amd64) arch="amd64" ;;
-    aarch64|arm64) arch="arm64" ;;
-    *)
-      echo "Arch '$(uname -m)' not supported!" >&2
-      exit 1
-      ;;
-  esac
-
+    arch=$(uname -m)
+    case $arch in
+        x86_64|amd64) arch="amd64" ;;
+        aarch64|arm64) arch="arm64" ;;
+        *)
+        echo "Arch '$(uname -m)' not supported!" >&2
+        exit 1
+        ;;
+    esac
 }
 
 initOS() {
-  os=$(uname -s)
-  binary_extension=""
-  case "$(uname)" in
-    Darwin) os="darwin" ;;
-    Linux) os="linux" ;;
-    CYGWIN*|MINGW*|MSYS_NT*) os="windows"; binary_extension=".exe" ;;
-    *)
-      echo "OS '$(uname)' not supported!" >&2
-      exit 1
-      ;;
-  esac
+    os=$(uname -s)
+    binary_extension=""
+    case "$(uname)" in
+        Darwin) os="darwin" ;;
+        Linux) os="linux" ;;
+        CYGWIN*|MINGW*|MSYS_NT*) os="windows"; binary_extension=".exe" ;;
+        *)
+        echo "OS '$(uname)' not supported!" >&2
+        exit 1
+        ;;
+    esac
 }
 
 on_exit() {
