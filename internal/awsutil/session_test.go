@@ -5,6 +5,8 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/google/uuid"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -43,7 +45,7 @@ func TestDynamicBucketRegion(t *testing.T) {
 		{
 			caseDescription:      "not existing S3 URL -> no region header, no effect (default region)",
 			expectedBucketRegion: defaultRegion,
-			inputS3URL:           "s3://not-an-s3-bucket-url",
+			inputS3URL:           "s3://" + uuid.NewString(), // make it truly random, because constant non-existing bucket may eventually be created
 		},
 	}
 
@@ -54,8 +56,8 @@ func TestDynamicBucketRegion(t *testing.T) {
 			t.Parallel()
 
 			actualSession, err := Session(DynamicBucketRegion(testCase.inputS3URL))
-			require.NoError(t, err)
-			require.Equal(t, testCase.expectedBucketRegion, aws.StringValue(actualSession.Config.Region))
+			assert.NoError(t, err)
+			assert.Equal(t, testCase.expectedBucketRegion, aws.StringValue(actualSession.Config.Region))
 		})
 	}
 }
