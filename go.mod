@@ -4,7 +4,7 @@ go 1.22.5
 
 require (
 	github.com/Masterminds/semver v1.5.0
-	github.com/Masterminds/semver/v3 v3.2.1
+	github.com/Masterminds/semver/v3 v3.3.1
 	github.com/aws/aws-sdk-go v1.55.5
 	github.com/ghodss/yaml v1.0.0
 	github.com/google/go-cmp v0.6.0
