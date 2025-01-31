@@ -20,29 +20,29 @@ validate_checksum() {
 }
 
 initArch() {
-  arch=$(uname -m)
-  case $arch in
-    x86_64|amd64) arch="amd64" ;;
-    aarch64|arm64) arch="arm64" ;;
-    *)
-      echo "Arch '$(uname -m)' not supported!" >&2
-      exit 1
-      ;;
-  esac
-
+    arch=$(uname -m)
+    case $arch in
+        x86_64|amd64) arch="amd64" ;;
+        aarch64|arm64) arch="arm64" ;;
+        *)
+        echo "Arch '$(uname -m)' not supported!" >&2
+        exit 1
+        ;;
+    esac
 }
 
 initOS() {
-  os=$(uname -s)
-  case "$(uname)" in
-    Darwin) os="darwin" ;;
-    Linux) os="linux" ;;
-    CYGWIN*|MINGW*|MSYS_NT*) os="windows" ;;
-    *)
-      echo "OS '$(uname)' not supported!" >&2
-      exit 1
-      ;;
-  esac
+    os=$(uname -s)
+    binary_extension=""
+    case "$(os)" in
+        Darwin) os="darwin" ;;
+        Linux) os="linux" ;;
+        CYGWIN*|MINGW*|MSYS_NT*) os="windows"; binary_extension=".exe" ;;
+        *)
+        echo "OS '$(os)' not supported!" >&2
+        exit 1
+        ;;
+    esac
 }
 
 on_exit() {
@@ -96,4 +96,4 @@ checksums_filename="releases/v${version}_checksums.txt"
 )
 
 # Unpack the binary.
-tar xzf "${binary_filename}" bin/helm-s3
+tar xzf "${binary_filename}" "bin/helm-s3${binary_extension}"
