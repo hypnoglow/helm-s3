@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"net/url"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -27,6 +28,7 @@ func newReindexCommand(opts *options) *cobra.Command {
 		verbose:  false,
 		repoName: "",
 		relative: false,
+		https:    false,
 	}
 
 	cmd := &cobra.Command{
@@ -50,6 +52,7 @@ func newReindexCommand(opts *options) *cobra.Command {
 
 	flags := cmd.Flags()
 	flags.BoolVar(&act.relative, "relative", act.relative, "Use relative chart URLs in the index instead of absolute.")
+	flags.BoolVar(&act.https, "https", act.https, "Use HTTPS protocol for chart URLs in the index instead of S3 protocol.")
 
 	return cmd
 }
@@ -69,6 +72,8 @@ type reindexAction struct {
 	// flags
 
 	relative bool
+
+	https bool
 }
 
 func (act *reindexAction) run(ctx context.Context) error {
@@ -92,6 +97,14 @@ func (act *reindexAction) run(ctx context.Context) error {
 			baseURL := repoEntry.URL()
 			if act.relative {
 				baseURL = ""
+			}
+
+			if act.https {
+				parsedS3URL, err := url.Parse(baseURL)
+				if err != nil {
+					act.printer.PrintErrf("[ERROR] failed to parse baseURL: %s", err)
+				}
+				baseURL = fmt.Sprintf("https://%s/%s", parsedS3URL.Host, parsedS3URL.Path)
 			}
 
 			if act.verbose {
