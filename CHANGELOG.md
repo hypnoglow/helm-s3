@@ -7,7 +7,27 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [0.16.3] - 2025-02-02
+
+### Changed
+
+- Go updated to 1.22.11.
+
+### Fixed
+
+- Fixed windows installation that was broken since `0.16.0`
+  (Refs: [#462](https://github.com/hypnoglow/helm-s3/issues/462) [#466](https://github.com/hypnoglow/helm-s3/pull/466) [#487](https://github.com/hypnoglow/helm-s3/pull/487) [#489](https://github.com/hypnoglow/helm-s3/pull/489). Thanks to [@arahmangulov](https://github.com/arahmangulov) [@salehparsa](https://github.com/salehparsa) [@omerfsen](https://github.com/omerfsen))
+
+### Security
+
+- Updated dependencies to pull vulnerabilities fixes.
+  (Refs: [#475](https://github.com/hypnoglow/helm-s3/issues/475) [#476](https://github.com/hypnoglow/helm-s3/issues/476) [#477](https://github.com/hypnoglow/helm-s3/pull/477) [#482](https://github.com/hypnoglow/helm-s3/pull/482). Thanks to [@kszarek](https://github.com/kszarek))
+
 ## [0.16.2] - 2024-07-26
+
+### Known Issues
+
+Windows installation is broken in this release. Please use `0.16.3` or later.
 
 ### Changed
 
@@ -15,6 +35,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   [Refs: [#448](https://github.com/hypnoglow/helm-s3/pull/448)]
 
 ## [0.16.1] - 2024-07-16
+
+### Known Issues
+
+Windows installation is broken in this release. Please use `0.16.3` or later.
 
 ### Changed
 
@@ -29,6 +53,10 @@ on push, reindex and delete.
 [Refs: [#436](https://github.com/hypnoglow/helm-s3/pull/436)]
 
 ## [0.16.0] - 2023-12-07
+
+### Known Issues
+
+Windows installation is broken in this release. Please use `0.16.3` or later.
 
 ### Added
 
