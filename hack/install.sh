@@ -39,7 +39,7 @@ initOS() {
         Linux) os="linux" ;;
         CYGWIN*|MINGW*|MSYS_NT*) os="windows"; binary_extension=".exe" ;;
         *)
-        echo "OS '$(os)' not supported!" >&2
+        echo "OS '${os}' not supported!" >&2
         exit 1
         ;;
     esac
