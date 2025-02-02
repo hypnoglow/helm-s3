@@ -34,7 +34,6 @@ initArch() {
 initOS() {
     os=$(uname -s)
     binary_extension=""
-
     case "${os}" in
         Darwin) platform="darwin" ;;
         Linux) platform="linux" ;;
