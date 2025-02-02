@@ -25,23 +25,26 @@ initArch() {
         x86_64|amd64) arch="amd64" ;;
         aarch64|arm64) arch="arm64" ;;
         *)
-        echo "Arch '$(uname -m)' not supported!" >&2
-        exit 1
-        ;;
+            echo "Arch '$(uname -m)' not supported!" >&2
+            exit 1
+            ;;
     esac
 }
 
 initOS() {
     os=$(uname -s)
     binary_extension=""
-    case ${os} in
-        Darwin) os="darwin" ;;
-        Linux) os="linux" ;;
-        CYGWIN*|MINGW*|MSYS_NT*) os="windows"; binary_extension=".exe" ;;
+    case "${os}" in
+        Darwin) platform="darwin" ;;
+        Linux) platform="linux" ;;
+        CYGWIN*|MINGW*|MSYS_NT*) 
+            platform="windows"
+            binary_extension=".exe" 
+            ;;
         *)
-        echo "OS '${os}' not supported!" >&2
-        exit 1
-        ;;
+            echo "OS '${os}' not supported!" >&2
+            exit 1
+            ;;
     esac
 }
 
@@ -59,13 +62,12 @@ version="$(grep "version" plugin.yaml | cut -d '"' -f 2)"
 echo "Downloading and installing ${PROJECT_NAME} v${version} ..."
 
 initArch
-
 initOS
 
-binary_url="https://github.com/${PROJECT_GH}/releases/download/v${version}/${PROJECT_NAME}_${version}_${os}_${arch}.tar.gz"
+binary_url="https://github.com/${PROJECT_GH}/releases/download/v${version}/${PROJECT_NAME}_${version}_${platform}_${arch}.tar.gz"
 checksum_url="https://github.com/${PROJECT_GH}/releases/download/v${version}/${PROJECT_NAME}_${version}_checksums.txt"
 
-mkdir "releases"
+mkdir -p "releases"
 binary_filename="releases/v${version}.tar.gz"
 checksums_filename="releases/v${version}_checksums.txt"
 
@@ -78,7 +80,8 @@ checksums_filename="releases/v${version}_checksums.txt"
         wget -q "${binary_url}" -O "${binary_filename}"
         wget -q "${checksum_url}" -O "${checksums_filename}"
     else
-      echo "ERROR: no curl or wget found to download files." > /dev/stderr
+        echo "ERROR: no curl or wget found to download files." > /dev/stderr
+        exit 1
     fi
 )
 
