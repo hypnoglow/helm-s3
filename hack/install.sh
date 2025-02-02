@@ -34,12 +34,12 @@ initArch() {
 initOS() {
     os=$(uname -s)
     binary_extension=""
-    case "$(os)" in
+    case ${os} in
         Darwin) os="darwin" ;;
         Linux) os="linux" ;;
         CYGWIN*|MINGW*|MSYS_NT*) os="windows"; binary_extension=".exe" ;;
         *)
-        echo "OS '$(os)' not supported!" >&2
+        echo "OS '${os}' not supported!" >&2
         exit 1
         ;;
     esac
