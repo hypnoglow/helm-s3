@@ -86,7 +86,6 @@ func TestIsHelm3(t *testing.T) {
 	}
 
 	for name, tc := range testCases {
-		tc := tc
 		t.Run(name, func(t *testing.T) {
 			teardown := tc.setup()
 			defer teardown()

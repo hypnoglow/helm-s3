@@ -34,7 +34,6 @@ func TestRepoEntryV2_URL(t *testing.T) {
 	}
 
 	for name, tc := range testCases {
-		tc := tc
 		t.Run(name, func(t *testing.T) {
 			assert.Equal(t, tc.url, tc.entry.URL())
 		})
@@ -67,7 +66,6 @@ func TestRepoEntryV2_IndexURL(t *testing.T) {
 	}
 
 	for name, tc := range testCases {
-		tc := tc
 		t.Run(name, func(t *testing.T) {
 			assert.Equal(t, tc.url, tc.entry.IndexURL())
 		})
@@ -125,7 +123,6 @@ func TestRepoEntryV2_CacheFile(t *testing.T) {
 	}
 
 	for name, tc := range testCases {
-		tc := tc
 		t.Run(name, func(t *testing.T) {
 			assert.Equal(t, tc.cacheFile, tc.entry.CacheFile())
 		})
@@ -202,7 +199,6 @@ func TestLookupV2(t *testing.T) {
 	}
 
 	for name, tc := range testCases {
-		tc := tc
 		t.Run(name, func(t *testing.T) {
 			teardown := tc.setup()
 			defer teardown()

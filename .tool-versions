@@ -1,4 +1,4 @@
-golang 1.22.11
-helm 3.15.2
-golangci-lint 1.59.1
+golang 1.23.6
+golangci-lint 1.63.4
 goreleaser 2.0.1
+helm 3.15.2

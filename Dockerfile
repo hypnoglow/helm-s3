@@ -1,9 +1,9 @@
-ARG GO_VERSION=1.22.11
-ARG HELM_VERSION
+ARG GO_VERSION=1.23.6
+ARG HELM_VERSION=3.15.2
 
-FROM golang:${GO_VERSION}-alpine as build
+FROM golang:${GO_VERSION}-alpine AS build
 
-ARG PLUGIN_VERSION
+ARG PLUGIN_VERSION=master
 
 RUN apk add --no-cache git
 
