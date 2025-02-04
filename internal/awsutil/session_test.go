@@ -49,15 +49,13 @@ func TestDynamicBucketRegion(t *testing.T) {
 		},
 	}
 
-	for _, testCase := range testCases {
-		testCase := testCase
-
-		t.Run(testCase.caseDescription, func(t *testing.T) {
+	for _, tc := range testCases {
+		t.Run(tc.caseDescription, func(t *testing.T) {
 			t.Parallel()
 
-			actualSession, err := Session(DynamicBucketRegion(testCase.inputS3URL))
+			actualSession, err := Session(DynamicBucketRegion(tc.inputS3URL))
 			assert.NoError(t, err)
-			assert.Equal(t, testCase.expectedBucketRegion, aws.StringValue(actualSession.Config.Region))
+			assert.Equal(t, tc.expectedBucketRegion, aws.StringValue(actualSession.Config.Region))
 		})
 	}
 }

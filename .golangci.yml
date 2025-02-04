@@ -7,10 +7,10 @@ linters:
   enable:
     - asciicheck
     - bodyclose
+    - copyloopvar
     - dogsled
     - errcheck
     - exhaustive
-    - exportloopref
     - gci
     - gochecknoinits
 #    - gocognit
