@@ -7,7 +7,7 @@ require (
 	github.com/Masterminds/semver/v3 v3.3.1
 	github.com/aws/aws-sdk-go v1.55.6
 	github.com/ghodss/yaml v1.0.0
-	github.com/google/go-cmp v0.6.0
+	github.com/google/go-cmp v0.7.0
 	github.com/google/uuid v1.6.0
 	github.com/minio/minio-go/v6 v6.0.57
 	github.com/pkg/errors v0.9.1
