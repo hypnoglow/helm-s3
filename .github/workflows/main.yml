@@ -142,6 +142,7 @@ jobs:
         run: |
           go test -v ./tests/e2e/...
 
+
   docker-images:
     name: Build Docker images
     needs:
@@ -151,6 +152,13 @@ jobs:
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
       DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
 
+  test-install:
+    name: Test plugin installation
+    needs:
+      - test-e2e
+    uses: ./.github/workflows/reusable-test-install.yml
+    if: github.ref_name == 'master'
+
   # This job's only purpose is to be used for the "Require status checks to pass
   # before merging" feature.
   status-check:
@@ -159,6 +167,7 @@ jobs:
       - build
       - test-e2e
       - docker-images
+      - test-install
     if: always()
     runs-on: ubuntu-latest
     steps:
@@ -166,10 +175,26 @@ jobs:
         uses: re-actors/alls-green@05ac9388f0aebcb5727afa17fcccfecd6f8ec5fe # v1.2.2
         with:
           jobs: ${{ toJSON(needs) }}
+          allowed-skips: test-install
 
-  test-install:
-    name: Test plugin installation
+  dependabot-merge:
+    name: Auto-merge Dependabot PRs
     needs:
-      - test-e2e
-    uses: ./.github/workflows/reusable-test-install.yml
-    if: github.ref_name == 'master'
+      - status-check
+    if: github.event.pull_request.user.login == 'dependabot[bot]' && github.repository == 'hypnoglow/helm-s3'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Dependabot metadata
+        id: metadata
+        uses: dependabot/fetch-metadata@d7267f607e9d3fb96fc2fbe83e0af444713e90b7 # v2.3.0
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Enable auto-merge for Dependabot PRs
+        if: steps.metadata.outputs.update-type == 'version-update:semver-minor'
+        run: gh pr merge --auto --merge "$PR_URL"
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
