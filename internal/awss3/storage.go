@@ -8,13 +8,17 @@ import (
 	"net/url"
 	"os"
 	"strings"
+	"sync"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"github.com/ghodss/yaml"
 	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/hypnoglow/helm-s3/internal/helmutil"
 )
@@ -26,6 +30,7 @@ const (
 	// s3MetadataSoftLimitBytes is application-specific soft limit
 	// for the number of bytes in S3 object metadata.
 	s3MetadataSoftLimitBytes = 1900
+	localBase                = "/tmp/"
 )
 
 var (
@@ -56,132 +61,176 @@ type Storage struct {
 }
 
 // Traverse traverses all charts in the repository.
-func (s *Storage) Traverse(ctx context.Context, repoURI string) (<-chan ChartInfo, <-chan error) {
-	charts := make(chan ChartInfo, 1)
-	errs := make(chan error, 1)
+func (s *Storage) Traverse(ctx context.Context, repoURI string) ([]ChartInfo, <-chan error) {
+	charts := make(chan ChartInfo)
+	errs := make(chan error)
+	var result []ChartInfo
 	go s.traverse(ctx, repoURI, charts, errs)
-	return charts, errs
+	// Collect the results and handle errors
+	log.Info("collecting results")
+	for {
+		select {
+		case chart, ok := <-charts:
+			if !ok {
+				charts = nil
+			} else {
+				result = append(result, chart)
+			}
+		}
+
+		// Exit the loop when both channels are closed
+		if charts == nil {
+			break
+		}
+	}
+
+	log.Info("collected results")
+
+	return result, errs
 }
 
 // traverse traverses all charts in the repository.
 // It writes an info item about every chart to items, and errors to errs.
 // It always closes both channels when returns.
 func (s *Storage) traverse(ctx context.Context, repoURI string, items chan<- ChartInfo, errs chan<- error) {
+	log.Info("traversing s3 bucket")
+	start := time.Now()
 	defer close(items)
 	defer close(errs)
 
 	bucket, prefixKey, err := parseURI(repoURI)
 	if err != nil {
-		errs <- err
+		log.Errorf("parse uri: %s", err)
 		return
 	}
 
 	client := s3.New(s.session)
 
 	var continuationToken *string
+	var wg sync.WaitGroup
+
 	for {
+		log.Info("listing objects")
 		listOut, err := client.ListObjectsV2WithContext(ctx, &s3.ListObjectsV2Input{
 			Bucket:            aws.String(bucket),
 			Prefix:            aws.String(prefixKey),
 			ContinuationToken: continuationToken,
 		})
 		if err != nil {
-			errs <- errors.Wrap(err, "list s3 bucket objects")
+			log.Errorf("list s3 objects: %s", err)
 			return
 		}
 
-		for _, obj := range listOut.Contents {
-			// We need to make object key relative to repo root.
-			key := strings.TrimPrefix(*obj.Key, prefixKey)
-			// Additionally trim prefix slash if exists, because repos can be:
-			// s3://bucket/repo/subdir OR s3://bucket/repo/subdir/
-			key = strings.TrimPrefix(key, "/")
+		log.Info("listOut.Contents: ", len(listOut.Contents))
 
-			if strings.Contains(key, "/") {
-				// This is a subfolder. Ignore it, because chart repository
-				// is flat and cannot contain nested directories.
-				continue
+		wg.Add(1)
+
+		go func() {
+			defer wg.Done()
+			// Process objects in parallel
+			for _, obj := range listOut.Contents {
+				processS3Object(ctx, client, bucket, obj, items, prefixKey)
+				log.Info("processing object: ", *obj.Key)
 			}
-
-			if !strings.HasSuffix(key, ".tgz") {
-				// Ignore any file that isn't a chart
-				// This could include index.yaml
-				// or any other kind of file that might be in the repo
-				continue
-			}
-
-			metaOut, err := client.HeadObjectWithContext(ctx, &s3.HeadObjectInput{
-				Bucket: aws.String(bucket),
-				Key:    obj.Key,
-			})
-			if err != nil {
-				errs <- fmt.Errorf("head s3 object %q: %s", key, err)
-				return
-			}
-
-			reindexItem := ChartInfo{Filename: key}
-
-			serializedChartMeta, hasMeta := metaOut.Metadata[strings.Title(metaChartMetadata)]
-			chartDigest, hasDigest := metaOut.Metadata[strings.Title(metaChartDigest)]
-			if !hasMeta || !hasDigest {
-				// Some charts in the repository can have no metadata.
-				//
-				// This might happen in few cases:
-				// - Chart was uploaded manually, not using 'helm s3 push';
-				// - Chart was pushed before we started adding metadata to objects;
-				// - Chart metadata was too big to add to the S3 object metadata (see issues
-				//   https://github.com/hypnoglow/helm-s3/issues/120 and
-				//   https://github.com/hypnoglow/helm-s3/issues/112 )
-				//
-				// In this case we have to download the ch file itself.
-				objectOut, err := client.GetObjectWithContext(ctx, &s3.GetObjectInput{
-					Bucket: aws.String(bucket),
-					Key:    obj.Key,
-				})
-				if err != nil {
-					errs <- fmt.Errorf("get s3 object %q: %s", key, err)
-					return
-				}
-
-				buf := &bytes.Buffer{}
-				tr := io.TeeReader(objectOut.Body, buf)
-
-				ch, err := helmutil.LoadArchive(tr)
-				objectOut.Body.Close()
-				if err != nil {
-					errs <- fmt.Errorf("load archive from s3 object %q: %s", key, err)
-					return
-				}
-
-				digest, err := helmutil.Digest(buf)
-				if err != nil {
-					errs <- fmt.Errorf("get chart hash for %q: %s", key, err)
-					return
-				}
-
-				reindexItem.Meta = ch.Metadata()
-				reindexItem.Hash = digest
-			} else {
-				meta := helmutil.NewChartMetadata()
-				if err := meta.UnmarshalJSON([]byte(*serializedChartMeta)); err != nil {
-					errs <- fmt.Errorf("unserialize chart meta for %q: %s", key, err)
-					return
-				}
-
-				reindexItem.Meta = meta
-				reindexItem.Hash = *chartDigest
-			}
-
-			// process meta and hash
-			items <- reindexItem
-		}
+		}()
 
 		// Decide if need to load more objects.
 		if listOut.NextContinuationToken == nil {
+			log.Info("all objects processed")
 			break
 		}
 		continuationToken = listOut.NextContinuationToken
 	}
+	wg.Wait()
+
+	log.Info("traverse took: ", time.Since(start))
+}
+
+func processS3Object(ctx context.Context, client *s3.S3, bucket string, obj *s3.Object, items chan<- ChartInfo, prefixKey string) {
+	log.Info("processing object: ", *obj.Key)
+	// We need to make object key relative to repo root.
+	key := strings.TrimPrefix(*obj.Key, prefixKey)
+	// Additionally trim prefix slash if exists, because repos can be:
+	// s3://bucket/repo/subdir OR s3://bucket/repo/subdir/
+	key = strings.TrimPrefix(key, "/")
+
+	if strings.Contains(key, "/") {
+		// This is a subfolder. Ignore it, because chart repository
+		// is flat and cannot contain nested directories.
+		return
+	}
+
+	if !strings.HasSuffix(key, ".tgz") {
+		// Ignore any file that isn't a chart
+		// This could include index.yaml
+		// or any other kind of file that might be in the repo
+		return
+	}
+
+	metaOut, err := client.HeadObjectWithContext(ctx, &s3.HeadObjectInput{
+		Bucket: aws.String(bucket),
+		Key:    obj.Key,
+	})
+	if err != nil {
+		log.Errorf("head s3 object %q: %s", key, err)
+		return
+	}
+
+	reindexItem := ChartInfo{Filename: key}
+
+	serializedChartMeta, hasMeta := metaOut.Metadata[strings.Title(metaChartMetadata)]
+	chartDigest, hasDigest := metaOut.Metadata[strings.Title(metaChartDigest)]
+	if !hasMeta || !hasDigest {
+		// Some charts in the repository can have no metadata.
+		//
+		// This might happen in few cases:
+		// - Chart was uploaded manually, not using 'helm s3 push';
+		// - Chart was pushed before we started adding metadata to objects;
+		// - Chart metadata was too big to add to the S3 object metadata (see issues
+		//   https://github.com/hypnoglow/helm-s3/issues/120 and
+		//   https://github.com/hypnoglow/helm-s3/issues/112 )
+		//
+		// In this case we have to download the ch file itself.
+		objectOut, err := client.GetObjectWithContext(ctx, &s3.GetObjectInput{
+			Bucket: aws.String(bucket),
+			Key:    obj.Key,
+		})
+		if err != nil {
+			log.Errorf("get s3 object %q: %s", key, err)
+			return
+		}
+
+		buf := &bytes.Buffer{}
+		tr := io.TeeReader(objectOut.Body, buf)
+
+		ch, err := helmutil.LoadArchive(tr)
+		objectOut.Body.Close()
+		if err != nil {
+			log.Errorf("load archive from s3 object %q: %s", key, err)
+			return
+		}
+
+		digest, err := helmutil.Digest(buf)
+		if err != nil {
+			log.Errorf("get chart hash for %q: %s", key, err)
+			return
+		}
+
+		reindexItem.Meta = ch.Metadata()
+		reindexItem.Hash = digest
+	} else {
+		meta := helmutil.NewChartMetadata()
+		if err := meta.UnmarshalJSON([]byte(*serializedChartMeta)); err != nil {
+			log.Errorf("unserialize chart meta for %q: %s", key, err)
+			return
+		}
+
+		reindexItem.Meta = meta
+		reindexItem.Hash = *chartDigest
+	}
+
+	// process meta and hash
+	items <- reindexItem
 }
 
 // ChartInfo contains info about particular chart.
@@ -246,7 +295,7 @@ func (s *Storage) Exists(ctx context.Context, uri string) (bool, error) {
 
 // PutChart puts the chart file to the storage.
 // uri must be in the form of s3 protocol: s3://bucket-name/key[...].
-func (s *Storage) PutChart(ctx context.Context, uri string, r io.Reader, chartMeta, acl string, chartDigest string, contentType string) (string, error) {
+func (s *Storage) PutChart(ctx context.Context, uri string, r io.Reader, chartMeta, acl string, chartDigest string, contentType string, tags string) (string, error) {
 	bucket, key, err := parseURI(uri)
 	if err != nil {
 		return "", err
@@ -261,6 +310,7 @@ func (s *Storage) PutChart(ctx context.Context, uri string, r io.Reader, chartMe
 			ServerSideEncryption: getSSE(),
 			Body:                 r,
 			Metadata:             assembleObjectMetadata(chartMeta, chartDigest),
+			Tagging:              &tags,
 		},
 	)
 	if err != nil {
@@ -296,6 +346,31 @@ func (s *Storage) PutIndex(ctx context.Context, uri string, acl string, r io.Rea
 	}
 
 	return nil
+}
+
+func (s *Storage) GetIndex(ctx context.Context, uri string, acl string, r io.Reader) error {
+	bucket, key, err := parseURI(uri)
+	if err != nil {
+		return err
+	}
+
+	index, err := s3.New(s.session).GetObjectWithContext(
+		ctx,
+		&s3.GetObjectInput{
+			Bucket: aws.String(bucket),
+			Key:    aws.String(key),
+		},
+	)
+	if err != nil {
+		return errors.Wrap(err, "delete object from s3")
+	}
+
+	indexBody, err := io.ReadAll(index.Body)
+	if err != nil {
+		return errors.Wrap(err, "read index body")
+	}
+
+	return yaml.Unmarshal(indexBody, r)
 }
 
 // IndexExists returns true if index file exists in the storage for repository

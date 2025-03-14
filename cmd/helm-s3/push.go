@@ -18,6 +18,7 @@ const pushDesc = `This command uploads a chart to the repository.
 'helm s3 push' takes two arguments:
 - PATH - path to the chart file,
 - REPO - target repository.
+- TAGS - S3 object tags.
 `
 
 const pushExample = `  helm s3 push ./epicservice-0.5.1.tgz my-repo - uploads chart file 'epicservice-0.5.1.tgz' from the current directory to the repository with name 'my-repo'.`
@@ -38,6 +39,8 @@ func newPushCommand(opts *options) *cobra.Command {
 		force:          false,
 		ignoreIfExists: false,
 		relative:       false,
+		skipReindex:    false,
+		tags:           "",
 	}
 
 	cmd := &cobra.Command{
@@ -69,6 +72,8 @@ func newPushCommand(opts *options) *cobra.Command {
 	flags.BoolVar(&act.force, "force", act.force, "Replace the chart if it already exists. This can cause the repository to lose existing chart; use it with care.")
 	flags.BoolVar(&act.ignoreIfExists, "ignore-if-exists", act.ignoreIfExists, "If the chart already exists, exit normally and do not trigger an error.")
 	flags.BoolVar(&act.relative, "relative", act.relative, "Use relative chart URL in the index instead of absolute.")
+	flags.BoolVar(&act.skipReindex, "skip-reindex", act.skipReindex, "Skip reindex after pushing the chart.")
+	flags.StringVar(&act.tags, "tags", act.tags, "S3 object tags.")
 
 	// We don't use cobra's feature
 	//
@@ -99,6 +104,8 @@ type pushAction struct {
 	force          bool
 	ignoreIfExists bool
 	relative       bool
+	skipReindex    bool
+	tags           string
 }
 
 func (act *pushAction) run(ctx context.Context) error {
@@ -186,7 +193,7 @@ func (act *pushAction) run(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
-		if _, err := storage.PutChart(ctx, repoEntry.URL()+"/"+fname, fchart, string(chartMetaJSON), act.acl, hash, act.contentType); err != nil {
+		if _, err := storage.PutChart(ctx, repoEntry.URL()+"/"+fname, fchart, string(chartMetaJSON), act.acl, hash, act.contentType, act.tags); err != nil {
 			return errors.WithMessage(err, "upload chart to s3")
 		}
 	}
@@ -201,40 +208,42 @@ func (act *pushAction) run(ctx context.Context) error {
 	if err != nil {
 		return errors.WithMessage(err, "fetch current repo index")
 	}
-
-	idx := helmutil.NewIndex()
-	if err := idx.UnmarshalBinary(b); err != nil {
-		return errors.WithMessage(err, "load index from downloaded file")
-	}
-
-	baseURL := repoEntry.URL()
-	if act.relative {
-		baseURL = ""
-	}
-
-	filename := escapeIfRelative(fname, act.relative)
-
-	if err := idx.AddOrReplace(chart.Metadata().Value(), filename, baseURL, hash); err != nil {
-		return errors.WithMessage(err, "add/replace chart in the index")
-	}
-	idx.SortEntries()
-	idx.UpdateGeneratedTime()
-
-	idxReader, err := idx.Reader()
-	if err != nil {
-		return errors.WithMessage(err, "get index reader")
-	}
-
-	if !act.dryRun {
-		if err := storage.PutIndex(ctx, repoEntry.URL(), act.acl, idxReader); err != nil {
-			return errors.WithMessage(err, "upload index to s3")
+	if !act.skipReindex {
+		idx := helmutil.NewIndex()
+		if err := idx.UnmarshalBinary(b); err != nil {
+			return errors.WithMessage(err, "load index from downloaded file")
 		}
 
-		if err := idx.WriteFile(repoEntry.CacheFile(), helmutil.DefaultIndexFilePerm); err != nil {
-			return errors.WithMessage(err, "update local index")
+		baseURL := repoEntry.URL()
+		if act.relative {
+			baseURL = ""
 		}
-	}
 
+		filename := escapeIfRelative(fname, act.relative)
+
+		if err := idx.AddOrReplace(chart.Metadata().Value(), filename, baseURL, hash); err != nil {
+			return errors.WithMessage(err, "add/replace chart in the index")
+		}
+		idx.SortEntries()
+		idx.UpdateGeneratedTime()
+
+		idxReader, err := idx.Reader()
+		if err != nil {
+			return errors.WithMessage(err, "get index reader")
+		}
+
+		if !act.dryRun {
+			if err := storage.PutIndex(ctx, repoEntry.URL(), act.acl, idxReader); err != nil {
+				return errors.WithMessage(err, "upload index to s3")
+			}
+
+			if err := idx.WriteFile(repoEntry.CacheFile(), helmutil.DefaultIndexFilePerm); err != nil {
+				return errors.WithMessage(err, "update local index")
+			}
+		}
+	} else {
+		act.printer.Printf("[DEBUG] Skipping reindex cause skipReindex is set to %b.\n", act.skipReindex)
+	}
 	act.printer.Printf("Successfully uploaded the chart to the repository.\n")
 	return nil
 }
