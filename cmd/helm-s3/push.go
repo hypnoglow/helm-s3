@@ -181,11 +181,16 @@ func (act *pushAction) run(ctx context.Context) error {
 		// fallthrough on --force
 	}
 
+	chartMetaJSON, err := chart.Metadata().MarshalJSON()
+	if err != nil {
+		return err
+	}
+	// check if metadata is lower than 2KB in UTF-8 encoding (#461)
+	if len("x-amz-meta-chart-metadata")+len(chartMetaJSON) > 2048 {
+		return errors.New("chart metadata is too large, must be less than 2KB in UTF-8 encoding")
+	}
+
 	if !act.dryRun {
-		chartMetaJSON, err := chart.Metadata().MarshalJSON()
-		if err != nil {
-			return err
-		}
 		if _, err := storage.PutChart(ctx, repoEntry.URL()+"/"+fname, fchart, string(chartMetaJSON), act.acl, hash, act.contentType); err != nil {
 			return errors.WithMessage(err, "upload chart to s3")
 		}
