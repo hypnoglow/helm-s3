@@ -297,6 +297,10 @@ func TestPushRelative(t *testing.T) {
 	setupRepo(t, repoName, repoDir)
 	defer teardownRepo(t, repoName)
 
+	tmpdir := setupTempDir(t)
+
+	// Push chart.
+
 	cmd, stdout, stderr := command(fmt.Sprintf("helm s3 push --relative %s %s", chartFilepath, repoName))
 	err := cmd.Run()
 	assert.NoError(t, err)
@@ -304,10 +308,6 @@ func TestPushRelative(t *testing.T) {
 	assert.Contains(t, stdout.String(), "Successfully uploaded the chart to the repository.")
 
 	// Fetch the repo index and check that chart uri is relative.
-
-	tmpdir, err := os.MkdirTemp("", t.Name())
-	require.NoError(t, err)
-	defer os.RemoveAll(tmpdir)
 
 	indexFile := filepath.Join(tmpdir, "index.yaml")
 
@@ -331,7 +331,59 @@ func TestPushRelative(t *testing.T) {
 	err = cmd.Run()
 	assert.NoError(t, err)
 	assertEmptyOutput(t, stdout, stderr)
+
 	assert.FileExists(t, filepath.Join(tmpdir, chartFilename))
+}
+
+func TestPushProvenance(t *testing.T) {
+	t.Log("Test push action for chart with .prov file")
+
+	const (
+		repoName        = "test-push-provenance"
+		repoDir         = "charts"
+		chartName       = "foo"
+		chartVersion    = "1.3.1"
+		chartFilename   = "foo-1.3.1.tgz"
+		provFilename    = "foo-1.3.1.tgz.prov"
+		chartFilepath   = "testdata/" + chartFilename
+		chartObjectName = repoDir + "/" + chartFilename
+		provObjectName  = repoDir + "/" + chartFilename + ".prov"
+	)
+
+	setupRepo(t, repoName, repoDir)
+	defer teardownRepo(t, repoName)
+
+	tmpdir := setupTempDir(t)
+
+	// Push chart.
+
+	cmd := fmt.Sprintf("helm s3 push %s %s", chartFilepath, repoName)
+	stdout, stderr, err := runCommand(cmd)
+	assert.NoError(t, err)
+	assertEmptyOutput(t, nil, stderr)
+	assert.Contains(t, stdout.String(), "Successfully uploaded the chart to the repository.")
+
+	// Check that chart was actually pushed.
+
+	obj, err := mc.StatObject(repoName, chartObjectName, minio.StatObjectOptions{})
+	assert.NoError(t, err)
+	assert.Equal(t, chartObjectName, obj.Key)
+
+	// Check that .prov file was actually pushed.
+
+	obj, err = mc.StatObject(repoName, provObjectName, minio.StatObjectOptions{})
+	assert.NoError(t, err)
+	assert.Equal(t, provObjectName, obj.Key)
+
+	// Check that chart can be fetched and verified.
+
+	cmd = fmt.Sprintf("helm fetch %s/%s --version %s --destination %s --verify", repoName, chartName, chartVersion, tmpdir)
+	stdout, stderr, err = runCommand(cmd)
+	assert.NoError(t, err)
+	assertEmptyOutput(t, stdout, stderr)
+
+	assert.FileExists(t, filepath.Join(tmpdir, chartFilename))
+	assert.FileExists(t, filepath.Join(tmpdir, provFilename))
 }
 
 func assertEmptyOutput(t *testing.T, stdout, stderr *bytes.Buffer) {
