@@ -106,7 +106,7 @@ type pushAction struct {
 	relative       bool
 }
 
-func (act *pushAction) run(ctx context.Context) error {
+func (act *pushAction) run(ctx context.Context) error { //nolint:gocyclo // Maybe refactor later.
 	// Sanity check.
 	if act.force && act.ignoreIfExists {
 		act.printer.PrintErrf(

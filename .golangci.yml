@@ -1,3 +1,5 @@
+# Reference: https://golangci.github.io/legacy-v1-doc/usage/configuration/
+
 run:
   concurrency: 4
   timeout: 5m
@@ -63,6 +65,9 @@ issues:
     - linters:
         - staticcheck
       text: "strings.Title has been deprecated"
+    - linters:
+        - goconst
+      path: _test\.go
     # TODO: fix this later.
     - linters:
         - revive
