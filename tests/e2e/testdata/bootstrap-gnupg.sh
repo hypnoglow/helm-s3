@@ -27,4 +27,14 @@ echo "[*] Exporting legacy keyring..."
 gpg --homedir "$GNUPGHOME" --export > "$GNUPGHOME/pubring.gpg"
 gpg --homedir "$GNUPGHOME" --export-secret-keys > "$GNUPGHOME/secring.gpg"
 
+if [[ -n "${HELM2:-}" ]]; then
+  echo "[*] HELM2 is set. Copying legacy keyring to \$HOME/.gnupg for Helm v2 compatibility..."
+  mkdir -p "$HOME/.gnupg"
+  chmod 700 "$HOME/.gnupg"
+  cp "$GNUPGHOME"/pubring.gpg "$HOME/.gnupg/pubring.gpg"
+  cp "$GNUPGHOME"/secring.gpg "$HOME/.gnupg/secring.gpg"
+  chmod 600 "$HOME/.gnupg/"*.gpg
+  ls -l "$HOME/.gnupg"
+fi
+
 echo "[✓] GNUPGHOME is ready."

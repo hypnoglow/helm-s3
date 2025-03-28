@@ -39,6 +39,7 @@ The plugin supports both Helm v2 and v3.
       * [Using S3 bucket ServerSide Encryption](#using-s3-bucket-serverside-encryption)
       * [S3 bucket location](#s3-bucket-location)
       * [AWS SSO](#aws-sso)
+      * [Signed charts](#signed-charts)
    * [Additional Documentation](#additional-documentation)
    * [Community and Related Projects](#community-and-related-projects)
    * [Contributing](#contributing)

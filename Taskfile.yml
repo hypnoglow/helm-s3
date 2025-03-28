@@ -1,6 +1,6 @@
 version: "3"
 
-vars: { }
+vars: {}
 
 env:
   GOBIN: "{{ .ROOT_DIR }}/bin"
@@ -9,23 +9,31 @@ env:
     sh: cat plugin.yaml | grep "version" | cut -d '"' -f 2
 
 tasks:
+  default:
+    desc: "Validate, build, and test the plugin"
+    deps:
+      - mod
+      - lint
+      - test-unit
+      - build
+      - test-e2e
   mod:
     desc: "Install dependencies"
     run: once
     cmds:
       - go mod tidy
-  test-unit:
-    desc: "Run unit tests"
-    deps:
-      - mod
-    cmds:
-      - go test $(go list ./... | grep -v e2e)
   lint:
     desc: "Run linter"
     deps:
       - mod
     cmds:
       - golangci-lint run {{ .CLI_ARGS }}
+  test-unit:
+    desc: "Run unit tests"
+    deps:
+      - mod
+    cmds:
+      - go test $(go list ./... | grep -v e2e)
   build:
     desc: "Build plugin binary"
     run: once

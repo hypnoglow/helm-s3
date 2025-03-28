@@ -13,6 +13,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"helm.sh/helm/v3/pkg/repo"
+
+	"github.com/hypnoglow/helm-s3/internal/helmutil"
 )
 
 const (
@@ -352,6 +354,10 @@ func TestPushProvenance(t *testing.T) {
 
 	tmpdir := setupTempDir(t)
 
+	gnupgHome, err := filepath.Abs("testdata/gnupg")
+	require.NoError(t, err)
+	t.Setenv("GNUPGHOME", gnupgHome)
+
 	// Push chart.
 
 	cmd := fmt.Sprintf("helm s3 push %s %s", chartFilepath, repoName)
@@ -378,10 +384,15 @@ func TestPushProvenance(t *testing.T) {
 	stdout, stderr, err = runCommand(cmd)
 	assert.NoError(t, err)
 	assertEmptyOutput(t, nil, stderr)
-	assert.Equal(t, `Signed by: Test Key (helm-s3) <test@example.org>
+
+	if helmutil.IsHelm3() {
+		assert.Equal(t, `Signed by: Test Key (helm-s3) <test@example.org>
 Using Key With Fingerprint: 362A31CD7E4CF7E098605C67491EB34640FC8895
 Chart Hash Verified: sha256:be99ea067f7cccf2516cb1e2e43a569f9032d8cde2f28efef200c66662e0b494
 `, stdout.String())
+	} else {
+		assert.Contains(t, stdout.String(), "sha256:be99ea067f7cccf2516cb1e2e43a569f9032d8cde2f28efef200c66662e0b494")
+	}
 
 	assert.FileExists(t, filepath.Join(tmpdir, chartFilename))
 	assert.FileExists(t, filepath.Join(tmpdir, provFilename))

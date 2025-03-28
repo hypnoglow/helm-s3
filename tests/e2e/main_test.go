@@ -28,6 +28,8 @@ func TestMain(m *testing.M) {
 }
 
 func setup() {
+	// Setup AWS (minio)
+
 	if os.Getenv("AWS_ENDPOINT") == "" {
 		panic("AWS_ENDPOINT is empty")
 	}
@@ -50,6 +52,40 @@ func setup() {
 	if err != nil {
 		panic("create minio client: " + err.Error())
 	}
+
+	// Setup Helm
+
+	helmutil.SetupHelm()
+
+	// Setup GnuPG
+
+	if err := setupGnupg(); err != nil {
+		panic("setup gnupg: " + err.Error())
+	}
+}
+
+func setupGnupg() error {
+	_, err := os.Stat("./testdata/gnupg")
+	if err == nil {
+		return nil
+	}
+	if !os.IsNotExist(err) {
+		return err
+	}
+
+	cmd := exec.Command("./testdata/bootstrap-gnupg.sh")
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	if !helmutil.IsHelm3() {
+		cmd.Env = append(os.Environ(), "HELM2=1")
+	}
+
+	if err := cmd.Run(); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func teardown() {
