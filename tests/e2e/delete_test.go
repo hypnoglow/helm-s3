@@ -167,8 +167,7 @@ func TestDeleteProvenance(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, chartObjectName, obj.Key)
 
-	// Check that .prov file exists in the bucked.
-
+	// Check that .prov file exists in the bucket.
 	obj, err = mc.StatObject(repoName, provObjectName, minio.StatObjectOptions{})
 	assert.NoError(t, err)
 	assert.Equal(t, provObjectName, obj.Key)

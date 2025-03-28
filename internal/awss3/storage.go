@@ -385,7 +385,7 @@ func (s *Storage) DeleteChart(ctx context.Context, uri string) error {
 		},
 	)
 	if err != nil {
-		return fmt.Errorf("delete chat object from s3: %w", err)
+		return fmt.Errorf("delete chart object from s3: %w", err)
 	}
 
 	return nil
