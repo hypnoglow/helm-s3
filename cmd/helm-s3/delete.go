@@ -14,9 +14,13 @@ import (
 
 const deleteDesc = `This command removes a chart from the repository.
 
-'helm s3 init' takes two arguments:
+'helm s3 delete' takes two arguments:
 - NAME - name of the chart to delete,
 - REPO - target repository.
+
+[Provenance]
+
+If the chart is signed, the provenance file is removed from the repository as well.
 `
 
 const deleteExample = `  helm s3 delete epicservice --version 0.5.1 my-repo - removes the chart with name 'epicservice' and version 0.5.1 from the repository with name 'my-repo'.`
@@ -118,7 +122,7 @@ func (act *deleteAction) run(ctx context.Context) error {
 			url = strings.TrimSuffix(repoEntry.URL(), "/") + "/" + url
 		}
 
-		if err := storage.Delete(ctx, url); err != nil {
+		if err := storage.DeleteChart(ctx, url); err != nil {
 			return errors.WithMessage(err, "delete chart file from s3")
 		}
 	}

@@ -111,6 +111,9 @@ jobs:
             helm repo add stable https://charts.helm.sh/stable
           fi
 
+      - name: Install GnuPG
+        run: sudo apt-get install -y gnupg
+
       - name: Build and install the plugin
         run: |
           plugin_version="commit.${{ github.sha }}"

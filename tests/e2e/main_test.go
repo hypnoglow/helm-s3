@@ -28,6 +28,8 @@ func TestMain(m *testing.M) {
 }
 
 func setup() {
+	// Setup AWS (minio)
+
 	if os.Getenv("AWS_ENDPOINT") == "" {
 		panic("AWS_ENDPOINT is empty")
 	}
@@ -50,6 +52,40 @@ func setup() {
 	if err != nil {
 		panic("create minio client: " + err.Error())
 	}
+
+	// Setup Helm
+
+	helmutil.SetupHelm()
+
+	// Setup GnuPG
+
+	if err := setupGnupg(); err != nil {
+		panic("setup gnupg: " + err.Error())
+	}
+}
+
+func setupGnupg() error {
+	_, err := os.Stat("./testdata/gnupg")
+	if err == nil {
+		return nil
+	}
+	if !os.IsNotExist(err) {
+		return err
+	}
+
+	cmd := exec.Command("./testdata/bootstrap-gnupg.sh")
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	if !helmutil.IsHelm3() {
+		cmd.Env = append(os.Environ(), "HELM2=1")
+	}
+
+	if err := cmd.Run(); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func teardown() {
@@ -124,6 +160,12 @@ func command(c string) (cmd *exec.Cmd, stdout, stderr *bytes.Buffer) {
 	return
 }
 
+func runCommand(c string) (stdout, stderr *bytes.Buffer, err error) {
+	cmd, stdout, stderr := command(c)
+	err = cmd.Run()
+	return stdout, stderr, err
+}
+
 // For helm v2, the command is `helm search foo/bar`.
 // For helm v3, the command is `helm search repo foo/bar`.
 func makeSearchCommand(repoName, chartName string) string { //nolint:unparam
@@ -135,4 +177,17 @@ func makeSearchCommand(repoName, chartName string) string { //nolint:unparam
 	}
 
 	return fmt.Sprintf("%s %s/%s", c, repoName, chartName)
+}
+
+func setupTempDir(t *testing.T) string {
+	t.Helper()
+
+	tmpdir, err := os.MkdirTemp("", t.Name())
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		_ = os.RemoveAll(tmpdir)
+	})
+
+	return tmpdir
 }
