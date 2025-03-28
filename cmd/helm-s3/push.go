@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
 
@@ -18,6 +19,10 @@ const pushDesc = `This command uploads a chart to the repository.
 'helm s3 push' takes two arguments:
 - PATH - path to the chart file,
 - REPO - target repository.
+
+[Provenance]
+
+If the chart is signed, the provenance file is uploaded to the repository as well.
 `
 
 const pushExample = `  helm s3 push ./epicservice-0.5.1.tgz my-repo - uploads chart file 'epicservice-0.5.1.tgz' from the current directory to the repository with name 'my-repo'.`
@@ -160,9 +165,20 @@ func (act *pushAction) run(ctx context.Context) error {
 		return errors.WithMessage(err, "get chart digest")
 	}
 
-	fchart, err := os.Open(fname)
+	chartFile, err := os.Open(fname)
 	if err != nil {
 		return errors.Wrap(err, "open chart file")
+	}
+
+	hasProv := false
+	provFile, err := os.Open(fname + ".prov")
+	switch {
+	case err == nil:
+		hasProv = true
+	case errors.Is(err, os.ErrNotExist):
+		// No provenance file, ignore it.
+	case err != nil:
+		return fmt.Errorf("open prov file: %w", err)
 	}
 
 	exists, err := storage.Exists(ctx, repoEntry.URL()+"/"+fname)
@@ -186,7 +202,17 @@ func (act *pushAction) run(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
-		if _, err := storage.PutChart(ctx, repoEntry.URL()+"/"+fname, fchart, string(chartMetaJSON), act.acl, hash, act.contentType); err != nil {
+		if _, err := storage.PutChart(
+			ctx,
+			repoEntry.URL()+"/"+fname,
+			chartFile,
+			string(chartMetaJSON),
+			act.acl,
+			hash,
+			act.contentType,
+			hasProv,
+			provFile,
+		); err != nil {
 			return errors.WithMessage(err, "upload chart to s3")
 		}
 	}

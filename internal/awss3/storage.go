@@ -246,12 +246,24 @@ func (s *Storage) Exists(ctx context.Context, uri string) (bool, error) {
 
 // PutChart puts the chart file to the storage.
 // uri must be in the form of s3 protocol: s3://bucket-name/key[...].
-func (s *Storage) PutChart(ctx context.Context, uri string, r io.Reader, chartMeta, acl string, chartDigest string, contentType string) (string, error) {
+func (s *Storage) PutChart(
+	ctx context.Context,
+	uri string,
+	r io.Reader,
+	chartMeta, acl string,
+	chartDigest string,
+	contentType string,
+	prov bool,
+	provReader io.Reader,
+) (string, error) {
 	bucket, key, err := parseURI(uri)
 	if err != nil {
 		return "", err
 	}
-	result, err := s3manager.NewUploader(s.session).UploadWithContext(
+
+	uploader := s3manager.NewUploader(s.session)
+
+	result, err := uploader.UploadWithContext(
 		ctx,
 		&s3manager.UploadInput{
 			Bucket:               aws.String(bucket),
@@ -264,7 +276,23 @@ func (s *Storage) PutChart(ctx context.Context, uri string, r io.Reader, chartMe
 		},
 	)
 	if err != nil {
-		return "", errors.Wrap(err, "upload object to s3")
+		return "", fmt.Errorf("upload chart object to s3: %w", err)
+	}
+
+	if prov {
+		_, err := uploader.UploadWithContext(
+			ctx,
+			&s3manager.UploadInput{
+				Bucket:               aws.String(bucket),
+				Key:                  aws.String(key + ".prov"),
+				ACL:                  aws.String(acl),
+				ServerSideEncryption: getSSE(),
+				Body:                 provReader,
+			},
+		)
+		if err != nil {
+			return "", fmt.Errorf("upload prov object to s3: %w", err)
+		}
 	}
 
 	return result.Location, nil
@@ -327,6 +355,37 @@ func (s *Storage) Delete(ctx context.Context, uri string) error {
 	)
 	if err != nil {
 		return errors.Wrap(err, "delete object from s3")
+	}
+
+	return nil
+}
+
+// DeleteChart deletes the chart object by uri. Also deletes .prov file if exists.
+// uri must be in the form of s3 protocol: s3://bucket-name/key[...].
+func (s *Storage) DeleteChart(ctx context.Context, uri string) error {
+	bucket, key, err := parseURI(uri)
+	if err != nil {
+		return err
+	}
+
+	_, err = s3.New(s.session).DeleteObjectsWithContext(
+		ctx,
+		&s3.DeleteObjectsInput{
+			Bucket: aws.String(bucket),
+			Delete: &s3.Delete{
+				Objects: []*s3.ObjectIdentifier{
+					{
+						Key: aws.String(key),
+					},
+					{
+						Key: aws.String(key + ".prov"),
+					},
+				},
+			},
+		},
+	)
+	if err != nil {
+		return fmt.Errorf("delete chat object from s3: %w", err)
 	}
 
 	return nil

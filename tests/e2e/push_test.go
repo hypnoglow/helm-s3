@@ -3,7 +3,6 @@ package e2e
 import (
 	"bytes"
 	"fmt"
-	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -36,15 +35,13 @@ func TestPush(t *testing.T) {
 	setupRepo(t, repoName, repoDir)
 	defer teardownRepo(t, repoName)
 
-	tmpdir, err := os.MkdirTemp("", t.Name())
-	require.NoError(t, err)
-	defer os.RemoveAll(tmpdir)
+	tmpdir := setupTempDir(t)
 
 	// Fetch the repo index before push to get generated time.
 
 	indexFile := filepath.Join(tmpdir, "index.yaml")
 
-	err = mc.FGetObject(repoName, repoDir+"/index.yaml", indexFile, minio.GetObjectOptions{})
+	err := mc.FGetObject(repoName, repoDir+"/index.yaml", indexFile, minio.GetObjectOptions{})
 	require.NoError(t, err)
 
 	idx, err := repo.LoadIndexFile(indexFile)
@@ -344,10 +341,10 @@ func TestPushProvenance(t *testing.T) {
 		chartName       = "foo"
 		chartVersion    = "1.3.1"
 		chartFilename   = "foo-1.3.1.tgz"
-		provFilename    = "foo-1.3.1.tgz.prov"
+		provFilename    = chartFilename + ".prov"
 		chartFilepath   = "testdata/" + chartFilename
 		chartObjectName = repoDir + "/" + chartFilename
-		provObjectName  = repoDir + "/" + chartFilename + ".prov"
+		provObjectName  = chartObjectName + ".prov"
 	)
 
 	setupRepo(t, repoName, repoDir)
@@ -380,7 +377,11 @@ func TestPushProvenance(t *testing.T) {
 	cmd = fmt.Sprintf("helm fetch %s/%s --version %s --destination %s --verify", repoName, chartName, chartVersion, tmpdir)
 	stdout, stderr, err = runCommand(cmd)
 	assert.NoError(t, err)
-	assertEmptyOutput(t, stdout, stderr)
+	assertEmptyOutput(t, nil, stderr)
+	assert.Equal(t, `Signed by: Test Key (helm-s3) <test@example.org>
+Using Key With Fingerprint: 362A31CD7E4CF7E098605C67491EB34640FC8895
+Chart Hash Verified: sha256:be99ea067f7cccf2516cb1e2e43a569f9032d8cde2f28efef200c66662e0b494
+`, stdout.String())
 
 	assert.FileExists(t, filepath.Join(tmpdir, chartFilename))
 	assert.FileExists(t, filepath.Join(tmpdir, provFilename))
