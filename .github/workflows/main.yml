@@ -29,10 +29,19 @@ jobs:
 
       - name: Run tests
         run: |
-          go test -v -race -coverprofile=coverage.txt -covermode=atomic $(go list ./... | grep -v e2e)
+          go test \
+            -v \
+            -race \
+            -coverprofile=coverage.unit.txt \
+            -covermode=atomic \
+            $(go list ./... | grep -v e2e)
 
-      - name: Codecov
-        uses: codecov/codecov-action@4fe8c5f003fae66aa5ebb77cfd3e7bfbbda0b6b0 # v3.1.5
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@0565863a31f2c772f9f0395002a31e3f06189574 # v5.4.0
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        with:
+          flags: unit
 
       - name: Run linters
         uses: golangci/golangci-lint-action@55c2c1448f86e01eaae002a5a3a9624417608d84 # v6.5.2
@@ -120,8 +129,9 @@ jobs:
           tmp_dir="$(mktemp -d)"
 
           go build \
-            -o bin/helm-s3 \
+            -cover \
             -ldflags "-X main.version=${plugin_version}" \
+            -o bin/helm-s3 \
             ./cmd/helm-s3
 
           # Copy plugin directory to outside of the workspace.
@@ -143,7 +153,18 @@ jobs:
 
       - name: Run tests
         run: |
+          export GOCOVERDIR="$GITHUB_WORKSPACE/covdatafiles"
+          mkdir -p "$GOCOVERDIR"
           go test -v ./tests/e2e/...
+          go tool covdata percent -i="$GOCOVERDIR"
+          go tool covdata textfmt -i="$GOCOVERDIR" -o=coverage.e2e.txt
+
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@0565863a31f2c772f9f0395002a31e3f06189574 # v5.4.0
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        with:
+          flags: e2e
 
   docker-images:
     name: Build Docker images
