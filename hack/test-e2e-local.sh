@@ -49,7 +49,7 @@ mc mb helm-s3-minio/test-bucket
 
 ## Test
 
-go test -v ./tests/e2e/... -run "${RUN}"
+go test -v -count=1 ./tests/e2e/... -run "${RUN}"
 if [ $? -eq 0 ] ; then
     echo -e "\nAll tests passed!"
 fi

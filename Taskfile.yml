@@ -1,6 +1,7 @@
 version: "3"
 
-vars: {}
+vars:
+  GOCOVERDIR: "{{ .ROOT_DIR }}/output/covdatafiles"
 
 env:
   GOBIN: "{{ .ROOT_DIR }}/bin"
@@ -33,7 +34,10 @@ tasks:
     deps:
       - mod
     cmds:
-      - go test $(go list ./... | grep -v e2e)
+      - go test
+        -coverprofile=output/coverage.unit.out
+        -covermode=count
+        $(go list ./... | grep -v e2e)
   build:
     desc: "Build plugin binary"
     run: once
@@ -44,8 +48,9 @@ tasks:
         sh: date -u +"%Y-%m-%dT%H:%M:%SZ"
     cmds:
       - go build
-        -o bin/helm-s3
+        -cover
         -ldflags "-X 'main.version=${PLUGIN_VERSION} (development)'"
+        -o bin/helm-s3
         ./cmd/helm-s3
   install:
     desc: "Install the plugin in development mode"
@@ -59,5 +64,26 @@ tasks:
     desc: "Run end-to-end tests"
     deps:
       - build
+    env:
+      GOCOVERDIR: "{{ .GOCOVERDIR }}"
     cmds:
+      - task: covdata:reset
       - ./hack/test-e2e-local.sh {{ .CLI_ARGS }}
+      - task: covdata:textfmt
+      - task: covdata:percent
+  #
+  # Internal
+  #
+  covdata:reset:
+    internal: true
+    cmds:
+      - rm -rf {{ .GOCOVERDIR }}
+      - mkdir -p {{ .GOCOVERDIR }}
+  covdata:textfmt:
+    internal: true
+    cmds:
+      - go tool covdata textfmt -i={{ .GOCOVERDIR }} -o=output/coverage.e2e.out
+  covdata:percent:
+    internal: true
+    cmds:
+      - go tool covdata percent -i={{ .GOCOVERDIR }}
