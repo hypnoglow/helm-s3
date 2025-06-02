@@ -29,27 +29,32 @@ on_exit() {
 }
 trap on_exit EXIT
 
+PATH=$(go env GOPATH)/bin:${PATH}
+if [ ! -x "$(which mc 2>/dev/null)" ]; then
+    echo "[e2e] --> ERROR: mc not found, please install it with \`go install github.com/minio/mc@latest\`"
+    exit 1
+fi
+
+echo "[e2e] --> Start minio server ..."
+
 docker container run -d --rm --name "${DOCKER_NAME}" \
     -p 9000:9000 \
     -e MINIO_ACCESS_KEY=$AWS_ACCESS_KEY_ID \
     -e MINIO_SECRET_KEY=$AWS_SECRET_ACCESS_KEY \
     minio/minio:latest server /data >/dev/null
 
-PATH=$(go env GOPATH)/bin:${PATH}
-if [ ! -x "$(which mc 2>/dev/null)" ]; then
-    pushd /tmp > /dev/null
-    go install github.com/minio/mc@latest
-    popd > /dev/null
-fi
+echo "[e2e] --> Wait for minio server to become available ..."
 
 # give minio time to become service available.
 sleep 3
-mc config host add helm-s3-minio http://localhost:9000 $AWS_ACCESS_KEY_ID $AWS_SECRET_ACCESS_KEY
+mc alias set helm-s3-minio http://localhost:9000 $AWS_ACCESS_KEY_ID $AWS_SECRET_ACCESS_KEY
 mc mb helm-s3-minio/test-bucket
 
 ## Test
 
+echo "[e2e] --> Run tests ..."
+
 go test -v -count=1 ./tests/e2e/... -run "${RUN}"
 if [ $? -eq 0 ] ; then
-    echo -e "\nAll tests passed!"
+    echo "[e2e] --> All tests passed!"
 fi

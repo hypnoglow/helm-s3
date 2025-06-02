@@ -16,7 +16,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Changed
 
-- Go updated to `1.23.6`.
+- Go updated to `1.24.3`.
+
+- Supported (and tested against) Helm versions updated to `3.17.3` and `3.18.1`.
+
+### Deprecated
+
+- Helm v2 support is deprecated and will be removed in the next minor release.
+  Helm v2 reached its [end of life](https://github.com/helm/helm/releases/tag/v2.17.0)
+  almost 5 years ago. Switch to Helm v3.
 
 ## [0.16.3] - 2025-02-02
 
