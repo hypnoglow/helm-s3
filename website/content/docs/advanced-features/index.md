@@ -195,3 +195,12 @@ $ export AWS_PROFILE=YOUR-PROFILE-NAME
 ```
 
 Now you can use the plugin as usual.
+
+## Signed Charts
+
+The plugin supports signed charts. See [Helm documentation](https://helm.sh/docs/topics/provenance/)
+for more information how it works.
+
+The plugin ensures that the `.prov` file is pushed to the S3 bucket along with
+the chart. Then, when Helm is invoked with `--verify` flag, the `.prov` file
+will be automatically downloaded with the chart and used for verification.
