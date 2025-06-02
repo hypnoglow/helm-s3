@@ -71,19 +71,42 @@ tasks:
       - ./hack/test-e2e-local.sh {{ .CLI_ARGS }}
       - task: covdata:textfmt
       - task: covdata:percent
+  setup:
+    desc: "Setup development environment"
+    cmds:
+      - task: setup:install-if-required
+      - task: setup:gpg
   #
   # Internal
   #
   covdata:reset:
     internal: true
+    silent: true
     cmds:
       - rm -rf {{ .GOCOVERDIR }}
       - mkdir -p {{ .GOCOVERDIR }}
   covdata:textfmt:
     internal: true
+    silent: true
     cmds:
       - go tool covdata textfmt -i={{ .GOCOVERDIR }} -o=output/coverage.e2e.out
   covdata:percent:
     internal: true
+    silent: true
     cmds:
       - go tool covdata percent -i={{ .GOCOVERDIR }}
+  setup:install-if-required:
+    internal: true
+    silent: true
+    cmds:
+      - task: install
+    status:
+      - helm plugin list ls | grep -q -e "^s3"
+  setup:gpg:
+    internal: true
+    silent: true
+    dir: "{{ .ROOT_DIR }}/tests/e2e/testdata"
+    cmds:
+      - ./bootstrap-gnupg.sh
+    status:
+      - test -f "{{ .ROOT_DIR }}/tests/e2e/testdata/gnupg/secring.gpg"

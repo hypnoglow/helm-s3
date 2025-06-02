@@ -11,7 +11,7 @@ jobs:
 
       - name: Install helm
         run: |
-          helm_version="3.15.2"
+          helm_version="3.18.1"
           tar_filename="helm-v${helm_version}-linux-amd64.tar.gz"
           checksum_filename="helm-v${helm_version}-linux-amd64.tar.gz.sha256sum"
 

@@ -34,6 +34,14 @@ that involve the plugin, or jump straight into plugin development.
 
 ## Testing
 
+To run tests, you need to have development environment set up.
+
+This command does some preparations:
+
+```shell
+task setup
+```
+
 Run unit tests:
 
 ```shell
