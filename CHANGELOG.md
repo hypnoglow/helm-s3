@@ -7,12 +7,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [0.17.0] - 2025-06-02
+
 ### Added
 
 - Add support for signed charts using [standard helm provenance mechanism](https://helm.sh/docs/topics/provenance/).
   The `.prov` file is pushed to the S3 bucket along with the chart, and
   automatically fetched when helm command is used with `--verify` flag to verify
   the chart signature.
+  (Refs: [#518](https://github.com/hypnoglow/helm-s3/pull/518) [#150](https://github.com/hypnoglow/helm-s3/issues/150))
 
 ### Changed
 
