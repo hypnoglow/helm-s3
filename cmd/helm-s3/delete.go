@@ -84,7 +84,7 @@ func (act *deleteAction) run(ctx context.Context) error {
 		return err
 	}
 
-	sess, err := awsutil.Session(awsutil.DynamicBucketRegion(repoEntry.URL()))
+	sess, err := awsutil.Session(awsutil.ConditionalDynamicBucketRegion(repoEntry.URL()))
 	if err != nil {
 		return err
 	}

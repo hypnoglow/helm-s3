@@ -73,7 +73,7 @@ func (act *downloadAction) run(ctx context.Context) error {
 
 	sess, err := awsutil.Session(
 		awsutil.AssumeRoleTokenProvider(awsutil.StderrTokenProvider),
-		awsutil.DynamicBucketRegion(act.url),
+		awsutil.ConditionalDynamicBucketRegion(act.url),
 	)
 	if err != nil {
 		return err

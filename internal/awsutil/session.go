@@ -21,6 +21,12 @@ const (
 	// awsBucketLocation can be set to an AWS region to force the session region
 	// if AWS_DEFAULT_REGION and AWS_REGION cannot be trusted.
 	awsBucketLocation = "HELM_S3_REGION"
+
+	// awsDynamicRegion can be set to false to disable dynamic bucket region detection.
+	// When set to "false", the plugin will rely on standard AWS region configuration
+	// (HELM_S3_REGION, AWS_REGION, AWS_DEFAULT_REGION) instead of auto-detecting
+	// the bucket region. Default value is "true" (enabled).
+	awsDynamicRegion = "HELM_S3_DYNAMIC_REGION"
 )
 
 // SessionOption is an option for session.
@@ -92,6 +98,27 @@ func DynamicBucketRegion(s3URL string) SessionOption {
 
 		options.Config.Region = aws.String(request.HTTPResponse.Header[bucketRegionHeader][0])
 	}
+}
+
+// ConditionalDynamicBucketRegion returns DynamicBucketRegion option if dynamic region
+// detection is enabled (default: true), otherwise returns no option. This allows users to
+// disable automatic bucket region detection by setting HELM_S3_DYNAMIC_REGION=false.
+func ConditionalDynamicBucketRegion(s3URL string) SessionOption {
+	envValue := os.Getenv(awsDynamicRegion)
+
+	// Default to true if not set
+	if envValue == "" {
+		envValue = "true"
+	}
+
+	// Check if dynamic region detection is disabled
+	if envValue == "false" {
+		// Return a no-op SessionOption
+		return func(*session.Options) {}
+	}
+
+	// Dynamic region detection enabled (default: true)
+	return DynamicBucketRegion(s3URL)
 }
 
 // Session returns an AWS session as described http://docs.aws.amazon.com/sdk-for-go/v1/developer-guide/configuring-sdk.html
