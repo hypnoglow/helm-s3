@@ -106,11 +106,6 @@ func DynamicBucketRegion(s3URL string) SessionOption {
 func ConditionalDynamicBucketRegion(s3URL string) SessionOption {
 	envValue := os.Getenv(awsDynamicRegion)
 
-	// Default to true if not set
-	if envValue == "" {
-		envValue = "true"
-	}
-
 	// Check if dynamic region detection is disabled
 	if envValue == "false" {
 		// Return a no-op SessionOption
