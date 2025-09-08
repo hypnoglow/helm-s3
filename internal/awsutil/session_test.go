@@ -85,3 +85,53 @@ func TestSessionWithCustomEndpoint(t *testing.T) {
 	os.Unsetenv("AWS_DISABLE_SSL")
 	os.Unsetenv("HELM_S3_REGION")
 }
+
+func TestConditionalDynamicBucketRegion(t *testing.T) {
+	t.Parallel()
+
+	defaultSession, err := Session()
+	require.NoError(t, err)
+	defaultRegion := aws.StringValue(defaultSession.Config.Region)
+
+	testCases := []struct {
+		caseDescription      string
+		envValue             string
+		inputS3URL           string
+		expectedBucketRegion string
+	}{
+		{
+			caseDescription:      "dynamic region enabled (default) -> should detect region",
+			envValue:             "", // not set, should default to enabled
+			inputS3URL:           "s3://cn-test-bucket",
+			expectedBucketRegion: "ap-southeast-2",
+		},
+		{
+			caseDescription:      "dynamic region explicitly enabled -> should detect region",
+			envValue:             "true",
+			inputS3URL:           "s3://cn-test-bucket",
+			expectedBucketRegion: "ap-southeast-2",
+		},
+		{
+			caseDescription:      "dynamic region disabled -> should use default region",
+			envValue:             "false",
+			inputS3URL:           "s3://cn-test-bucket",
+			expectedBucketRegion: defaultRegion,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.caseDescription, func(t *testing.T) {
+			t.Parallel()
+
+			// Set environment variable for this test case
+			if tc.envValue != "" {
+				os.Setenv("HELM_S3_DYNAMIC_REGION", tc.envValue)
+				defer os.Unsetenv("HELM_S3_DYNAMIC_REGION")
+			}
+
+			actualSession, err := Session(ConditionalDynamicBucketRegion(tc.inputS3URL))
+			assert.NoError(t, err)
+			assert.Equal(t, tc.expectedBucketRegion, aws.StringValue(actualSession.Config.Region))
+		})
+	}
+}
