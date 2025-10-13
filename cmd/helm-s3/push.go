@@ -120,7 +120,7 @@ func (act *pushAction) run(ctx context.Context) error { //nolint:gocyclo // Mayb
 		return err
 	}
 
-	sess, err := awsutil.Session(awsutil.DynamicBucketRegion(repoEntry.URL()))
+	sess, err := awsutil.Session(awsutil.ConditionalDynamicBucketRegion(repoEntry.URL()))
 	if err != nil {
 		return err
 	}
