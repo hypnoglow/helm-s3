@@ -1,34 +1,28 @@
-# Reference: https://golangci.github.io/legacy-v1-doc/usage/configuration/
+# Reference: https://golangci-lint.run/docs/configuration/file/
 
-run:
-  concurrency: 4
-  timeout: 5m
+version: "2"
 
 linters:
-  disable-all: true
+  default: none
   enable:
     - asciicheck
     - bodyclose
     - copyloopvar
     - dogsled
     - errcheck
+    - errchkjson
     - exhaustive
-    - gci
-    - gochecknoinits
+    - funcorder
 #    - gocognit
     - goconst
     - gocritic
     - gocyclo
     - godot
-    - gofmt
-    - goheader
-#    - gomnd
-    - gomodguard
     - goprintffuncname
     - gosec
-    - gosimple
     - govet
     - ineffassign
+    - mirror
     - misspell
     - nakedret
 #    - nestif
@@ -36,39 +30,60 @@ linters:
     - nolintlint
     - prealloc
     - revive
-    - rowserrcheck
-    - sqlclosecheck
     - staticcheck
-    - stylecheck
-    - typecheck
     - unconvert
     - unparam
     - unused
+    - usestdlibvars
     - whitespace
 
-linters-settings:
-  gci:
-    sections:
-      - standard
-      - default
-      - prefix(github.com/hypnoglow/helm-s3)
-  goimports:
-    local-prefixes: github.com/hypnoglow/helm-s3
+  settings:
+    gocritic:
+      disabled-checks:
+        - singleCaseSwitch
+    gomoddirectives:
+      toolchain-forbidden: true
+    nolintlint:
+      require-specific: true
+      require-explanation: true
+
+  exclusions:
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    rules:
+      # Relax requirements for tests.
+      - linters:
+          - goconst
+          - noctx
+        path: _test.go
+      - linters:
+          - golint
+          - stylecheck
+          - revive
+        text: "error strings should not be capitalized"
+      # TODO: fix this later.
+      - linters:
+          - revive
+        text: "^unused-parameter"
+
+formatters:
+  enable:
+    - gci
+    - gofmt
+
+  settings:
+    gci:
+      sections:
+        - standard
+        - default
+        - prefix(github.com/hypnoglow/helm-s3)
 
 issues:
-  exclude-rules:
-    - linters:
-        - golint
-        - stylecheck
-        - revive
-      text: "error strings should not be capitalized"
-    - linters:
-        - staticcheck
-      text: "strings.Title has been deprecated"
-    - linters:
-        - goconst
-      path: _test\.go
-    # TODO: fix this later.
-    - linters:
-        - revive
-      text: "^unused-parameter"
+  fix: true
+
+run:
+  timeout: 5m
+  build-tags: []
