@@ -27,12 +27,12 @@ type customError struct {
 	err     error
 }
 
-func (c customError) errorType() errorType {
-	return c.errType
-}
-
 func (c customError) Error() string {
 	return c.err.Error()
+}
+
+func (c customError) errorType() errorType {
+	return c.errType
 }
 
 func newBadUsageError(err error) error {
