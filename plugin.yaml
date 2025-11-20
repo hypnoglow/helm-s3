@@ -1,5 +1,5 @@
 name: "s3"
-version: "0.17.0"
+version: "0.17.1"
 usage: "Manage chart repositories on Amazon S3"
 description: |-
   Provides AWS S3 protocol support for charts and repos. https://github.com/hypnoglow/helm-s3
