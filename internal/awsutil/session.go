@@ -82,8 +82,8 @@ func DynamicBucketRegion(s3URL string) SessionOption {
 			WithCredentials(credentials.NewStaticCredentials("dummy", "dummy", "")).
 			WithRegion("us-east-1").
 			WithEndpoint("s3.amazonaws.com")
-		session := session.Must(session.NewSession())
-		s3Client := s3.New(session, configuration)
+		sess := session.Must(session.NewSession())
+		s3Client := s3.New(sess, configuration)
 
 		bucketRegionHeader := "X-Amz-Bucket-Region"
 		input := &s3.HeadBucketInput{
@@ -118,10 +118,7 @@ func ConditionalDynamicBucketRegion(s3URL string) SessionOption {
 
 // Session returns an AWS session as described http://docs.aws.amazon.com/sdk-for-go/v1/developer-guide/configuring-sdk.html
 func Session(opts ...SessionOption) (*session.Session, error) {
-	disableSSL := false
-	if os.Getenv(awsDisableSSL) == "true" {
-		disableSSL = true
-	}
+	disableSSL := os.Getenv(awsDisableSSL) == "true"
 
 	so := session.Options{
 		Config: aws.Config{

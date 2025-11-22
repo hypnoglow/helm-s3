@@ -1,9 +1,11 @@
 package helmutil
 
 import (
+	"context"
 	"os"
 	"os/exec"
 	"strings"
+	"time"
 )
 
 // IsHelm3 returns true if helm is version 3+.
@@ -29,7 +31,10 @@ func IsHelm3() bool {
 var helm3Detected func() bool
 
 func helmVersionCommand() bool {
-	cmd := exec.Command("helm", "version", "--short", "--client")
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	cmd := exec.CommandContext(ctx, "helm", "version", "--short", "--client")
 	out, err := cmd.Output()
 	if err != nil {
 		// Should not happen in normal cases (when helm is properly installed).

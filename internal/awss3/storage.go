@@ -66,7 +66,7 @@ func (s *Storage) Traverse(ctx context.Context, repoURI string) (<-chan ChartInf
 // traverse traverses all charts in the repository.
 // It writes an info item about every chart to items, and errors to errs.
 // It always closes both channels when returns.
-func (s *Storage) traverse(ctx context.Context, repoURI string, items chan<- ChartInfo, errs chan<- error) {
+func (s *Storage) traverse(ctx context.Context, repoURI string, items chan<- ChartInfo, errs chan<- error) { //nolint:funcorder // TODO: needs fixing
 	defer close(items)
 	defer close(errs)
 
@@ -121,8 +121,8 @@ func (s *Storage) traverse(ctx context.Context, repoURI string, items chan<- Cha
 
 			reindexItem := ChartInfo{Filename: key}
 
-			serializedChartMeta, hasMeta := metaOut.Metadata[strings.Title(metaChartMetadata)]
-			chartDigest, hasDigest := metaOut.Metadata[strings.Title(metaChartDigest)]
+			serializedChartMeta, hasMeta := metaOut.Metadata[strings.Title(metaChartMetadata)] //nolint:staticcheck // Safe use of strings.Title
+			chartDigest, hasDigest := metaOut.Metadata[strings.Title(metaChartDigest)]         //nolint:staticcheck // Safe use of strings.Title
 			if !hasMeta || !hasDigest {
 				// Some charts in the repository can have no metadata.
 				//

@@ -122,7 +122,7 @@ func teardownBucket(t *testing.T, name string) {
 	require.NoError(t, err, "remove bucket")
 }
 
-func setupRepo(t *testing.T, name, dir string) { //nolint:unparam
+func setupRepo(t *testing.T, name, dir string) { //nolint:unparam // For now dir is always "charts".
 	t.Helper()
 
 	setupBucket(t, name)
@@ -153,7 +153,7 @@ func command(c string) (cmd *exec.Cmd, stdout, stderr *bytes.Buffer) {
 	stderr = &bytes.Buffer{}
 	args := strings.Split(c, " ")
 
-	cmd = exec.Command(args[0], args[1:]...) //nolint:gosec
+	cmd = exec.Command(args[0], args[1:]...) //nolint:gosec // TODO: fix to always "helm" command.
 	cmd.Stdout = stdout
 	cmd.Stderr = stderr
 
@@ -168,7 +168,7 @@ func runCommand(c string) (stdout, stderr *bytes.Buffer, err error) {
 
 // For helm v2, the command is `helm search foo/bar`.
 // For helm v3, the command is `helm search repo foo/bar`.
-func makeSearchCommand(repoName, chartName string) string { //nolint:unparam
+func makeSearchCommand(repoName, chartName string) string { //nolint:unparam // For now chartName is always "foo".
 	c := "helm search"
 
 	helmutil.SetupHelm()
