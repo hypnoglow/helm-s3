@@ -11,7 +11,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/minio/minio-go/v6 v6.0.57
 	github.com/pkg/errors v0.9.1
-	github.com/spf13/cobra v1.10.1
+	github.com/spf13/cobra v1.10.2
 	github.com/stretchr/testify v1.11.1
 	helm.sh/helm/v3 v3.19.0
 	k8s.io/helm v2.17.0+incompatible
