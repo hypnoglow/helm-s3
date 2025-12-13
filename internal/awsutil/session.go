@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/smithy-go/middleware"
 )
 
 const (
@@ -82,14 +83,7 @@ func DynamicBucketRegion(s3URL string) SessionOption {
 		cfg, err := config.LoadDefaultConfig(ctx,
 			config.WithRegion("us-east-1"),
 			config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider("dummy", "dummy", "")),
-			config.WithEndpointResolverWithOptions(aws.EndpointResolverWithOptionsFunc(
-				func(service, region string, opts ...interface{}) (aws.Endpoint, error) {
-					return aws.Endpoint{
-						URL:           "https://s3.amazonaws.com",
-						SigningRegion: "us-east-1",
-					}, nil
-				},
-			)),
+			config.WithBaseEndpoint("https://s3.amazonaws.com"),
 		)
 		if err != nil {
 			return nil
@@ -97,22 +91,44 @@ func DynamicBucketRegion(s3URL string) SessionOption {
 
 		s3Client := s3.NewFromConfig(cfg)
 
-		bucketRegionHeader := "X-Amz-Bucket-Region"
-		input := &s3.HeadBucketInput{
+		// Try GetBucketLocation first as it directly returns the region
+		locationResp, err := s3Client.GetBucketLocation(ctx, &s3.GetBucketLocationInput{
 			Bucket: aws.String(parsedS3URL.Host),
-		}
-
-		resp, err := s3Client.HeadBucket(ctx, input)
-		if err != nil || resp == nil {
+		})
+		if err == nil && locationResp != nil {
+			// AWS S3 returns empty string for us-east-1
+			region := string(locationResp.LocationConstraint)
+			if region == "" {
+				region = "us-east-1"
+			}
+			options.Region = region
 			return nil
 		}
 
-		// Extract the region from the response metadata
-		if httpResp, ok := resp.ResultMetadata.Get("http.Response").(*http.Response); ok {
-			if region := httpResp.Header.Get(bucketRegionHeader); region != "" {
-				options.Region = region
-			}
-		}
+		// Fallback to HeadBucket with header extraction if GetBucketLocation fails
+		_, err = s3Client.HeadBucket(ctx, &s3.HeadBucketInput{
+			Bucket: aws.String(parsedS3URL.Host),
+		}, func(o *s3.Options) {
+			o.APIOptions = append(o.APIOptions, func(stack *middleware.Stack) error {
+				return stack.Deserialize.Add(middleware.DeserializeMiddlewareFunc(
+					"CaptureRegionHeader",
+					func(ctx context.Context, in middleware.DeserializeInput, next middleware.DeserializeHandler) (
+						out middleware.DeserializeOutput, metadata middleware.Metadata, err error,
+					) {
+						out, metadata, err = next.HandleDeserialize(ctx, in)
+
+						// Check if the response contains HTTP response
+						if httpResp, ok := out.RawResponse.(*http.Response); ok {
+							if region := httpResp.Header.Get("X-Amz-Bucket-Region"); region != "" {
+								options.Region = region
+							}
+						}
+
+						return out, metadata, err
+					},
+				), middleware.After)
+			})
+		})
 
 		return nil
 	}
@@ -151,19 +167,8 @@ func Session(opts ...SessionOption) (aws.Config, error) {
 	endpoint := os.Getenv(awsEndpoint)
 	disableSSL := os.Getenv(awsDisableSSL) == "true"
 
-	if endpoint != "" || disableSSL {
-		cfg.EndpointResolverWithOptions = aws.EndpointResolverWithOptionsFunc(
-			func(service, region string, options ...interface{}) (aws.Endpoint, error) {
-				if endpoint != "" {
-					return aws.Endpoint{
-						URL:               endpoint,
-						HostnameImmutable: true,
-						Source:            aws.EndpointSourceCustom,
-					}, nil
-				}
-				return aws.Endpoint{}, &aws.EndpointNotFoundError{}
-			},
-		)
+	if endpoint != "" {
+		cfg.BaseEndpoint = aws.String(endpoint)
 	}
 
 	// Set HTTP client with SSL configuration
