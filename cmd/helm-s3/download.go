@@ -71,7 +71,7 @@ type downloadAction struct {
 func (act *downloadAction) run(ctx context.Context) error {
 	const indexYaml = "index.yaml"
 
-	sess, err := awsutil.Session(
+	cfg, err := awsutil.Session(
 		awsutil.AssumeRoleTokenProvider(awsutil.StderrTokenProvider),
 		awsutil.DynamicBucketRegion(act.url),
 	)
@@ -79,7 +79,7 @@ func (act *downloadAction) run(ctx context.Context) error {
 		return err
 	}
 
-	storage := awss3.New(sess)
+	storage := awss3.New(cfg)
 
 	b, err := storage.FetchRaw(ctx, act.url)
 	if err != nil {

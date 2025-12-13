@@ -96,11 +96,11 @@ func (act *initAction) run(ctx context.Context) error {
 		return errors.WithMessage(err, "get index reader")
 	}
 
-	sess, err := awsutil.Session(awsutil.DynamicBucketRegion(act.uri))
+	cfg, err := awsutil.Session(awsutil.DynamicBucketRegion(act.uri))
 	if err != nil {
 		return err
 	}
-	storage := awss3.New(sess)
+	storage := awss3.New(cfg)
 
 	exists, err := storage.IndexExists(ctx, act.uri)
 	if err != nil {
