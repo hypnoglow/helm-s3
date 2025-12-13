@@ -177,7 +177,7 @@ func (act *pushAction) run(ctx context.Context) error { //nolint:gocyclo // Mayb
 		hasProv = true
 	case errors.Is(err, os.ErrNotExist):
 		// No provenance file, ignore it.
-	case err != nil:
+	default:
 		return fmt.Errorf("open prov file: %w", err)
 	}
 

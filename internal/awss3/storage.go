@@ -15,6 +15,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/aws/smithy-go"
 	"github.com/pkg/errors"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 
 	"github.com/hypnoglow/helm-s3/internal/helmutil"
 )
@@ -48,6 +50,12 @@ func getSSE() types.ServerSideEncryption {
 		return ""
 	}
 	return types.ServerSideEncryption(sse)
+}
+
+// titleCase converts a string to title case using the current implementation.
+// This replaces the deprecated strings.Title function.
+func titleCase(s string) string {
+	return cases.Title(language.English).String(s)
 }
 
 // Storage provides an interface to work with AWS S3 objects by s3 protocol.
@@ -121,8 +129,8 @@ func (s *Storage) traverse(ctx context.Context, repoURI string, items chan<- Cha
 
 			reindexItem := ChartInfo{Filename: key}
 
-			serializedChartMeta, hasMeta := metaOut.Metadata[strings.Title(metaChartMetadata)] //nolint:staticcheck // Safe use of strings.Title
-			chartDigest, hasDigest := metaOut.Metadata[strings.Title(metaChartDigest)]         //nolint:staticcheck // Safe use of strings.Title
+			serializedChartMeta, hasMeta := metaOut.Metadata[titleCase(metaChartMetadata)]
+			chartDigest, hasDigest := metaOut.Metadata[titleCase(metaChartDigest)]
 			if !hasMeta || !hasDigest {
 				// Some charts in the repository can have no metadata.
 				//
