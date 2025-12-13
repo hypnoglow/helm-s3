@@ -84,11 +84,11 @@ func (act *deleteAction) run(ctx context.Context) error {
 		return err
 	}
 
-	sess, err := awsutil.Session(awsutil.DynamicBucketRegion(repoEntry.URL()))
+	cfg, err := awsutil.Session(awsutil.DynamicBucketRegion(repoEntry.URL()))
 	if err != nil {
 		return err
 	}
-	storage := awss3.New(sess)
+	storage := awss3.New(cfg)
 
 	// Fetch current index.
 	b, err := storage.FetchRaw(ctx, repoEntry.IndexURL())

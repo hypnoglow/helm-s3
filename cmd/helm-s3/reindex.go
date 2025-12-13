@@ -77,11 +77,11 @@ func (act *reindexAction) run(ctx context.Context) error {
 		return err
 	}
 
-	sess, err := awsutil.Session(awsutil.DynamicBucketRegion(repoEntry.URL()))
+	cfg, err := awsutil.Session(awsutil.DynamicBucketRegion(repoEntry.URL()))
 	if err != nil {
 		return err
 	}
-	storage := awss3.New(sess)
+	storage := awss3.New(cfg)
 
 	items, errs := storage.Traverse(ctx, repoEntry.URL())
 
