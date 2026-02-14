@@ -1,4 +1,4 @@
-ARG GO_VERSION=1.25.3
+ARG GO_VERSION=1.25.5
 ARG HELM_VERSION=3.20.0
 
 FROM golang:${GO_VERSION}-alpine AS build
@@ -14,7 +14,6 @@ COPY . .
 RUN CGO_ENABLED=0 \
     go build  \
     -trimpath \
-    -mod=vendor \
     -ldflags "-X main.version=${PLUGIN_VERSION}" \
     -o bin/helm-s3 \
     ./cmd/helm-s3
