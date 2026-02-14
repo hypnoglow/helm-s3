@@ -60,7 +60,7 @@ func TestDynamicBucketRegion(t *testing.T) {
 }
 
 func TestSessionWithCustomEndpoint(t *testing.T) {
-	os.Setenv("AWS_ENDPOINT", "foobar:1234")
+	os.Setenv("AWS_ENDPOINT", "http://foobar:1234")
 	os.Setenv("AWS_DISABLE_SSL", "true")
 	os.Setenv("HELM_S3_REGION", "us-west-2")
 
@@ -73,6 +73,24 @@ func TestSessionWithCustomEndpoint(t *testing.T) {
 	// The endpoint resolver is checked when making actual API calls
 	if cfg.Region != "us-west-2" {
 		t.Fatalf("Expected to set us-west-2 region, got %s", cfg.Region)
+	}
+
+	os.Unsetenv("AWS_ENDPOINT")
+	os.Unsetenv("AWS_DISABLE_SSL")
+	os.Unsetenv("HELM_S3_REGION")
+}
+
+func TestSessionWithInvalidEndpoint(t *testing.T) {
+	os.Setenv("AWS_ENDPOINT", "foobar:1234")
+	os.Setenv("AWS_DISABLE_SSL", "true")
+	os.Setenv("HELM_S3_REGION", "us-west-2")
+
+	_, err := Session()
+	if err == nil {
+		t.Fatalf("Expected error for endpoint without scheme, got nil")
+	}
+	if err.Error() != "endpoint must include a scheme (e.g., https://)" {
+		t.Fatalf("Expected 'endpoint must include a scheme' error, got: %v", err)
 	}
 
 	os.Unsetenv("AWS_ENDPOINT")

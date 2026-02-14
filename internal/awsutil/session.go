@@ -3,6 +3,8 @@ package awsutil
 import (
 	"context"
 	"crypto/tls"
+	"errors"
+	"fmt"
 	"net/http"
 	"net/url"
 	"os"
@@ -152,6 +154,20 @@ func Session(opts ...SessionOption) (aws.Config, error) {
 		configOpts = append(configOpts, config.WithRegion(bucketRegion))
 	}
 
+	// Configure custom endpoint if specified
+	endpoint := os.Getenv(awsEndpoint)
+	if endpoint != "" {
+		// Validate that endpoint has a scheme
+		parsedURL, err := url.Parse(endpoint)
+		if err != nil {
+			return aws.Config{}, fmt.Errorf("failed to parse endpoint %q: %w", endpoint, err)
+		}
+		if parsedURL.Scheme == "" {
+			return aws.Config{}, errors.New("endpoint must include a scheme (e.g., https://)")
+		}
+		configOpts = append(configOpts, config.WithBaseEndpoint(endpoint))
+	}
+
 	// Add custom options
 	for _, opt := range opts {
 		configOpts = append(configOpts, opt)
@@ -163,15 +179,8 @@ func Session(opts ...SessionOption) (aws.Config, error) {
 		return aws.Config{}, err
 	}
 
-	// Configure endpoint and SSL settings
-	endpoint := os.Getenv(awsEndpoint)
-	disableSSL := os.Getenv(awsDisableSSL) == "true"
-
-	if endpoint != "" {
-		cfg.BaseEndpoint = aws.String(endpoint)
-	}
-
 	// Set HTTP client with SSL configuration
+	disableSSL := os.Getenv(awsDisableSSL) == "true"
 	if disableSSL {
 		httpClient := &http.Client{
 			Transport: &http.Transport{
