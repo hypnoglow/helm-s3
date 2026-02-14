@@ -25,6 +25,10 @@ const (
 	// selects serverside encryption for bucket.
 	awsS3encryption = "AWS_S3_SSE"
 
+	// awsS3UsePathStyle controls whether to use path-style addressing
+	// for S3 requests. Defaults to true unless explicitly set to "false".
+	awsS3UsePathStyle = "AWS_S3_USE_PATH_STYLE"
+
 	// s3MetadataSoftLimitBytes is application-specific soft limit
 	// for the number of bytes in S3 object metadata.
 	s3MetadataSoftLimitBytes = 1900
@@ -50,6 +54,19 @@ func getSSE() types.ServerSideEncryption {
 		return ""
 	}
 	return types.ServerSideEncryption(sse)
+}
+
+// usePathStyle returns true if path-style addressing should be used for S3
+// requests. It defaults to true unless AWS_S3_USE_PATH_STYLE is set to "false".
+func usePathStyle() bool {
+	return strings.ToLower(os.Getenv(awsS3UsePathStyle)) != "false"
+}
+
+// withPathStyle returns an s3.Options function that sets UsePathStyle.
+func withPathStyle() func(*s3.Options) {
+	return func(o *s3.Options) {
+		o.UsePathStyle = usePathStyle()
+	}
 }
 
 // titleCase converts a string to title case using the current implementation.
@@ -84,7 +101,7 @@ func (s *Storage) traverse(ctx context.Context, repoURI string, items chan<- Cha
 		return
 	}
 
-	client := s3.NewFromConfig(s.config)
+	client := s3.NewFromConfig(s.config, withPathStyle())
 
 	var continuationToken *string
 	for {
@@ -208,13 +225,13 @@ func (s *Storage) FetchRaw(ctx context.Context, uri string) ([]byte, error) {
 	}
 
 	buf := manager.NewWriteAtBuffer([]byte{})
-	downloader := manager.NewDownloader(s3.NewFromConfig(s.config))
+	downloader := manager.NewDownloader(s3.NewFromConfig(s.config, withPathStyle()))
 	_, err = downloader.Download(ctx, buf, &s3.GetObjectInput{
 		Bucket: aws.String(bucket),
 		Key:    aws.String(key),
 	})
 	if err != nil {
-		// Check for specific S3 errors
+		// Check for specific S3 typed errors
 		var nsk *types.NoSuchKey
 		var nsb *types.NoSuchBucket
 		if errors.As(err, &nsk) {
@@ -222,6 +239,17 @@ func (s *Storage) FetchRaw(ctx context.Context, uri string) ([]byte, error) {
 		}
 		if errors.As(err, &nsb) {
 			return nil, ErrBucketNotFound
+		}
+		// Fallback: SDK v2 may surface these as generic smithy API errors
+		// with error code strings instead of concrete types.
+		var apiErr smithy.APIError
+		if errors.As(err, &apiErr) {
+			switch apiErr.ErrorCode() {
+			case "NoSuchKey", "NotFound":
+				return nil, ErrObjectNotFound
+			case "NoSuchBucket":
+				return nil, ErrBucketNotFound
+			}
 		}
 		return nil, errors.Wrap(err, "fetch object from s3")
 	}
@@ -236,7 +264,7 @@ func (s *Storage) Exists(ctx context.Context, uri string) (bool, error) {
 		return false, err
 	}
 
-	client := s3.NewFromConfig(s.config)
+	client := s3.NewFromConfig(s.config, withPathStyle())
 	_, err = client.HeadObject(ctx, &s3.HeadObjectInput{
 		Bucket: aws.String(bucket),
 		Key:    aws.String(key),
@@ -274,17 +302,18 @@ func (s *Storage) PutChart(
 		return "", err
 	}
 
-	uploader := manager.NewUploader(s3.NewFromConfig(s.config))
+	uploader := manager.NewUploader(s3.NewFromConfig(s.config, withPathStyle()))
 
 	sse := getSSE()
-	aclType := types.ObjectCannedACL(acl)
 	uploadInput := &s3.PutObjectInput{
 		Bucket:      aws.String(bucket),
 		Key:         aws.String(key),
-		ACL:         aclType,
 		ContentType: aws.String(contentType),
 		Body:        r,
 		Metadata:    assembleObjectMetadata(chartMeta, chartDigest),
+	}
+	if acl != "" {
+		uploadInput.ACL = types.ObjectCannedACL(acl)
 	}
 	if sse != "" {
 		uploadInput.ServerSideEncryption = sse
@@ -299,8 +328,10 @@ func (s *Storage) PutChart(
 		provInput := &s3.PutObjectInput{
 			Bucket: aws.String(bucket),
 			Key:    aws.String(key + ".prov"),
-			ACL:    aclType,
 			Body:   provReader,
+		}
+		if acl != "" {
+			provInput.ACL = types.ObjectCannedACL(acl)
 		}
 		if sse != "" {
 			provInput.ServerSideEncryption = sse
@@ -326,14 +357,15 @@ func (s *Storage) PutIndex(ctx context.Context, uri string, acl string, r io.Rea
 	if err != nil {
 		return err
 	}
-	uploader := manager.NewUploader(s3.NewFromConfig(s.config))
-	aclType := types.ObjectCannedACL(acl)
+	uploader := manager.NewUploader(s3.NewFromConfig(s.config, withPathStyle()))
 	sse := getSSE()
 	uploadInput := &s3.PutObjectInput{
 		Bucket: aws.String(bucket),
 		Key:    aws.String(key),
-		ACL:    aclType,
 		Body:   r,
+	}
+	if acl != "" {
+		uploadInput.ACL = types.ObjectCannedACL(acl)
 	}
 	if sse != "" {
 		uploadInput.ServerSideEncryption = sse
@@ -366,7 +398,7 @@ func (s *Storage) Delete(ctx context.Context, uri string) error {
 		return err
 	}
 
-	client := s3.NewFromConfig(s.config)
+	client := s3.NewFromConfig(s.config, withPathStyle())
 	_, err = client.DeleteObject(ctx, &s3.DeleteObjectInput{
 		Bucket: aws.String(bucket),
 		Key:    aws.String(key),
@@ -386,7 +418,7 @@ func (s *Storage) DeleteChart(ctx context.Context, uri string) error {
 		return err
 	}
 
-	client := s3.NewFromConfig(s.config)
+	client := s3.NewFromConfig(s.config, withPathStyle())
 	_, err = client.DeleteObjects(ctx, &s3.DeleteObjectsInput{
 		Bucket: aws.String(bucket),
 		Delete: &types.Delete{
