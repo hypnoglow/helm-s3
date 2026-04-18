@@ -12,18 +12,28 @@ import (
 	"github.com/hypnoglow/helm-s3/internal/helmutil"
 )
 
-const deleteDesc = `This command removes a chart from the repository.
+const deleteDesc = `This command removes one or more versions of a chart from the repository.
 
 'helm s3 delete' takes two arguments:
 - NAME - name of the chart to delete,
 - REPO - target repository.
+
+Use --version once per version, or a comma-separated list, to remove several versions in a
+single run (one index fetch and one index upload).
 
 [Provenance]
 
 If the chart is signed, the provenance file is removed from the repository as well.
 `
 
-const deleteExample = `  helm s3 delete epicservice --version 0.5.1 my-repo - removes the chart with name 'epicservice' and version 0.5.1 from the repository with name 'my-repo'.`
+const deleteExample = `  helm s3 delete epicservice --version 0.5.1 my-repo
+  - removes version 0.5.1 of epicservice.
+
+  helm s3 delete epicservice --version 0.5.1 --version 0.5.2 my-repo
+  - removes both versions in one operation.
+
+  helm s3 delete epicservice --version 0.5.1,0.5.2 my-repo
+  - same as repeating --version for each value.`
 
 func newDeleteCommand(opts *options) *cobra.Command {
 	act := &deleteAction{
@@ -31,7 +41,6 @@ func newDeleteCommand(opts *options) *cobra.Command {
 		acl:       "",
 		chartName: "",
 		repoName:  "",
-		version:   "",
 	}
 
 	cmd := &cobra.Command{
@@ -55,7 +64,7 @@ func newDeleteCommand(opts *options) *cobra.Command {
 	}
 
 	flags := cmd.Flags()
-	flags.StringVar(&act.version, "version", act.version, "Version of the chart to delete.")
+	flags.StringSliceVar(&act.versions, "version", nil, "Version(s) of the chart to delete. Repeat the flag or use comma-separated values.")
 	_ = cobra.MarkFlagRequired(flags, "version")
 
 	return cmd
@@ -75,10 +84,15 @@ type deleteAction struct {
 
 	// flags
 
-	version string
+	versions []string
 }
 
 func (act *deleteAction) run(ctx context.Context) error {
+	versions := expandVersions(act.versions)
+	if len(versions) == 0 {
+		return errors.New("at least one non-empty --version is required")
+	}
+
 	repoEntry, err := helmutil.LookupRepoEntry(act.repoName)
 	if err != nil {
 		return err
@@ -101,30 +115,28 @@ func (act *deleteAction) run(ctx context.Context) error {
 		return errors.WithMessage(err, "load index from downloaded file")
 	}
 
-	// Update index.
+	for _, ver := range versions {
+		url, err := idx.Delete(act.chartName, ver)
+		if err != nil {
+			return err
+		}
 
-	url, err := idx.Delete(act.chartName, act.version)
-	if err != nil {
-		return err
+		if url != "" {
+			if !strings.HasPrefix(url, repoEntry.URL()) {
+				url = strings.TrimSuffix(repoEntry.URL(), "/") + "/" + url
+			}
+
+			if err := storage.DeleteChart(ctx, url); err != nil {
+				return errors.WithMessage(err, "delete chart file from s3")
+			}
+		}
 	}
+
 	idx.UpdateGeneratedTime()
 
 	idxReader, err := idx.Reader()
 	if err != nil {
 		return errors.Wrap(err, "get index reader")
-	}
-
-	// Delete the file from S3 and replace index file.
-
-	if url != "" {
-		// For relative URLs we need to prepend base URL.
-		if !strings.HasPrefix(url, repoEntry.URL()) {
-			url = strings.TrimSuffix(repoEntry.URL(), "/") + "/" + url
-		}
-
-		if err := storage.DeleteChart(ctx, url); err != nil {
-			return errors.WithMessage(err, "delete chart file from s3")
-		}
 	}
 
 	if err := storage.PutIndex(ctx, repoEntry.URL(), act.acl, idxReader); err != nil {
@@ -135,6 +147,31 @@ func (act *deleteAction) run(ctx context.Context) error {
 		return errors.WithMessage(err, "update local index")
 	}
 
-	act.printer.Printf("Successfully deleted the chart from the repository.\n")
+	if len(versions) == 1 {
+		act.printer.Printf("Successfully deleted the chart from the repository.\n")
+	} else {
+		act.printer.Printf("Successfully deleted %d chart versions from the repository.\n", len(versions))
+	}
 	return nil
+}
+
+// expandVersions flattens comma-separated entries, trims space, drops empties, and dedupes
+// while preserving first-seen order.
+func expandVersions(in []string) []string {
+	var out []string
+	seen := make(map[string]struct{})
+	for _, part := range in {
+		for _, v := range strings.Split(part, ",") {
+			v = strings.TrimSpace(v)
+			if v == "" {
+				continue
+			}
+			if _, ok := seen[v]; ok {
+				continue
+			}
+			seen[v] = struct{}{}
+			out = append(out, v)
+		}
+	}
+	return out
 }

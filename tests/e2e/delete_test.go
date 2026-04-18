@@ -6,6 +6,7 @@ import (
 
 	"github.com/minio/minio-go/v6"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestDelete(t *testing.T) {
@@ -209,4 +210,50 @@ func TestDeleteProvenance(t *testing.T) {
 
 	expected = `No results found`
 	assert.Contains(t, stdout.String(), expected)
+}
+
+func TestDeleteMultipleVersions(t *testing.T) {
+	t.Log("Test delete with multiple --version values in one run")
+
+	const (
+		repoName         = "test-delete-multi-ver"
+		repoDir          = "charts"
+		chartName        = "foo"
+		verA             = "1.2.3"
+		verB             = "1.3.1"
+		chartFileA       = "foo-" + verA + ".tgz"
+		chartFileB       = "foo-" + verB + ".tgz"
+		chartFilepathA   = "testdata/" + chartFileA
+		chartFilepathB   = "testdata/" + chartFileB
+		chartObjectNameA = repoDir + "/" + chartFileA
+		chartObjectNameB = repoDir + "/" + chartFileB
+	)
+
+	setupRepo(t, repoName, repoDir)
+	defer teardownRepo(t, repoName)
+
+	cmd, stdout, stderr := command(fmt.Sprintf("helm s3 push %s %s", chartFilepathA, repoName))
+	require.NoError(t, cmd.Run())
+	assertEmptyOutput(t, nil, stderr)
+	assert.Contains(t, stdout.String(), "Successfully uploaded the chart to the repository.")
+
+	cmd, stdout, stderr = command(fmt.Sprintf("helm s3 push %s %s", chartFilepathB, repoName))
+	require.NoError(t, cmd.Run())
+	assertEmptyOutput(t, nil, stderr)
+	assert.Contains(t, stdout.String(), "Successfully uploaded the chart to the repository.")
+
+	cmd, stdout, stderr = command(fmt.Sprintf("helm s3 delete %s --version %s --version %s %s", chartName, verA, verB, repoName))
+	require.NoError(t, cmd.Run())
+	assertEmptyOutput(t, nil, stderr)
+	assert.Contains(t, stdout.String(), "Successfully deleted 2 chart versions from the repository.")
+
+	_, err := mc.StatObject(repoName, chartObjectNameA, minio.StatObjectOptions{})
+	assert.Equal(t, "NoSuchKey", minio.ToErrorResponse(err).Code)
+	_, err = mc.StatObject(repoName, chartObjectNameB, minio.StatObjectOptions{})
+	assert.Equal(t, "NoSuchKey", minio.ToErrorResponse(err).Code)
+
+	cmd, stdout, stderr = command(makeSearchCommand(repoName, chartName))
+	require.NoError(t, cmd.Run())
+	assertEmptyOutput(t, nil, stderr)
+	assert.Contains(t, stdout.String(), "No results found")
 }
