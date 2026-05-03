@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 
 PROJECT_NAME="helm-s3"
-PROJECT_GH="hypnoglow/$PROJECT_NAME"
+PROJECT_GH="sasanyasari/$PROJECT_NAME"
 
 set -e
 set -u
