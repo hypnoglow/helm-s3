@@ -33,4 +33,4 @@ jobs:
           fi
 
           echo "Check installation of version ${version}"
-          helm plugin install https://github.com/${{ github.repository }}/helm-s3.git --version ${version}
+          helm plugin install https://github.com/sasanyasari/helm-s3.git --version ${version}
