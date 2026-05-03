@@ -1,6 +1,6 @@
 module github.com/hypnoglow/helm-s3
 
-go 1.25.7
+go 1.25.3
 
 require (
 	github.com/Masterminds/semver v1.5.0
