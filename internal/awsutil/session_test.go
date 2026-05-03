@@ -85,3 +85,17 @@ func TestSessionWithCustomEndpoint(t *testing.T) {
 	os.Unsetenv("AWS_DISABLE_SSL")
 	os.Unsetenv("HELM_S3_REGION")
 }
+
+func TestDynamicBucketRegionDisabled(t *testing.T) {
+	os.Setenv("HELM_S3_DYNAMIC_REGION", "false")
+	defer os.Unsetenv("HELM_S3_DYNAMIC_REGION")
+
+	defaultSession, err := Session()
+	require.NoError(t, err)
+	defaultRegion := aws.StringValue(defaultSession.Config.Region)
+
+	actualSession, err := Session(DynamicBucketRegion("s3://cn-test-bucket"))
+	require.NoError(t, err)
+
+	assert.Equal(t, defaultRegion, aws.StringValue(actualSession.Config.Region))
+}
