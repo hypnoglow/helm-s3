@@ -1,0 +1,30 @@
+name: Dependabot auto-merge (major)
+
+on:
+  pull_request_review:
+    types:
+      - submitted
+
+jobs:
+  dependabot-major-merge:
+    name: Auto-merge major Dependabot PRs
+    if: >-
+      github.event.review.state == 'approved'
+      && github.event.pull_request.user.login == 'dependabot[bot]'
+      && github.event.review.author_association == 'OWNER'
+    permissions:
+      contents: write
+      pull-requests: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dependabot metadata
+        id: metadata
+        uses: dependabot/fetch-metadata@21025c705c08248db411dc16f3619e6b5f9ea21a # v2.5.0
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Enable auto-merge for approved major Dependabot PRs
+        if: steps.metadata.outputs.update-type == 'version-update:semver-major'
+        run: gh pr merge --auto --merge "$PR_URL"
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
