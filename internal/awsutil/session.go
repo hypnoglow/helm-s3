@@ -3,6 +3,7 @@ package awsutil
 import (
 	"net/url"
 	"os"
+	"strconv"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
@@ -22,9 +23,9 @@ const (
 	// if AWS_DEFAULT_REGION and AWS_REGION cannot be trusted.
 	awsBucketLocation = "HELM_S3_REGION"
 
-	// awsDynamicRegion can be set to "false" to disable dynamic bucket region
-	// discovery. By default, dynamic region discovery is enabled.
-	awsDynamicRegion = "HELM_S3_DYNAMIC_REGION"
+	// awsDynamicRegionEnabled can be set to a falsy value to disable dynamic
+	// bucket region discovery. By default, dynamic region discovery is enabled.
+	awsDynamicRegionEnabled = "HELM_S3_DYNAMIC_REGION_ENABLED"
 )
 
 // SessionOption is an option for session.
@@ -51,7 +52,7 @@ func AssumeRoleTokenProvider(provider func() (string, error)) SessionOption {
 // https://github.com/aws/aws-sdk-go/issues/720#issuecomment-243891223
 func DynamicBucketRegion(s3URL string) SessionOption {
 	return func(options *session.Options) {
-		if os.Getenv(awsDynamicRegion) == "false" {
+		if v, err := strconv.ParseBool(os.Getenv(awsDynamicRegionEnabled)); err == nil && !v {
 			return
 		}
 

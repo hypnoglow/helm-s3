@@ -1,7 +1,11 @@
 package awsutil
 
 import (
+	"net/http"
+	"net/http/httptest"
+	"net/url"
 	"os"
+	"sync/atomic"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -87,8 +91,29 @@ func TestSessionWithCustomEndpoint(t *testing.T) {
 }
 
 func TestDynamicBucketRegionDisabled(t *testing.T) {
-	os.Setenv("HELM_S3_DYNAMIC_REGION", "false")
-	defer os.Unsetenv("HELM_S3_DYNAMIC_REGION")
+	// Stand up an httptest.Server that counts every request it receives, and
+	// install a transport that rewrites every outbound request from the AWS
+	// SDK to that server. If DynamicBucketRegion respects the disable flag, the
+	// server's hit counter must remain at zero. (Without this interception, the
+	// test would also pass when the HEAD request was sent but failed for an
+	// unrelated reason like DNS or CI sandboxing.)
+	var requestsReceived int32
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		atomic.AddInt32(&requestsReceived, 1)
+		w.Header().Set("X-Amz-Bucket-Region", "us-west-2")
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer server.Close()
+
+	serverURL, err := url.Parse(server.URL)
+	require.NoError(t, err)
+
+	origTransport := http.DefaultTransport
+	http.DefaultTransport = &rewritingTransport{target: serverURL, base: origTransport}
+	defer func() { http.DefaultTransport = origTransport }()
+
+	os.Setenv("HELM_S3_DYNAMIC_REGION_ENABLED", "false")
+	defer os.Unsetenv("HELM_S3_DYNAMIC_REGION_ENABLED")
 
 	defaultSession, err := Session()
 	require.NoError(t, err)
@@ -98,4 +123,22 @@ func TestDynamicBucketRegionDisabled(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.Equal(t, defaultRegion, aws.StringValue(actualSession.Config.Region))
+	assert.Zero(t, atomic.LoadInt32(&requestsReceived),
+		"expected no HTTP requests when dynamic region discovery is disabled")
+}
+
+// rewritingTransport routes every request to target, regardless of the
+// request's original scheme/host. Used in tests to point the AWS SDK at an
+// httptest.Server.
+type rewritingTransport struct {
+	target *url.URL
+	base   http.RoundTripper
+}
+
+func (t *rewritingTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	req = req.Clone(req.Context())
+	req.URL.Scheme = t.target.Scheme
+	req.URL.Host = t.target.Host
+	req.Host = t.target.Host
+	return t.base.RoundTrip(req)
 }
