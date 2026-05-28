@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Changed
+
+- Supported (and tested against) Helm versions updated to `3.20.2` and `3.21.0`.
+
+## [0.17.2] - 2026-05-26
+
+### Security
+
+- Updated dependencies to pull vulnerability fixes
+  (`google.golang.org/grpc`, `github.com/containerd/containerd`,
+  `github.com/moby/spdystream`).
+  (Refs: [#586](https://github.com/hypnoglow/helm-s3/pull/586) [#594](https://github.com/hypnoglow/helm-s3/pull/594) [#601](https://github.com/hypnoglow/helm-s3/pull/601) [#602](https://github.com/hypnoglow/helm-s3/issues/602))
+
 ## [0.17.1] - 2025-11-21
 
 ### Changed
