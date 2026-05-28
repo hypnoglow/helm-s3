@@ -115,6 +115,8 @@ func (act *deleteAction) run(ctx context.Context) error {
 		return errors.WithMessage(err, "load index from downloaded file")
 	}
 
+	// Apply deletions in-memory; collect URLs to delete from S3 later.
+	urls := make([]string, 0, len(versions))
 	for _, ver := range versions {
 		url, err := idx.Delete(act.chartName, ver)
 		if err != nil {
@@ -122,13 +124,11 @@ func (act *deleteAction) run(ctx context.Context) error {
 		}
 
 		if url != "" {
+			// For relative URLs we need to prepend base URL.
 			if !strings.HasPrefix(url, repoEntry.URL()) {
 				url = strings.TrimSuffix(repoEntry.URL(), "/") + "/" + url
 			}
-
-			if err := storage.DeleteChart(ctx, url); err != nil {
-				return errors.WithMessage(err, "delete chart file from s3")
-			}
+			urls = append(urls, url)
 		}
 	}
 
@@ -139,12 +139,20 @@ func (act *deleteAction) run(ctx context.Context) error {
 		return errors.Wrap(err, "get index reader")
 	}
 
+	// Upload the updated index first to keep the repo consistent on failure.
 	if err := storage.PutIndex(ctx, repoEntry.URL(), act.acl, idxReader); err != nil {
 		return errors.WithMessage(err, "upload new index to s3")
 	}
 
 	if err := idx.WriteFile(repoEntry.CacheFile(), helmutil.DefaultIndexFilePerm); err != nil {
 		return errors.WithMessage(err, "update local index")
+	}
+
+	// Delete .tgz objects last; a failure here leaves orphans, not broken links.
+	for _, url := range urls {
+		if err := storage.DeleteChart(ctx, url); err != nil {
+			return errors.WithMessage(err, "delete chart file from s3")
+		}
 	}
 
 	if len(versions) == 1 {

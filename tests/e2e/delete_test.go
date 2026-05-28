@@ -257,3 +257,48 @@ func TestDeleteMultipleVersions(t *testing.T) {
 	assertEmptyOutput(t, nil, stderr)
 	assert.Contains(t, stdout.String(), "No results found")
 }
+
+func TestDeleteMultipleVersionsOneMissing(t *testing.T) {
+	t.Log("Test delete with multiple --version values where one is missing aborts before any S3 mutation")
+
+	const (
+		repoName        = "test-delete-multi-ver-missing"
+		repoDir         = "charts"
+		chartName       = "foo"
+		existingVersion = "1.2.3"
+		missingVersion  = "9.9.9"
+		chartFilename   = "foo-" + existingVersion + ".tgz"
+		chartFilepath   = "testdata/" + chartFilename
+		chartObjectName = repoDir + "/" + chartFilename
+	)
+
+	setupRepo(t, repoName, repoDir)
+	defer teardownRepo(t, repoName)
+
+	// Push the single existing chart version.
+	cmd, stdout, stderr := command(fmt.Sprintf("helm s3 push %s %s", chartFilepath, repoName))
+	require.NoError(t, cmd.Run())
+	assertEmptyOutput(t, nil, stderr)
+	assert.Contains(t, stdout.String(), "Successfully uploaded the chart to the repository.")
+
+	// Attempt to delete the existing version together with a missing one.
+	// The operation must fail without touching any S3 object: the index in
+	// S3 still lists existingVersion and the .tgz is still present.
+	cmd, stdout, stderr = command(fmt.Sprintf("helm s3 delete %s --version %s --version %s %s", chartName, existingVersion, missingVersion, repoName))
+	err := cmd.Run()
+	assert.Error(t, err)
+	assert.Contains(t, stderr.String(), fmt.Sprintf("chart %s version %s not found in index", chartName, missingVersion))
+	assert.NotContains(t, stdout.String(), "Successfully deleted")
+
+	// The existing chart .tgz must still be in the bucket.
+	obj, err := mc.StatObject(repoName, chartObjectName, minio.StatObjectOptions{})
+	assert.NoError(t, err)
+	assert.Equal(t, chartObjectName, obj.Key)
+
+	// The existing version must still be searchable, i.e. still listed in the index.
+	cmd, stdout, stderr = command(makeSearchCommand(repoName, chartName))
+	require.NoError(t, cmd.Run())
+	assertEmptyOutput(t, nil, stderr)
+	expected := `test-delete-multi-ver-missing/foo	1.2.3        	1.2.3      	A Helm chart for Kubernetes`
+	assert.Contains(t, stdout.String(), expected)
+}

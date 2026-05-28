@@ -117,6 +117,14 @@ To delete specific chart version from the repository:
 $ helm s3 delete epicservice --version 0.7.2 mynewrepo
 ```
 
+To delete several versions in a single run (one index fetch and one index upload),
+repeat the `--version` flag or pass a comma-separated list:
+
+```bash
+$ helm s3 delete epicservice --version 0.7.2 --version 0.7.3 mynewrepo
+$ helm s3 delete epicservice --version 0.7.2,0.7.3 mynewrepo
+```
+
 As always, both remote and local repo indexes updated automatically.
 
 The chart is deleted from the repo:
