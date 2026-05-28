@@ -19,8 +19,8 @@ jobs:
       matrix:
         helm:
           - 2.17.0
-          - 3.18.6
-          - 3.19.0
+          - 3.20.2
+          - 3.21.0
     env:
       IMAGE_NAME: hypnoglow/helm-s3
       HELM_VERSION: ${{ matrix.helm }}
