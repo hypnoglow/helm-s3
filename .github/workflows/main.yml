@@ -211,7 +211,6 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
-      actions: write
     runs-on: ubuntu-latest
     steps:
       - name: Dependabot metadata
@@ -226,4 +225,6 @@ jobs:
         run: gh pr merge --auto --squash "$PR_URL"
         env:
           PR_URL: ${{ github.event.pull_request.html_url }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Use a dedicated token instead of GITHUB_TOKEN so that
+          # auto-merge works on PRs that modify workflow files.
+          GH_TOKEN: ${{ secrets.DEPENDABOT_AUTOMERGE_TOKEN }}

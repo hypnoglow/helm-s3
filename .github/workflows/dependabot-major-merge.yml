@@ -16,11 +16,12 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
-      actions: write
     runs-on: ubuntu-latest
     steps:
       - name: Enable auto-merge
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Use a dedicated token instead of GITHUB_TOKEN so that
+          # auto-merge works on PRs that modify workflow files.
+          GH_TOKEN: ${{ secrets.DEPENDABOT_AUTOMERGE_TOKEN }}
           PR_URL: ${{ github.event.issue.html_url }}
         run: gh pr merge --auto --squash "$PR_URL"
