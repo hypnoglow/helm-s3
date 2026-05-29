@@ -167,6 +167,15 @@ the plugin supports dynamic S3 bucket region retrieval, so in most cases you
 don't need to provide the region. The plugin will detect it automatically and
 work without issues.
 
+If you want to disable dynamic region discovery (e.g., when using a custom S3-compatible
+endpoint or in air-gapped environments), set `HELM_S3_DYNAMIC_REGION_ENABLED` to `false`.
+This is especially useful in air-gapped environments where the plugin would otherwise
+wait for a timeout trying to reach `s3.amazonaws.com`:
+
+```bash
+$ export HELM_S3_DYNAMIC_REGION_ENABLED=false
+```
+
 ## AWS SSO
 
 The plugin supports AWS IAM Identity Center (aka AWS SSO) authentication.
