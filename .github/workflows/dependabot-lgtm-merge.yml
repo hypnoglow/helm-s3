@@ -1,4 +1,4 @@
-name: Dependabot auto-merge (LGTM)
+name: Dependabot Auto-Merge (LGTM)
 
 on:
   issue_comment:
