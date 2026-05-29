@@ -148,7 +148,7 @@ $ export AWS_ENDPOINT=localhost:9000
 $ export AWS_DISABLE_SSL=true
 ```
 
-See [these integration tests](https://github.com/hypnoglow/helm-s3/blob/master/hack/test-e2e-local.sh)
+See [these integration tests](https://github.com/hypnoglow/helm-s3/blob/main/hack/test-e2e-local.sh)
 that use local minio docker container for a complete example.
 
 ## Using S3 bucket ServerSide Encryption
@@ -162,10 +162,19 @@ The plugin will look for the bucket in the region inferred by the environment.
 This can be controlled by exporting one of `HELM_S3_REGION`, `AWS_REGION` or
 `AWS_DEFAULT_REGION`, in order of precedence.
 
-Since [v0.11.0](https://github.com/hypnoglow/helm-s3/blob/master/CHANGELOG.md#0110---2022-05-24)
+Since [v0.11.0](https://github.com/hypnoglow/helm-s3/blob/main/CHANGELOG.md#0110---2022-05-24)
 the plugin supports dynamic S3 bucket region retrieval, so in most cases you
 don't need to provide the region. The plugin will detect it automatically and
 work without issues.
+
+If you want to disable dynamic region discovery (e.g., when using a custom S3-compatible
+endpoint or in air-gapped environments), set `HELM_S3_DYNAMIC_REGION_ENABLED` to `false`.
+This is especially useful in air-gapped environments where the plugin would otherwise
+wait for a timeout trying to reach `s3.amazonaws.com`:
+
+```bash
+$ export HELM_S3_DYNAMIC_REGION_ENABLED=false
+```
 
 ## AWS SSO
 

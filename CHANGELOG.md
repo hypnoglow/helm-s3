@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Added
+
+- Add `HELM_S3_DYNAMIC_REGION_ENABLED` environment variable to disable dynamic
+  bucket region discovery. Useful with custom S3-compatible endpoints or in
+  air-gapped environments where the plugin would otherwise wait for a timeout
+  trying to reach `s3.amazonaws.com`.
+  (Refs: [#599](https://github.com/hypnoglow/helm-s3/pull/599))
+
+### Changed
+
+- Supported (and tested against) Helm versions updated to `3.20.2` and `3.21.0`.
+
 ## [0.17.2] - 2026-05-26
 
 ### Security

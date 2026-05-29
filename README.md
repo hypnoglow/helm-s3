@@ -1,8 +1,8 @@
 <p align="left"><img src=".github/assets/icon_with_name.png" width="500" alt="helm-s3 Logo"></p>
 
-[![main](https://github.com/hypnoglow/helm-s3/actions/workflows/main.yml/badge.svg)](https://github.com/hypnoglow/helm-s3/actions/workflows/main.yml)
-[![release](https://github.com/hypnoglow/helm-s3/actions/workflows/release.yml/badge.svg)](https://github.com/hypnoglow/helm-s3/actions/workflows/release.yml)
-[![codecov](https://codecov.io/gh/hypnoglow/helm-s3/branch/master/graph/badge.svg?token=lJqiDsDfPu)](https://codecov.io/gh/hypnoglow/helm-s3)
+[![CI](https://github.com/hypnoglow/helm-s3/actions/workflows/ci.yml/badge.svg)](https://github.com/hypnoglow/helm-s3/actions/workflows/ci.yml)
+[![Release](https://github.com/hypnoglow/helm-s3/actions/workflows/release.yml/badge.svg)](https://github.com/hypnoglow/helm-s3/actions/workflows/release.yml)
+[![codecov](https://codecov.io/gh/hypnoglow/helm-s3/branch/main/graph/badge.svg?token=lJqiDsDfPu)](https://codecov.io/gh/hypnoglow/helm-s3)
 [![License MIT](https://img.shields.io/badge/license-MIT-blue.svg?style=flat)](LICENSE)
 [![GitHub release](https://img.shields.io/github/release/hypnoglow/helm-s3.svg)](https://github.com/hypnoglow/helm-s3/releases)
 [![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/s3)](https://artifacthub.io/packages/search?repo=s3)
@@ -66,7 +66,7 @@ to the plugin, please see [these instructions](.github/CONTRIBUTING.md).
 
 The plugin is also distributed as Docker images. Images are pushed to Docker Hub
 tagged with plugin release version and suffixed with Helm version. The image
-built from master branch is also available, note that it should be only used for
+built from main branch is also available, note that it should be only used for
 playing and testing, it is **strongly discouraged** to use that image for
 production use cases. Refer to https://hub.docker.com/r/hypnoglow/helm-s3 for
 details and all available tags.
@@ -465,7 +465,7 @@ $ export AWS_ENDPOINT=localhost:9000
 $ export AWS_DISABLE_SSL=true
 ```
 
-See [these integration tests](https://github.com/hypnoglow/helm-s3/blob/master/hack/test-e2e-local.sh)
+See [these integration tests](https://github.com/hypnoglow/helm-s3/blob/main/hack/test-e2e-local.sh)
 that use local minio docker container for a complete example.
 
 ### Using S3 bucket ServerSide Encryption
@@ -479,10 +479,19 @@ The plugin will look for the bucket in the region inferred by the environment.
 This can be controlled by exporting one of `HELM_S3_REGION`, `AWS_REGION` or 
 `AWS_DEFAULT_REGION`, in order of precedence.
 
-Since [v0.11.0](https://github.com/hypnoglow/helm-s3/blob/master/CHANGELOG.md#0110---2022-05-24)
+Since [v0.11.0](https://github.com/hypnoglow/helm-s3/blob/main/CHANGELOG.md#0110---2022-05-24)
 the plugin supports dynamic S3 bucket region retrieval, so in most cases you
 don't need to provide the region. The plugin will detect it automatically and
 work without issues.
+
+If you want to disable dynamic region discovery (e.g., when using a custom S3-compatible
+endpoint or in air-gapped environments), set `HELM_S3_DYNAMIC_REGION_ENABLED` to `false`.
+This is especially useful in air-gapped environments where the plugin would otherwise
+wait for a timeout trying to reach `s3.amazonaws.com`:
+
+```bash
+$ export HELM_S3_DYNAMIC_REGION_ENABLED=false
+```
 
 ### AWS SSO
 

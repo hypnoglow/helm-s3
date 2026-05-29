@@ -23,4 +23,4 @@ archives:
 
 release:
   header: |
-    See descriptive changelog in [CHANGELOG.md](https://github.com/hypnoglow/helm-s3/blob/master/CHANGELOG.md).
+    See descriptive changelog in [CHANGELOG.md](https://github.com/hypnoglow/helm-s3/blob/main/CHANGELOG.md).

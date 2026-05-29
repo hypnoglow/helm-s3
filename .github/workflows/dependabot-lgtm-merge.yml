@@ -1,4 +1,4 @@
-name: Dependabot auto-merge (LGTM)
+name: Dependabot Auto-Merge (LGTM)
 
 on:
   issue_comment:
@@ -20,6 +20,8 @@ jobs:
     steps:
       - name: Enable auto-merge
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Use a dedicated token instead of GITHUB_TOKEN so that
+          # auto-merge works on PRs that modify workflow files.
+          GH_TOKEN: ${{ secrets.DEPENDABOT_AUTOMERGE_TOKEN }}
           PR_URL: ${{ github.event.issue.html_url }}
-        run: gh pr merge --auto --merge "$PR_URL"
+        run: gh pr merge --auto --squash "$PR_URL"
