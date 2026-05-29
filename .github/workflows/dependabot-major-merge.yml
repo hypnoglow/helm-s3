@@ -1,0 +1,27 @@
+name: Dependabot auto-merge (LGTM)
+
+on:
+  issue_comment:
+    types:
+      - created
+
+jobs:
+  dependabot-lgtm-merge:
+    name: Auto-merge Dependabot PR on /lgtm
+    if: >-
+      github.event.issue.pull_request != null
+      && github.event.issue.user.login == 'dependabot[bot]'
+      && github.event.comment.body == '/lgtm'
+      && github.event.comment.author_association == 'OWNER'
+    permissions:
+      contents: write
+      pull-requests: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Enable auto-merge
+        env:
+          # Use a dedicated token instead of GITHUB_TOKEN so that
+          # auto-merge works on PRs that modify workflow files.
+          GH_TOKEN: ${{ secrets.DEPENDABOT_AUTOMERGE_TOKEN }}
+          PR_URL: ${{ github.event.issue.html_url }}
+        run: gh pr merge --auto --squash "$PR_URL"
