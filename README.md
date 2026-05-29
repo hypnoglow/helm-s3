@@ -1,7 +1,7 @@
 <p align="left"><img src=".github/assets/icon_with_name.png" width="500" alt="helm-s3 Logo"></p>
 
-[![main](https://github.com/hypnoglow/helm-s3/actions/workflows/main.yml/badge.svg)](https://github.com/hypnoglow/helm-s3/actions/workflows/main.yml)
-[![release](https://github.com/hypnoglow/helm-s3/actions/workflows/release.yml/badge.svg)](https://github.com/hypnoglow/helm-s3/actions/workflows/release.yml)
+[![CI](https://github.com/hypnoglow/helm-s3/actions/workflows/ci.yml/badge.svg)](https://github.com/hypnoglow/helm-s3/actions/workflows/ci.yml)
+[![Release](https://github.com/hypnoglow/helm-s3/actions/workflows/release.yml/badge.svg)](https://github.com/hypnoglow/helm-s3/actions/workflows/release.yml)
 [![codecov](https://codecov.io/gh/hypnoglow/helm-s3/branch/master/graph/badge.svg?token=lJqiDsDfPu)](https://codecov.io/gh/hypnoglow/helm-s3)
 [![License MIT](https://img.shields.io/badge/license-MIT-blue.svg?style=flat)](LICENSE)
 [![GitHub release](https://img.shields.io/github/release/hypnoglow/helm-s3.svg)](https://github.com/hypnoglow/helm-s3/releases)
