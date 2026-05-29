@@ -5,7 +5,7 @@ name: CI
 on:
   push:
     branches:
-      - master
+      - main
   pull_request:
     branches:
       - '*'
@@ -182,7 +182,7 @@ jobs:
     needs:
       - test-e2e
     uses: ./.github/workflows/reusable-test-install.yml
-    if: github.ref_name == 'master'
+    if: github.ref_name == 'main'
 
   # This job's only purpose is to be used for the "Require status checks to pass
   # before merging" feature.

@@ -7,7 +7,7 @@ import (
 )
 
 var (
-	version = "master"
+	version = "main"
 )
 
 func main() {
