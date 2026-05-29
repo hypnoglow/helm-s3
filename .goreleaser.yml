@@ -20,3 +20,7 @@ archives:
     files:
       - LICENSE
       - plugin.yaml
+
+release:
+  header: |
+    See descriptive changelog in [CHANGELOG.md](https://github.com/hypnoglow/helm-s3/blob/master/CHANGELOG.md).
