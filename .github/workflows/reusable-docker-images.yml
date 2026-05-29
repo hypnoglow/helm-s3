@@ -51,8 +51,8 @@ jobs:
             
             let plugin_version = `commit.${context.sha}`
             let push = false
-            if (GITHUB_REF_TYPE === "branch" && GITHUB_REF_NAME === "master") {
-              plugin_version = "master"
+            if (GITHUB_REF_TYPE === "branch" && GITHUB_REF_NAME === "main") {
+              plugin_version = "main"
               push = true
             }
             if (GITHUB_REF_TYPE === "tag") {
