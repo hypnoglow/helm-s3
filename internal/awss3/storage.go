@@ -9,12 +9,14 @@ import (
 	"os"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/s3/types"
+	"github.com/aws/smithy-go"
 	"github.com/pkg/errors"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 
 	"github.com/hypnoglow/helm-s3/internal/helmutil"
 )
@@ -22,6 +24,10 @@ import (
 const (
 	// selects serverside encryption for bucket.
 	awsS3encryption = "AWS_S3_SSE"
+
+	// awsS3UsePathStyle controls whether to use path-style addressing
+	// for S3 requests. Defaults to true unless explicitly set to "false".
+	awsS3UsePathStyle = "AWS_S3_USE_PATH_STYLE"
 
 	// s3MetadataSoftLimitBytes is application-specific soft limit
 	// for the number of bytes in S3 object metadata.
@@ -37,22 +43,41 @@ var (
 )
 
 // New returns a new Storage.
-func New(session *session.Session) *Storage {
-	return &Storage{session: session}
+func New(cfg aws.Config) *Storage {
+	return &Storage{config: cfg}
 }
 
 // Returns desired encryption.
-func getSSE() *string {
+func getSSE() types.ServerSideEncryption {
 	sse := os.Getenv(awsS3encryption)
 	if sse == "" {
-		return nil
+		return ""
 	}
-	return &sse
+	return types.ServerSideEncryption(sse)
+}
+
+// usePathStyle returns true if path-style addressing should be used for S3
+// requests. It defaults to true unless AWS_S3_USE_PATH_STYLE is set to "false".
+func usePathStyle() bool {
+	return strings.ToLower(os.Getenv(awsS3UsePathStyle)) != "false"
+}
+
+// withPathStyle returns an s3.Options function that sets UsePathStyle.
+func withPathStyle() func(*s3.Options) {
+	return func(o *s3.Options) {
+		o.UsePathStyle = usePathStyle()
+	}
+}
+
+// titleCase converts a string to title case using the current implementation.
+// This replaces the deprecated strings.Title function.
+func titleCase(s string) string {
+	return cases.Title(language.English).String(s)
 }
 
 // Storage provides an interface to work with AWS S3 objects by s3 protocol.
 type Storage struct {
-	session *session.Session
+	config aws.Config
 }
 
 // Traverse traverses all charts in the repository.
@@ -76,11 +101,11 @@ func (s *Storage) traverse(ctx context.Context, repoURI string, items chan<- Cha
 		return
 	}
 
-	client := s3.New(s.session)
+	client := s3.NewFromConfig(s.config, withPathStyle())
 
 	var continuationToken *string
 	for {
-		listOut, err := client.ListObjectsV2WithContext(ctx, &s3.ListObjectsV2Input{
+		listOut, err := client.ListObjectsV2(ctx, &s3.ListObjectsV2Input{
 			Bucket:            aws.String(bucket),
 			Prefix:            aws.String(prefixKey),
 			ContinuationToken: continuationToken,
@@ -110,7 +135,7 @@ func (s *Storage) traverse(ctx context.Context, repoURI string, items chan<- Cha
 				continue
 			}
 
-			metaOut, err := client.HeadObjectWithContext(ctx, &s3.HeadObjectInput{
+			metaOut, err := client.HeadObject(ctx, &s3.HeadObjectInput{
 				Bucket: aws.String(bucket),
 				Key:    obj.Key,
 			})
@@ -121,8 +146,8 @@ func (s *Storage) traverse(ctx context.Context, repoURI string, items chan<- Cha
 
 			reindexItem := ChartInfo{Filename: key}
 
-			serializedChartMeta, hasMeta := metaOut.Metadata[strings.Title(metaChartMetadata)] //nolint:staticcheck // Safe use of strings.Title
-			chartDigest, hasDigest := metaOut.Metadata[strings.Title(metaChartDigest)]         //nolint:staticcheck // Safe use of strings.Title
+			serializedChartMeta, hasMeta := metaOut.Metadata[titleCase(metaChartMetadata)]
+			chartDigest, hasDigest := metaOut.Metadata[titleCase(metaChartDigest)]
 			if !hasMeta || !hasDigest {
 				// Some charts in the repository can have no metadata.
 				//
@@ -134,7 +159,7 @@ func (s *Storage) traverse(ctx context.Context, repoURI string, items chan<- Cha
 				//   https://github.com/hypnoglow/helm-s3/issues/112 )
 				//
 				// In this case we have to download the ch file itself.
-				objectOut, err := client.GetObjectWithContext(ctx, &s3.GetObjectInput{
+				objectOut, err := client.GetObject(ctx, &s3.GetObjectInput{
 					Bucket: aws.String(bucket),
 					Key:    obj.Key,
 				})
@@ -163,13 +188,13 @@ func (s *Storage) traverse(ctx context.Context, repoURI string, items chan<- Cha
 				reindexItem.Hash = digest
 			} else {
 				meta := helmutil.NewChartMetadata()
-				if err := meta.UnmarshalJSON([]byte(*serializedChartMeta)); err != nil {
+				if err := meta.UnmarshalJSON([]byte(serializedChartMeta)); err != nil {
 					errs <- fmt.Errorf("unserialize chart meta for %q: %s", key, err)
 					return
 				}
 
 				reindexItem.Meta = meta
-				reindexItem.Hash = *chartDigest
+				reindexItem.Hash = chartDigest
 			}
 
 			// process meta and hash
@@ -199,21 +224,31 @@ func (s *Storage) FetchRaw(ctx context.Context, uri string) ([]byte, error) {
 		return nil, err
 	}
 
-	buf := &aws.WriteAtBuffer{}
-	_, err = s3manager.NewDownloader(s.session).DownloadWithContext(
-		ctx,
-		buf,
-		&s3.GetObjectInput{
-			Bucket: aws.String(bucket),
-			Key:    aws.String(key),
-		})
+	buf := manager.NewWriteAtBuffer([]byte{})
+	downloader := manager.NewDownloader(s3.NewFromConfig(s.config, withPathStyle()))
+	_, err = downloader.Download(ctx, buf, &s3.GetObjectInput{
+		Bucket: aws.String(bucket),
+		Key:    aws.String(key),
+	})
 	if err != nil {
-		if ae, ok := err.(awserr.Error); ok {
-			if ae.Code() == s3.ErrCodeNoSuchBucket {
-				return nil, ErrBucketNotFound
-			}
-			if ae.Code() == s3.ErrCodeNoSuchKey {
+		// Check for specific S3 typed errors
+		var nsk *types.NoSuchKey
+		var nsb *types.NoSuchBucket
+		if errors.As(err, &nsk) {
+			return nil, ErrObjectNotFound
+		}
+		if errors.As(err, &nsb) {
+			return nil, ErrBucketNotFound
+		}
+		// Fallback: SDK v2 may surface these as generic smithy API errors
+		// with error code strings instead of concrete types.
+		var apiErr smithy.APIError
+		if errors.As(err, &apiErr) {
+			switch apiErr.ErrorCode() {
+			case "NoSuchKey", "NotFound":
 				return nil, ErrObjectNotFound
+			case "NoSuchBucket":
+				return nil, ErrBucketNotFound
 			}
 		}
 		return nil, errors.Wrap(err, "fetch object from s3")
@@ -229,13 +264,19 @@ func (s *Storage) Exists(ctx context.Context, uri string) (bool, error) {
 		return false, err
 	}
 
-	_, err = s3.New(s.session).HeadObjectWithContext(ctx, &s3.HeadObjectInput{
+	client := s3.NewFromConfig(s.config, withPathStyle())
+	_, err = client.HeadObject(ctx, &s3.HeadObjectInput{
 		Bucket: aws.String(bucket),
 		Key:    aws.String(key),
 	})
 	if err != nil {
-		// That's weird that there is no NotFound constant in aws sdk.
-		if ae, ok := err.(awserr.Error); ok && ae.Code() == "NotFound" {
+		// Check if it's a NotFound error
+		var apiErr smithy.APIError
+		if errors.As(err, &apiErr) && apiErr.ErrorCode() == "NotFound" {
+			return false, nil
+		}
+		var nf *types.NotFound
+		if errors.As(err, &nf) {
 			return false, nil
 		}
 		return false, errors.Wrap(err, "head s3 object")
@@ -261,35 +302,41 @@ func (s *Storage) PutChart(
 		return "", err
 	}
 
-	uploader := s3manager.NewUploader(s.session)
+	uploader := manager.NewUploader(s3.NewFromConfig(s.config, withPathStyle()))
 
-	result, err := uploader.UploadWithContext(
-		ctx,
-		&s3manager.UploadInput{
-			Bucket:               aws.String(bucket),
-			Key:                  aws.String(key),
-			ACL:                  aws.String(acl),
-			ContentType:          aws.String(contentType),
-			ServerSideEncryption: getSSE(),
-			Body:                 r,
-			Metadata:             assembleObjectMetadata(chartMeta, chartDigest),
-		},
-	)
+	sse := getSSE()
+	uploadInput := &s3.PutObjectInput{
+		Bucket:      aws.String(bucket),
+		Key:         aws.String(key),
+		ContentType: aws.String(contentType),
+		Body:        r,
+		Metadata:    assembleObjectMetadata(chartMeta, chartDigest),
+	}
+	if acl != "" {
+		uploadInput.ACL = types.ObjectCannedACL(acl)
+	}
+	if sse != "" {
+		uploadInput.ServerSideEncryption = sse
+	}
+
+	result, err := uploader.Upload(ctx, uploadInput)
 	if err != nil {
 		return "", fmt.Errorf("upload chart object to s3: %w", err)
 	}
 
 	if prov {
-		_, err := uploader.UploadWithContext(
-			ctx,
-			&s3manager.UploadInput{
-				Bucket:               aws.String(bucket),
-				Key:                  aws.String(key + ".prov"),
-				ACL:                  aws.String(acl),
-				ServerSideEncryption: getSSE(),
-				Body:                 provReader,
-			},
-		)
+		provInput := &s3.PutObjectInput{
+			Bucket: aws.String(bucket),
+			Key:    aws.String(key + ".prov"),
+			Body:   provReader,
+		}
+		if acl != "" {
+			provInput.ACL = types.ObjectCannedACL(acl)
+		}
+		if sse != "" {
+			provInput.ServerSideEncryption = sse
+		}
+		_, err := uploader.Upload(ctx, provInput)
 		if err != nil {
 			return "", fmt.Errorf("upload prov object to s3: %w", err)
 		}
@@ -310,15 +357,20 @@ func (s *Storage) PutIndex(ctx context.Context, uri string, acl string, r io.Rea
 	if err != nil {
 		return err
 	}
-	_, err = s3manager.NewUploader(s.session).UploadWithContext(
-		ctx,
-		&s3manager.UploadInput{
-			Bucket:               aws.String(bucket),
-			Key:                  aws.String(key),
-			ACL:                  aws.String(acl),
-			ServerSideEncryption: getSSE(),
-			Body:                 r,
-		})
+	uploader := manager.NewUploader(s3.NewFromConfig(s.config, withPathStyle()))
+	sse := getSSE()
+	uploadInput := &s3.PutObjectInput{
+		Bucket: aws.String(bucket),
+		Key:    aws.String(key),
+		Body:   r,
+	}
+	if acl != "" {
+		uploadInput.ACL = types.ObjectCannedACL(acl)
+	}
+	if sse != "" {
+		uploadInput.ServerSideEncryption = sse
+	}
+	_, err = uploader.Upload(ctx, uploadInput)
 	if err != nil {
 		return errors.Wrap(err, "upload index to S3 bucket")
 	}
@@ -346,13 +398,11 @@ func (s *Storage) Delete(ctx context.Context, uri string) error {
 		return err
 	}
 
-	_, err = s3.New(s.session).DeleteObjectWithContext(
-		ctx,
-		&s3.DeleteObjectInput{
-			Bucket: aws.String(bucket),
-			Key:    aws.String(key),
-		},
-	)
+	client := s3.NewFromConfig(s.config, withPathStyle())
+	_, err = client.DeleteObject(ctx, &s3.DeleteObjectInput{
+		Bucket: aws.String(bucket),
+		Key:    aws.String(key),
+	})
 	if err != nil {
 		return errors.Wrap(err, "delete object from s3")
 	}
@@ -368,22 +418,20 @@ func (s *Storage) DeleteChart(ctx context.Context, uri string) error {
 		return err
 	}
 
-	_, err = s3.New(s.session).DeleteObjectsWithContext(
-		ctx,
-		&s3.DeleteObjectsInput{
-			Bucket: aws.String(bucket),
-			Delete: &s3.Delete{
-				Objects: []*s3.ObjectIdentifier{
-					{
-						Key: aws.String(key),
-					},
-					{
-						Key: aws.String(key + ".prov"),
-					},
+	client := s3.NewFromConfig(s.config, withPathStyle())
+	_, err = client.DeleteObjects(ctx, &s3.DeleteObjectsInput{
+		Bucket: aws.String(bucket),
+		Delete: &types.Delete{
+			Objects: []types.ObjectIdentifier{
+				{
+					Key: aws.String(key),
+				},
+				{
+					Key: aws.String(key + ".prov"),
 				},
 			},
 		},
-	)
+	})
 	if err != nil {
 		return fmt.Errorf("delete chart object from s3: %w", err)
 	}
@@ -415,10 +463,10 @@ func parseURI(uri string) (bucket, key string, err error) {
 // To mitigate the issue with large charts which metadata is more than 2 KB,
 // we simply drop it. This affects 'reindex' operation, so that it has to download
 // the chart file (GET Request) instead of only fetching its metadata (HEAD request).
-func assembleObjectMetadata(chartMeta, chartDigest string) map[string]*string {
-	meta := map[string]*string{
-		metaChartMetadata: aws.String(chartMeta),
-		metaChartDigest:   aws.String(chartDigest),
+func assembleObjectMetadata(chartMeta, chartDigest string) map[string]string {
+	meta := map[string]string{
+		metaChartMetadata: chartMeta,
+		metaChartDigest:   chartDigest,
 	}
 	if objectMetadataSize(meta) > s3MetadataSoftLimitBytes {
 		return nil
@@ -429,14 +477,11 @@ func assembleObjectMetadata(chartMeta, chartDigest string) map[string]*string {
 
 // objectMetadataSize calculates object metadata size as described in https://docs.aws.amazon.com/AmazonS3/latest/dev/UsingMetadata.html
 // "The size of user-defined metadata is measured by taking the sum of the number of bytes in the UTF-8 encoding of each key and value.".
-func objectMetadataSize(m map[string]*string) int {
+func objectMetadataSize(m map[string]string) int {
 	var sum int
 	for k, v := range m {
 		sum += len([]byte(k))
-		if v == nil {
-			continue
-		}
-		sum += len([]byte(*v))
+		sum += len([]byte(v))
 	}
 	return sum
 }

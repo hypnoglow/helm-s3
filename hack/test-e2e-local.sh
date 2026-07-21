@@ -8,7 +8,7 @@ set -e -uo pipefail
 export AWS_ACCESS_KEY_ID=EXAMPLEKEY123
 export AWS_SECRET_ACCESS_KEY=EXAMPLESECRET123456
 export AWS_DEFAULT_REGION=us-east-1
-export AWS_ENDPOINT=localhost:9000
+export AWS_ENDPOINT=http://localhost:9000
 export AWS_DISABLE_SSL=true
 
 DOCKER_NAME='helm-s3-minio'

@@ -42,9 +42,15 @@ func setup() {
 		panic("AWS_SECRET_ACCESS_KEY is empty")
 	}
 
+	// minio.New expects a bare host:port endpoint, while helm-s3's Session
+	// requires a scheme (http:// or https://). Strip the scheme here.
+	minioEndpoint := os.Getenv("AWS_ENDPOINT")
+	minioEndpoint = strings.TrimPrefix(minioEndpoint, "http://")
+	minioEndpoint = strings.TrimPrefix(minioEndpoint, "https://")
+
 	var err error
 	mc, err = minio.New(
-		os.Getenv("AWS_ENDPOINT"),
+		minioEndpoint,
 		os.Getenv("AWS_ACCESS_KEY_ID"),
 		os.Getenv("AWS_SECRET_ACCESS_KEY"),
 		false,
