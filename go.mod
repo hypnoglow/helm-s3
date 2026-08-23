@@ -12,7 +12,7 @@ require (
 	github.com/minio/minio-go/v6 v6.0.57
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/cobra v1.10.2
-	github.com/stretchr/testify v1.11.1
+	github.com/stretchr/testify v1.12.1
 	helm.sh/helm/v3 v3.21.0
 	k8s.io/helm v2.17.0+incompatible
 	sigs.k8s.io/yaml v1.6.0
@@ -74,7 +74,7 @@ require (
 	github.com/x448/float16 v0.8.4 // indirect
 	github.com/xlab/treeprint v1.2.0 // indirect
 	go.yaml.in/yaml/v2 v2.4.4 // indirect
-	go.yaml.in/yaml/v3 v3.0.4 // indirect
+	go.yaml.in/yaml/v3 v3.0.5 // indirect
 	golang.org/x/crypto v0.49.0 // indirect
 	golang.org/x/net v0.52.0 // indirect
 	golang.org/x/oauth2 v0.35.0 // indirect
