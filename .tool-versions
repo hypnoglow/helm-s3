@@ -1,4 +1,4 @@
-golang 1.27.1
+golang 1.27.2
 golangci-lint 2.13.2
 goreleaser 2.18.2
 helm 3.22.0
