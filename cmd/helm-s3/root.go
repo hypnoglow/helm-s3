@@ -56,7 +56,7 @@ func newRootCmd() *cobra.Command {
 		Short: "Manage chart repositories on Amazon S3",
 		Long:  rootDesc,
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
-			ctx, cancel = context.WithTimeout(cmd.Context(), opts.timeout)
+			ctx, cancel = context.WithTimeout(cmd.Context(), opts.timeout) //nolint:gosec // cancel is called in PersistentPostRun.
 			cmd.SetContext(ctx)
 		},
 		PersistentPostRun: func(cmd *cobra.Command, args []string) {

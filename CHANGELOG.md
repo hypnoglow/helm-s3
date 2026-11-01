@@ -17,7 +17,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Changed
 
-- Supported (and tested against) Helm versions updated to `3.20.2` and `3.21.0`.
+- Supported (and tested against) Helm versions updated to `3.21.4` and `3.22.1`.
+
+- Go updated to `1.27.3`.
 
 ## [0.17.2] - 2026-05-26
 

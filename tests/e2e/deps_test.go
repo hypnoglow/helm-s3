@@ -2,9 +2,7 @@ package e2e
 
 import (
 	"fmt"
-	"io/fs"
 	"os"
-	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -49,13 +47,8 @@ func TestHelmDependencyUpdate(t *testing.T) {
 
 	// 2. Ensure that 'bar' chart has empty 'charts' directory.
 
-	err = filepath.WalkDir(barChartDirpath+"/charts", func(path string, d fs.DirEntry, err error) error {
-		if path == barChartDirpath+"/charts" {
-			return nil
-		}
-		return os.RemoveAll(path)
-	})
-	assert.NoError(t, err)
+	assert.NoError(t, os.RemoveAll(barChartDirpath+"/charts"))
+	assert.NoError(t, os.Mkdir(barChartDirpath+"/charts", 0o750))
 
 	// 3. Run `helm dep up`.
 
