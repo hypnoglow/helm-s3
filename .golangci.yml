@@ -68,6 +68,10 @@ linters:
       - linters:
           - revive
         text: "^unused-parameter"
+      # TODO: migrate to aws-sdk-go-v2.
+      - linters:
+          - staticcheck
+        text: "SA1019: github.com/aws/aws-sdk-go/"
 
 formatters:
   enable:
